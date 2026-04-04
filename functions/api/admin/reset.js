@@ -6,6 +6,7 @@ import {
 } from '../../_lib/default-cms-content.js';
 import {
   deleteAllPosts,
+  getPrivateProfileDefault,
   replaceUpdates,
   setDocument,
 } from '../../_lib/db.js';
@@ -22,19 +23,21 @@ async function resetUpdates(env){
 }
 
 async function resetPrivateProfile(env){
-  await setDocument(env, 'private_profile', DEFAULT_PRIVATE_PROFILE);
-  return { profile: DEFAULT_PRIVATE_PROFILE };
+  const privateProfileDefault = await getPrivateProfileDefault(env);
+  await setDocument(env, 'private_profile', privateProfileDefault);
+  return { profile: privateProfileDefault };
 }
 
 async function resetAll(env){
+  const privateProfileDefault = await getPrivateProfileDefault(env);
   await setDocument(env, 'public_translations', DEFAULT_PUBLIC_TRANSLATIONS);
   await replaceUpdates(env, DEFAULT_UPDATES);
-  await setDocument(env, 'private_profile', DEFAULT_PRIVATE_PROFILE);
+  await setDocument(env, 'private_profile', privateProfileDefault);
   await deleteAllPosts(env);
   return {
     translations: DEFAULT_PUBLIC_TRANSLATIONS,
     updates: DEFAULT_UPDATES,
-    profile: DEFAULT_PRIVATE_PROFILE,
+    profile: privateProfileDefault,
     posts: [],
   };
 }

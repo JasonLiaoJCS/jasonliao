@@ -79,6 +79,13 @@ export async function ensureCmsDb(env){
         JSON.stringify(DEFAULT_PRIVATE_PROFILE),
         nowIso(),
       ).run();
+      await env.CMS_DB.prepare(
+        'INSERT OR IGNORE INTO cms_documents (id, value_json, updated_at) VALUES (?, ?, ?)',
+      ).bind(
+        'private_profile_default',
+        JSON.stringify(DEFAULT_PRIVATE_PROFILE),
+        nowIso(),
+      ).run();
     })().catch(error => {
       ensurePromise = null;
       throw error;
@@ -321,4 +328,12 @@ export async function getAcquaintanceBootstrap(env){
 
 export function getDefaultPosts(){
   return DEFAULT_POSTS;
+}
+
+export async function getPrivateProfileDefault(env){
+  return getDocument(env, 'private_profile_default', DEFAULT_PRIVATE_PROFILE);
+}
+
+export async function setPrivateProfileDefault(env, profile){
+  await setDocument(env, 'private_profile_default', profile);
 }

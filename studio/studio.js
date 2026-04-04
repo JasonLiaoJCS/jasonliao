@@ -608,12 +608,13 @@ function renderPrivateProfile(){
       <div>
         <div class="eyebrow">Acquaintance Profile</div>
         <h3>熟客模式內容</h3>
+        </div>
+        <div class="studio-row-actions">
+          <button class="btn magnetic" type="button" id="resetPrivateProfileBtn">Reset to Default</button>
+          <button class="btn magnetic" type="button" id="savePrivateProfileAsDefaultBtn">Save as Reset Default</button>
+          <button class="btn btn-primary magnetic" type="button" id="savePrivateProfileBtn">Save Acquaintance Profile</button>
+        </div>
       </div>
-      <div class="studio-row-actions">
-        <button class="btn magnetic" type="button" id="resetPrivateProfileBtn">Reset to Default</button>
-        <button class="btn btn-primary magnetic" type="button" id="savePrivateProfileBtn">Save Acquaintance Profile</button>
-      </div>
-    </div>
     <div class="studio-grid" style="margin-top:20px">
       <section class="studio-card">
         <h4>直接聯絡資訊</h4>
@@ -682,6 +683,7 @@ function renderPrivateProfile(){
   `;
 
   panel.querySelector('#resetPrivateProfileBtn')?.addEventListener('click', resetPrivateProfileToDefault);
+  panel.querySelector('#savePrivateProfileAsDefaultBtn')?.addEventListener('click', savePrivateProfileAsDefault);
   panel.querySelector('#savePrivateProfileBtn')?.addEventListener('click', savePrivateProfile);
   panel.querySelectorAll('[data-private-image-upload]').forEach(input => {
     input.addEventListener('change', async event => {
@@ -704,7 +706,7 @@ async function readFileAsDataUrl(file){
   });
 }
 
-async function savePrivateProfile(){
+function collectPrivateProfileFromForm(){
   const current = structuredClone(studioState.bootstrap.privateProfile);
   current.fields.email = document.getElementById('privateEmail').value;
   current.fields.emailHref = document.getElementById('privateEmailHref').value;
@@ -731,6 +733,11 @@ async function savePrivateProfile(){
     current.images[slot].alt[field.dataset.lang] = field.value;
   });
 
+  return current;
+}
+
+async function savePrivateProfile(){
+  const current = collectPrivateProfileFromForm();
   setStudioStatus('Saving acquaintance profile...', 'pending');
   await studioFetchJson('/api/admin/private-profile', {
     method: 'PUT',
@@ -738,6 +745,19 @@ async function savePrivateProfile(){
   });
   studioState.bootstrap.privateProfile = current;
   setStudioStatus('Acquaintance profile saved', 'success');
+}
+
+async function savePrivateProfileAsDefault(){
+  if(!window.confirm('Save the current acquaintance profile as your future reset default?')){
+    return;
+  }
+  const current = collectPrivateProfileFromForm();
+  setStudioStatus('Saving acquaintance reset default...', 'pending');
+  await studioFetchJson('/api/admin/private-profile-default', {
+    method: 'PUT',
+    body: JSON.stringify({ profile: current }),
+  });
+  setStudioStatus('Acquaintance reset default saved', 'success');
 }
 
 async function resetPrivateProfileToDefault(){
@@ -768,15 +788,16 @@ function renderDeployPanel(){
           <li><span class="muted">確認首頁公開網址維持不變，這樣 Google 既有索引不需要整個重來。</span></li>
         </ol>
       </section>
-      <section class="studio-card">
-        <div class="eyebrow">Privacy Boundary</div>
-        <h3>這一版已經做的保護</h3>
-        <ul class="list">
-          <li><span class="muted">後台與 API 預設 noindex，不會自己跑去被 Google 收錄。</span></li>
-          <li><span class="muted">熟客資料改成經過安全 session 驗證後才從 server 取回，不需要再把明文個資塞在公開頁面原始碼裡。</span></li>
-          <li><span class="muted">公開前台保留靜態 fallback，還沒切部署時現有網站也不會壞。</span></li>
-        </ul>
-      </section>
+        <section class="studio-card">
+          <div class="eyebrow">Privacy Boundary</div>
+          <h3>這一版已經做的保護</h3>
+          <ul class="list">
+            <li><span class="muted">後台與 API 預設 noindex，不會自己跑去被 Google 收錄。</span></li>
+            <li><span class="muted">熟客資料改成經過安全 session 驗證後才從 server 取回，不需要再把明文個資塞在公開頁面原始碼裡。</span></li>
+            <li><span class="muted">公開前台保留靜態 fallback，還沒切部署時現有網站也不會壞。</span></li>
+            <li><span class="muted">熟客資料可以另外存成你的私人 reset default，不需要把真實個資寫回公開 repo。</span></li>
+          </ul>
+        </section>
       <section class="studio-card">
         <div class="eyebrow">Safety Reset</div>
         <h3>回到最初預設</h3>
