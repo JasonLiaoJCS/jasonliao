@@ -126,7 +126,7 @@ const I18N_EN = {
   'private.modal.label': 'Password',
   'private.modal.submit': 'Unlock',
   'private.modal.cancel': 'Cancel',
-  'private.modal.note': 'The password is verified locally in your browser and is never sent to a server.',
+  'private.modal.note': 'The password is verified locally in your browser and is never sent to a server. Acquaintance Mode locks again after 10 minutes of inactivity.',
 
   // Footer
   'footer.motto': "Stand on reason, walk with passion.",
@@ -137,11 +137,16 @@ const I18N_EN = {
 const i18nOriginal = new Map();
 const i18nMetaOriginal = {};
 let i18nInitialized = false;
+const PRIVATE_IDLE_TIMEOUT_MS = 10 * 60 * 1000;
+const PRIVATE_ACTIVITY_THROTTLE_MS = 1000;
 const privateMode = {
   unlocked: false,
   payload: null,
   scriptPromise: null,
   mediaUrls: [],
+  lastActivityAt: 0,
+  lastActivityHandledAt: 0,
+  idleTimer: null,
 };
 const PRIVATE_UI_COPY = {
   zh: {
@@ -234,9 +239,68 @@ function base64ToUint8Array(base64){
   return bytes;
 }
 
+function getPrivatePayloadEntries(payload){
+  if(Array.isArray(payload?.entries) && payload.entries.length){
+    return payload.entries;
+  }
+  return payload ? [payload] : [];
+}
+
 function revokePrivateMedia(){
   privateMode.mediaUrls.forEach(url => URL.revokeObjectURL(url));
   privateMode.mediaUrls = [];
+}
+
+function clearPrivateAutoLockTimer(){
+  if(privateMode.idleTimer){
+    window.clearTimeout(privateMode.idleTimer);
+    privateMode.idleTimer = null;
+  }
+}
+
+function isPrivateSessionExpired(){
+  return privateMode.unlocked && privateMode.lastActivityAt > 0 && (Date.now() - privateMode.lastActivityAt) >= PRIVATE_IDLE_TIMEOUT_MS;
+}
+
+function schedulePrivateAutoLock(){
+  clearPrivateAutoLockTimer();
+  if(!privateMode.unlocked) return;
+
+  const remaining = PRIVATE_IDLE_TIMEOUT_MS - (Date.now() - privateMode.lastActivityAt);
+  if(remaining <= 0){
+    lockPrivateMode('timeout');
+    return;
+  }
+
+  privateMode.idleTimer = window.setTimeout(() => {
+    if(isPrivateSessionExpired()){
+      lockPrivateMode('timeout');
+      return;
+    }
+    schedulePrivateAutoLock();
+  }, remaining);
+}
+
+function touchPrivateSession(source = 'activity'){
+  if(!privateMode.unlocked) return;
+
+  const now = Date.now();
+  if(source === 'mousemove' && (now - privateMode.lastActivityHandledAt) < PRIVATE_ACTIVITY_THROTTLE_MS){
+    return;
+  }
+
+  privateMode.lastActivityAt = now;
+  privateMode.lastActivityHandledAt = now;
+  schedulePrivateAutoLock();
+}
+
+function evaluatePrivateSessionExpiry(){
+  if(!privateMode.unlocked) return;
+  if(isPrivateSessionExpired()){
+    lockPrivateMode('timeout');
+    return;
+  }
+  schedulePrivateAutoLock();
 }
 
 function createPrivateImageUrl(entry){
@@ -400,44 +464,60 @@ async function loadPrivatePayload(){
 async function decryptPrivatePayload(password){
   if(!window.crypto?.subtle) throw new Error('crypto unavailable');
   const payload = await loadPrivatePayload();
-  const keyMaterial = await window.crypto.subtle.importKey(
-    'raw',
-    textEncoder.encode(password),
-    'PBKDF2',
-    false,
-    ['deriveKey'],
-  );
-  const key = await window.crypto.subtle.deriveKey(
-    {
-      name: 'PBKDF2',
-      salt: base64ToUint8Array(payload.salt),
-      iterations: payload.iterations,
-      hash: 'SHA-256',
-    },
-    keyMaterial,
-    { name: 'AES-GCM', length: 256 },
-    false,
-    ['decrypt'],
-  );
-  const decrypted = await window.crypto.subtle.decrypt(
-    { name: 'AES-GCM', iv: base64ToUint8Array(payload.iv) },
-    key,
-    base64ToUint8Array(payload.data),
-  );
-  return JSON.parse(textDecoder.decode(decrypted));
+  const entries = getPrivatePayloadEntries(payload);
+
+  for(const entry of entries){
+    try {
+      const keyMaterial = await window.crypto.subtle.importKey(
+        'raw',
+        textEncoder.encode(password),
+        'PBKDF2',
+        false,
+        ['deriveKey'],
+      );
+      const key = await window.crypto.subtle.deriveKey(
+        {
+          name: 'PBKDF2',
+          salt: base64ToUint8Array(entry.salt),
+          iterations: entry.iterations,
+          hash: 'SHA-256',
+        },
+        keyMaterial,
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['decrypt'],
+      );
+      const decrypted = await window.crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv: base64ToUint8Array(entry.iv) },
+        key,
+        base64ToUint8Array(entry.data),
+      );
+      return JSON.parse(textDecoder.decode(decrypted));
+    } catch {
+      // Keep trying remaining entries so multiple passwords can stay valid.
+    }
+  }
+
+  throw new Error('private payload decrypt failed');
 }
 
 async function unlockPrivateMode(password){
   const data = await decryptPrivatePayload(password);
   privateMode.unlocked = true;
   privateMode.payload = data;
+  privateMode.lastActivityAt = Date.now();
+  privateMode.lastActivityHandledAt = privateMode.lastActivityAt;
   applyLang(currentLang);
+  schedulePrivateAutoLock();
   closePrivateModal();
 }
 
 function lockPrivateMode(){
   privateMode.unlocked = false;
   privateMode.payload = null;
+  privateMode.lastActivityAt = 0;
+  privateMode.lastActivityHandledAt = 0;
+  clearPrivateAutoLockTimer();
   revokePrivateMedia();
   applyLang(currentLang);
 }
@@ -592,6 +672,18 @@ function setupPrivateUI(){
   document.addEventListener('keydown', event => {
     if(event.key === 'Escape'){
       closePrivateModal();
+    }
+  });
+
+  ['pointerdown', 'keydown', 'scroll', 'touchstart'].forEach(eventName => {
+    window.addEventListener(eventName, () => touchPrivateSession(eventName), { passive: true });
+  });
+  window.addEventListener('mousemove', () => touchPrivateSession('mousemove'), { passive: true });
+  window.addEventListener('focus', evaluatePrivateSessionExpiry);
+  window.addEventListener('pageshow', evaluatePrivateSessionExpiry);
+  document.addEventListener('visibilitychange', () => {
+    if(document.visibilityState === 'visible'){
+      evaluatePrivateSessionExpiry();
     }
   });
 
