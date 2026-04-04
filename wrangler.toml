@@ -5,4 +5,4 @@ pages_build_output_dir = "."
 [[d1_databases]]
 binding = "CMS_DB"
 database_name = "jasonliao-cms"
-database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+database_id = "9754b1b1-a382-45cb-b1aa-d55bbf6f0f9c"
