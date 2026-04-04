@@ -461,7 +461,12 @@
       <p class="muted" data-i18n="private.modal.desc">為了降低個資外露風險，照片、直接聯絡方式、中文姓名與完整學經歷只在本機驗證密碼後顯示。</p>
       <form class="private-form" id="privateForm">
         <label class="private-label" for="privatePassword" data-i18n="private.modal.label">Password</label>
-        <input class="private-input" id="privatePassword" name="password" type="password" autocomplete="current-password" spellcheck="false">
+        <div class="private-input-wrap">
+          <input class="private-input" id="privatePassword" name="password" type="password" autocomplete="current-password" spellcheck="false">
+          <button class="private-password-toggle" id="privatePasswordToggle" type="button" aria-label="顯示密碼" data-i18n-aria-label="private.modal.toggleShow">
+            <span class="private-password-toggle-text" id="privatePasswordToggleText" data-i18n="private.modal.toggleShow">顯示</span>
+          </button>
+        </div>
         <p class="private-error small" id="privateError" aria-live="polite"></p>
         <div class="private-actions">
           <button class="btn btn-primary magnetic" id="privateSubmit" type="submit" data-i18n="private.modal.submit">Unlock</button>

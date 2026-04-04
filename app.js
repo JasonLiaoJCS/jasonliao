@@ -126,11 +126,17 @@ const I18N_EN = {
   'private.modal.label': 'Password',
   'private.modal.submit': 'Unlock',
   'private.modal.cancel': 'Cancel',
+  'private.modal.toggleShow': 'Show',
+  'private.modal.toggleHide': 'Hide',
   'private.modal.note': 'The password is verified locally in your browser and is never sent to a server. Acquaintance Mode locks again after 10 minutes of inactivity.',
 
   // Footer
   'footer.motto': "Stand on reason, walk with passion.",
   'footer.brand': "Jason Liao",
+};
+const I18N_ZH = {
+  'private.modal.toggleShow': '顯示',
+  'private.modal.toggleHide': '隱藏',
 };
 
 // Store original Chinese content
@@ -218,7 +224,9 @@ function getTranslations(){
 
 function getBaseTranslation(key, lang){
   const translations = getTranslations();
-  return lang === 'en' ? (translations[key] || i18nOriginal.get(key) || '') : (i18nOriginal.get(key) || '');
+  return lang === 'en'
+    ? (translations[key] || i18nOriginal.get(key) || '')
+    : (I18N_ZH[key] || i18nOriginal.get(key) || '');
 }
 
 function getPrivateTranslation(key, lang){
@@ -378,6 +386,8 @@ function updatePrivateModalUI(){
   const passwordInput = document.getElementById('privatePassword');
   const errorEl = document.getElementById('privateError');
   const submitBtn = document.getElementById('privateSubmit');
+  const passwordToggle = document.getElementById('privatePasswordToggle');
+  const passwordToggleText = document.getElementById('privatePasswordToggleText');
   if(passwordInput){
     passwordInput.placeholder = PRIVATE_UI_COPY[currentLang].passwordPlaceholder;
   }
@@ -386,6 +396,12 @@ function updatePrivateModalUI(){
   }
   if(submitBtn && !submitBtn.disabled){
     submitBtn.textContent = getBaseTranslation('private.modal.submit', currentLang);
+  }
+  if(passwordToggle && passwordToggleText){
+    const toggleKey = passwordInput?.type === 'text' ? 'private.modal.toggleHide' : 'private.modal.toggleShow';
+    const toggleLabel = getBaseTranslation(toggleKey, currentLang);
+    passwordToggleText.textContent = toggleLabel;
+    passwordToggle.setAttribute('aria-label', toggleLabel);
   }
 }
 
@@ -429,10 +445,15 @@ function openPrivateModal(){
 
 function closePrivateModal(){
   const modal = document.getElementById('privateModal');
+  const passwordInput = document.getElementById('privatePassword');
   if(!modal) return;
   modal.classList.remove('open');
   modal.setAttribute('aria-hidden', 'true');
   document.body.classList.remove('modal-open');
+  if(passwordInput){
+    passwordInput.type = 'password';
+  }
+  updatePrivateModalUI();
 }
 
 async function loadPrivatePayload(){
@@ -593,6 +614,9 @@ function initI18n(){
   document.querySelectorAll('[data-i18n-html]').forEach(el => {
     i18nOriginal.set(el.getAttribute('data-i18n-html'), el.innerHTML);
   });
+  document.querySelectorAll('[data-i18n-aria-label]').forEach(el => {
+    i18nOriginal.set(el.getAttribute('data-i18n-aria-label'), el.getAttribute('aria-label') || '');
+  });
 
   applyLang(currentLang === 'en' ? 'en' : 'zh');
 
@@ -614,6 +638,10 @@ function applyLang(lang){
   document.querySelectorAll('[data-i18n-html]').forEach(el => {
     const key = el.getAttribute('data-i18n-html');
     el.innerHTML = getRenderedTranslation(key, lang);
+  });
+  document.querySelectorAll('[data-i18n-aria-label]').forEach(el => {
+    const key = el.getAttribute('data-i18n-aria-label');
+    el.setAttribute('aria-label', getRenderedTranslation(key, lang));
   });
 
   applyMeta(lang);
@@ -648,6 +676,7 @@ function setupPrivateUI(){
   const footerContactLink = document.getElementById('footerContactLink');
   const privateForm = document.getElementById('privateForm');
   const privatePassword = document.getElementById('privatePassword');
+  const privatePasswordToggle = document.getElementById('privatePasswordToggle');
   const privateError = document.getElementById('privateError');
   const privateSubmit = document.getElementById('privateSubmit');
 
@@ -718,6 +747,14 @@ function setupPrivateUI(){
           privateSubmit.textContent = getBaseTranslation('private.modal.submit', currentLang);
         }
       }
+    });
+  }
+
+  if(privatePassword && privatePasswordToggle){
+    privatePasswordToggle.addEventListener('click', () => {
+      privatePassword.type = privatePassword.type === 'password' ? 'text' : 'password';
+      updatePrivateModalUI();
+      privatePassword.focus();
     });
   }
 
