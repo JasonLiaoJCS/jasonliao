@@ -175,14 +175,20 @@ export async function onRequestGet(context){
     if(!session){
       return html(renderLockedPage(slug), {
         status: 404,
-        headers: { 'X-Robots-Tag': 'noindex, nofollow' },
+        headers: {
+          'X-Robots-Tag': 'noindex, nofollow',
+          'Cache-Control': 'no-store',
+        },
       });
     }
   }
 
   return html(renderPostPage(post), {
     headers: post.visibility === 'acquaintance'
-      ? { 'X-Robots-Tag': 'noindex, nofollow' }
+      ? {
+        'X-Robots-Tag': 'noindex, nofollow',
+        'Cache-Control': 'no-store',
+      }
       : {},
   });
 }

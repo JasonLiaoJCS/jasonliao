@@ -169,16 +169,16 @@ export async function createAdminSession(username, env){
     exp: Date.now() + (12 * 60 * 60 * 1000),
   };
   const token = await createSignedToken(payload, getSessionSecrets(env).adminSecret);
-  return serializeCookie(ADMIN_COOKIE, token, { sameSite: 'Lax' });
+  return serializeCookie(ADMIN_COOKIE, token, { sameSite: 'Strict' });
 }
 
 export async function createAcquaintanceSession(env){
   const payload = {
     role: 'acquaintance',
-    exp: Date.now() + (8 * 60 * 60 * 1000),
+    exp: Date.now() + (60 * 60 * 1000),
   };
   const token = await createSignedToken(payload, getSessionSecrets(env).adminSecret);
-  return serializeCookie(ACQUAINTANCE_COOKIE, token, { sameSite: 'Lax', maxAge: 8 * 60 * 60 });
+  return serializeCookie(ACQUAINTANCE_COOKIE, token, { sameSite: 'Strict' });
 }
 
 export async function getAdminSession(request, env){
