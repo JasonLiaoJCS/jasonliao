@@ -171,7 +171,10 @@ function renderTranslations(){
         <div class="eyebrow">Public Copy</div>
         <h3>前台公開文案</h3>
       </div>
-      <button class="btn btn-primary magnetic" type="button" id="saveTranslationsBtn">Save Public Copy</button>
+      <div class="studio-row-actions">
+        <button class="btn magnetic" type="button" id="resetTranslationsBtn">Reset to Default</button>
+        <button class="btn btn-primary magnetic" type="button" id="saveTranslationsBtn">Save Public Copy</button>
+      </div>
     </div>
     <div class="studio-grid" style="margin-top:20px">
       ${groups.map(group => `
@@ -206,6 +209,7 @@ function renderTranslations(){
     </div>
   `;
 
+  panel.querySelector('#resetTranslationsBtn')?.addEventListener('click', resetTranslationsToDefault);
   panel.querySelector('#saveTranslationsBtn')?.addEventListener('click', saveTranslations);
 }
 
@@ -221,6 +225,20 @@ async function saveTranslations(){
   });
   studioState.bootstrap.translations = payload;
   setStudioStatus('Public copy saved', 'success');
+}
+
+async function resetTranslationsToDefault(){
+  if(!window.confirm('Reset public copy to the original default text?')){
+    return;
+  }
+  setStudioStatus('Resetting public copy...', 'pending');
+  const payload = await studioFetchJson('/api/admin/reset', {
+    method: 'POST',
+    body: JSON.stringify({ target: 'translations' }),
+  });
+  studioState.bootstrap.translations = payload.translations;
+  renderTranslations();
+  setStudioStatus('Public copy restored to default', 'success');
 }
 
 function renderUpdateItem(item){
@@ -268,6 +286,7 @@ function renderUpdates(){
         <h3>首頁最新動態</h3>
       </div>
       <div class="studio-row-actions">
+        <button class="btn magnetic" type="button" id="resetUpdatesBtn">Reset Updates</button>
         <button class="btn magnetic" type="button" id="addUpdateBtn">Add Update</button>
         <button class="btn btn-primary magnetic" type="button" id="saveUpdatesBtn">Save Updates</button>
       </div>
@@ -277,6 +296,7 @@ function renderUpdates(){
     </div>
   `;
 
+  panel.querySelector('#resetUpdatesBtn')?.addEventListener('click', resetUpdatesToDefault);
   panel.querySelector('#addUpdateBtn')?.addEventListener('click', () => {
     studioState.bootstrap.updates.push({
       id: createId(),
@@ -331,6 +351,20 @@ async function saveUpdates(){
   studioState.bootstrap.updates = updates;
   renderUpdates();
   setStudioStatus('Updates saved', 'success');
+}
+
+async function resetUpdatesToDefault(){
+  if(!window.confirm('Reset all homepage updates to the default empty state?')){
+    return;
+  }
+  setStudioStatus('Resetting updates...', 'pending');
+  const payload = await studioFetchJson('/api/admin/reset', {
+    method: 'POST',
+    body: JSON.stringify({ target: 'updates' }),
+  });
+  studioState.bootstrap.updates = payload.updates || [];
+  renderUpdates();
+  setStudioStatus('Updates restored to default', 'success');
 }
 
 function renderPostEditor(post){
@@ -575,7 +609,10 @@ function renderPrivateProfile(){
         <div class="eyebrow">Acquaintance Profile</div>
         <h3>熟客模式內容</h3>
       </div>
-      <button class="btn btn-primary magnetic" type="button" id="savePrivateProfileBtn">Save Acquaintance Profile</button>
+      <div class="studio-row-actions">
+        <button class="btn magnetic" type="button" id="resetPrivateProfileBtn">Reset to Default</button>
+        <button class="btn btn-primary magnetic" type="button" id="savePrivateProfileBtn">Save Acquaintance Profile</button>
+      </div>
     </div>
     <div class="studio-grid" style="margin-top:20px">
       <section class="studio-card">
@@ -644,6 +681,7 @@ function renderPrivateProfile(){
     </div>
   `;
 
+  panel.querySelector('#resetPrivateProfileBtn')?.addEventListener('click', resetPrivateProfileToDefault);
   panel.querySelector('#savePrivateProfileBtn')?.addEventListener('click', savePrivateProfile);
   panel.querySelectorAll('[data-private-image-upload]').forEach(input => {
     input.addEventListener('change', async event => {
@@ -702,6 +740,20 @@ async function savePrivateProfile(){
   setStudioStatus('Acquaintance profile saved', 'success');
 }
 
+async function resetPrivateProfileToDefault(){
+  if(!window.confirm('Reset acquaintance profile, private captions, and contact fields to the default values?')){
+    return;
+  }
+  setStudioStatus('Resetting acquaintance profile...', 'pending');
+  const payload = await studioFetchJson('/api/admin/reset', {
+    method: 'POST',
+    body: JSON.stringify({ target: 'private-profile' }),
+  });
+  studioState.bootstrap.privateProfile = payload.profile;
+  renderPrivateProfile();
+  setStudioStatus('Acquaintance profile restored to default', 'success');
+}
+
 function renderDeployPanel(){
   const panel = studioRefs.panels.deploy;
   panel.innerHTML = `
@@ -725,8 +777,36 @@ function renderDeployPanel(){
           <li><span class="muted">公開前台保留靜態 fallback，還沒切部署時現有網站也不會壞。</span></li>
         </ul>
       </section>
+      <section class="studio-card">
+        <div class="eyebrow">Safety Reset</div>
+        <h3>回到最初預設</h3>
+        <p class="muted">如果你試改了一輪，想把 CMS 管理的內容全部回到初始狀態，可以在這裡一鍵重置。這會清空 CMS managed posts 與 updates，並把公開文案、熟客資料恢復為預設值。</p>
+        <div class="studio-row-actions" style="margin-top:18px">
+          <button class="btn magnetic" type="button" id="resetAllCmsBtn">Reset Entire CMS</button>
+        </div>
+      </section>
     </div>
   `;
+
+  panel.querySelector('#resetAllCmsBtn')?.addEventListener('click', resetEntireCms);
+}
+
+async function resetEntireCms(){
+  if(!window.confirm('Reset the entire CMS to default? This will clear all managed posts and updates.')){
+    return;
+  }
+  setStudioStatus('Resetting entire CMS...', 'pending');
+  const payload = await studioFetchJson('/api/admin/reset', {
+    method: 'POST',
+    body: JSON.stringify({ target: 'all' }),
+  });
+  studioState.bootstrap.translations = payload.translations;
+  studioState.bootstrap.updates = payload.updates || [];
+  studioState.bootstrap.privateProfile = payload.profile;
+  studioState.bootstrap.posts = payload.posts || [];
+  studioState.selectedPostId = null;
+  renderStudio();
+  setStudioStatus('Entire CMS restored to default', 'success');
 }
 
 function renderStudio(){

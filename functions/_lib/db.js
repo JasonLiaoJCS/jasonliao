@@ -274,6 +274,11 @@ export async function deletePost(env, id){
   await env.CMS_DB.prepare('DELETE FROM cms_posts WHERE id = ?').bind(id).run();
 }
 
+export async function deleteAllPosts(env){
+  await ensureCmsDb(env);
+  await env.CMS_DB.prepare('DELETE FROM cms_posts').run();
+}
+
 export async function getAdminBootstrap(env){
   const translations = await getDocument(env, 'public_translations', DEFAULT_PUBLIC_TRANSLATIONS);
   const privateProfile = await getDocument(env, 'private_profile', DEFAULT_PRIVATE_PROFILE);
