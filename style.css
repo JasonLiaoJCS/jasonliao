@@ -225,7 +225,7 @@ p{margin:0 0 18px; color:var(--muted)}
 }
 .timeline-item .year{color:var(--gold-soft); font-size:.86rem; text-transform:uppercase; letter-spacing:.12em}
 .columns{
-  display:grid; grid-template-columns:1.15fr .85fr; gap:26px;
+  display:grid; grid-template-columns:1.15fr .85fr; gap:26px; align-items:start;
 }
 .highlight{
   color:#f5ede0;
