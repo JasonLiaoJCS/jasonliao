@@ -5,6 +5,16 @@ const studioState = {
   username: null,
 };
 
+const STUDIO_IDLE_TIMEOUT_MS = 10 * 60 * 1000;
+const STUDIO_SESSION_STORAGE_KEY = 'jl_studio_session_active';
+const STUDIO_ACTIVITY_EVENTS = ['pointerdown', 'keydown', 'scroll', 'touchstart'];
+
+const studioSessionState = {
+  idleTimer: null,
+  lastActivityAt: 0,
+  expiring: false,
+};
+
 const studioRefs = {
   loginView: document.getElementById('studioLoginView'),
   appView: document.getElementById('studioAppView'),
@@ -61,6 +71,7 @@ function setStudioStatus(message, tone = 'neutral'){
 function showLogin(){
   studioRefs.loginView.hidden = false;
   studioRefs.appView.hidden = true;
+  studioRefs.password.value = '';
 }
 
 function showApp(){
@@ -73,6 +84,91 @@ function createId(){
     return window.crypto.randomUUID();
   }
   return `item-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function hasStudioSessionMarker(){
+  try {
+    return sessionStorage.getItem(STUDIO_SESSION_STORAGE_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function setStudioSessionMarker(){
+  try {
+    sessionStorage.setItem(STUDIO_SESSION_STORAGE_KEY, '1');
+  } catch {
+    // ignore sessionStorage issues and rely on cookie/session timeout
+  }
+}
+
+function clearStudioSessionMarker(){
+  try {
+    sessionStorage.removeItem(STUDIO_SESSION_STORAGE_KEY);
+  } catch {
+    // ignore sessionStorage issues
+  }
+}
+
+function clearStudioIdleTimer(){
+  if(studioSessionState.idleTimer){
+    window.clearTimeout(studioSessionState.idleTimer);
+    studioSessionState.idleTimer = null;
+  }
+}
+
+function stopStudioSessionProtection(){
+  clearStudioIdleTimer();
+  studioSessionState.lastActivityAt = 0;
+  studioSessionState.expiring = false;
+}
+
+function updateStudioSessionHint(){
+  if(!studioState.username){
+    studioRefs.sessionHint.textContent = '每次重新打開 Studio 都需要重新登入，閒置 10 分鐘會自動登出。';
+    return;
+  }
+  studioRefs.sessionHint.textContent = `Signed in as ${studioState.username} · Auto logout after 10 minutes idle`;
+}
+
+function recordStudioActivity(){
+  if(!studioState.username) return;
+  studioSessionState.lastActivityAt = Date.now();
+  clearStudioIdleTimer();
+  studioSessionState.idleTimer = window.setTimeout(() => {
+    expireStudioSession('Inactive for 10 minutes. Please sign in again.');
+  }, STUDIO_IDLE_TIMEOUT_MS);
+}
+
+async function clearStudioSession(reason = 'Signed out', tone = 'neutral', options = {}){
+  const { showLoginError = false } = options;
+  stopStudioSessionProtection();
+  clearStudioSessionMarker();
+  studioState.bootstrap = null;
+  studioState.username = null;
+  studioState.selectedPostId = null;
+  showLogin();
+  studioRefs.loginError.textContent = showLoginError ? reason : '';
+  updateStudioSessionHint();
+  setStudioStatus(reason, tone);
+  try {
+    await studioFetchJson('/api/admin/logout', { method: 'POST' });
+  } catch {
+    // ignore logout transport issues while clearing local state
+  }
+}
+
+async function expireStudioSession(reason){
+  if(studioSessionState.expiring) return;
+  studioSessionState.expiring = true;
+  await clearStudioSession(reason, 'neutral', { showLoginError: true });
+}
+
+function startStudioSessionProtection(){
+  studioSessionState.expiring = false;
+  setStudioSessionMarker();
+  updateStudioSessionHint();
+  recordStudioActivity();
 }
 
 function escapeHtml(value = ''){
@@ -853,8 +949,8 @@ async function loadBootstrap(){
   studioState.bootstrap = payload;
   studioState.username = payload.username;
   ensureSelectedPost();
-  studioRefs.sessionHint.textContent = `Signed in as ${payload.username}`;
   renderStudio();
+  startStudioSessionProtection();
   setStudioStatus('Studio ready', 'success');
 }
 
@@ -871,6 +967,7 @@ async function handleLogin(event){
         password: studioRefs.password.value,
       }),
     });
+    setStudioSessionMarker();
     await loadBootstrap();
   } catch (error){
     studioRefs.loginError.textContent = error.message;
@@ -879,15 +976,17 @@ async function handleLogin(event){
 }
 
 async function handleLogout(){
-  await studioFetchJson('/api/admin/logout', { method: 'POST' });
-  studioState.bootstrap = null;
-  studioState.username = null;
-  showLogin();
-  setStudioStatus('Signed out', 'neutral');
+  await clearStudioSession('Signed out', 'neutral');
 }
 
 async function bootstrapStudio(){
   showLogin();
+  updateStudioSessionHint();
+  if(!hasStudioSessionMarker()){
+    await clearStudioSession('Ready', 'neutral');
+    return;
+  }
+
   setStudioStatus('Checking session...', 'pending');
   try {
     const session = await studioFetchJson('/api/admin/session');
@@ -898,10 +997,25 @@ async function bootstrapStudio(){
   } catch {
     // ignore and show login view
   }
+  clearStudioSessionMarker();
   setStudioStatus('Ready', 'neutral');
 }
 
 studioRefs.loginForm?.addEventListener('submit', handleLogin);
 studioRefs.logoutBtn?.addEventListener('click', handleLogout);
+document.addEventListener('visibilitychange', () => {
+  if(!studioState.username) return;
+  if(document.visibilityState === 'hidden'){
+    return;
+  }
+  if(Date.now() - studioSessionState.lastActivityAt >= STUDIO_IDLE_TIMEOUT_MS){
+    expireStudioSession('Inactive for 10 minutes. Please sign in again.');
+    return;
+  }
+  recordStudioActivity();
+});
+STUDIO_ACTIVITY_EVENTS.forEach(eventName => {
+  document.addEventListener(eventName, recordStudioActivity, { passive: true });
+});
 
 bootstrapStudio();

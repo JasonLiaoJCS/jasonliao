@@ -169,7 +169,7 @@ export async function createAdminSession(username, env){
     exp: Date.now() + (12 * 60 * 60 * 1000),
   };
   const token = await createSignedToken(payload, getSessionSecrets(env).adminSecret);
-  return serializeCookie(ADMIN_COOKIE, token, { sameSite: 'Lax', maxAge: 12 * 60 * 60 });
+  return serializeCookie(ADMIN_COOKIE, token, { sameSite: 'Lax' });
 }
 
 export async function createAcquaintanceSession(env){
