@@ -1,3 +1,15 @@
+/
+  Cache-Control: no-cache
+
+/index.html
+  Cache-Control: no-cache
+
+/app.js
+  Cache-Control: no-cache
+
+/style.css
+  Cache-Control: no-cache
+
 /studio
   Cache-Control: no-store
   X-Robots-Tag: noindex, nofollow

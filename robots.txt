@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://jasonliaojcs.github.io/jasonliao/sitemap.xml
+Sitemap: https://jasonliao-pages.pages.dev/sitemap.xml

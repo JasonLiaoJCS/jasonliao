@@ -2,23 +2,23 @@
 <rss version="2.0">
   <channel>
     <title>Jason Liao</title>
-    <link>https://jasonliaojcs.github.io/jasonliao/</link>
+    <link>https://jasonliao-pages.pages.dev/</link>
     <description>Personal website and blog of Jason Liao</description>
     <language>zh-tw</language>
 
     <item>
       <title>理性為骨，熱血為心</title>
-      <link>https://jasonliaojcs.github.io/jasonliao/posts/reason-passion.html</link>
+      <link>https://jasonliao-pages.pages.dev/posts/reason-passion.html</link>
       <description>關於學術、熱愛、責任與未來的自我宣言。</description>
     </item>
     <item>
       <title>從數學到機器人控制</title>
-      <link>https://jasonliaojcs.github.io/jasonliao/posts/math-robotics.html</link>
+      <link>https://jasonliao-pages.pages.dev/posts/math-robotics.html</link>
       <description>談數學訓練如何成為控制與建模的底層優勢。</description>
     </item>
     <item>
       <title>棒球教會我的工程觀</title>
-      <link>https://jasonliaojcs.github.io/jasonliao/posts/baseball-engineering.html</link>
+      <link>https://jasonliao-pages.pages.dev/posts/baseball-engineering.html</link>
       <description>在球場與工程之間，找到紀律、節奏與系統感。</description>
     </item>
   </channel>

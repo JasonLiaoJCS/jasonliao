@@ -2,6 +2,9 @@
 // ════════════════════════════════════════
 // ★ i18n — Language Toggle System
 // ════════════════════════════════════════
+const PRIMARY_SITE_ORIGIN = 'https://jasonliao-pages.pages.dev';
+const LEGACY_GITHUB_PAGES_HOST = 'jasonliaojcs.github.io';
+
 const I18N_EN = {
   // Hero
   'hero.eyebrow': 'Personal Website',
@@ -175,6 +178,8 @@ const PRIVATE_UI_COPY = {
     unlockButton: 'Email Me',
     footerEmail: 'Email',
     modalError: '密碼不正確，或目前的熟客模式驗證不可用。',
+    modalLegacyRedirect: '你目前開到的是舊版 GitHub Pages 網址，熟客模式已改由 Cloudflare 版網站提供，頁面會自動跳轉。',
+    modalServiceUnavailable: '熟客模式服務目前不可用，請重新整理頁面後再試一次。',
     modalLoading: '驗證中...',
     passwordPlaceholder: '輸入密碼',
     portraitLocked: [
@@ -194,6 +199,8 @@ const PRIVATE_UI_COPY = {
     unlockButton: 'Email Me',
     footerEmail: 'Email',
     modalError: 'Incorrect password, or acquaintance verification is currently unavailable.',
+    modalLegacyRedirect: 'You are on the legacy GitHub Pages URL. Acquaintance Mode now runs on the Cloudflare site, and this page will redirect automatically.',
+    modalServiceUnavailable: 'Acquaintance Mode is temporarily unavailable. Please refresh the page and try again.',
     modalLoading: 'Unlocking...',
     passwordPlaceholder: 'Enter password',
     portraitLocked: [
@@ -275,6 +282,29 @@ function canUseLegacyLocalPrivateMode(){
   }
   const hostname = window.location.hostname;
   return hostname === 'localhost' || hostname === '127.0.0.1';
+}
+
+function isLegacyGithubPagesOrigin(){
+  return window.location.hostname.toLowerCase() === LEGACY_GITHUB_PAGES_HOST;
+}
+
+function buildPrimarySiteUrl(){
+  const legacyBase = '/jasonliao';
+  const pathname = window.location.pathname.startsWith(legacyBase)
+    ? (window.location.pathname.slice(legacyBase.length) || '/')
+    : window.location.pathname;
+  return `${PRIMARY_SITE_ORIGIN}${pathname}${window.location.search}${window.location.hash}`;
+}
+
+function redirectLegacyGithubPagesOrigin(){
+  if(!isLegacyGithubPagesOrigin()){
+    return false;
+  }
+  const targetUrl = buildPrimarySiteUrl();
+  if(targetUrl !== window.location.href){
+    window.location.replace(targetUrl);
+  }
+  return true;
 }
 
 function revokePrivateMedia(){
@@ -453,10 +483,17 @@ function refreshPrivateUI(){
 }
 
 async function fetchCmsJson(url, options = {}){
-  const response = await fetch(url, {
-    credentials: 'same-origin',
-    ...options,
-  });
+  let response;
+  try {
+    response = await fetch(url, {
+      credentials: 'same-origin',
+      ...options,
+    });
+  } catch {
+    const error = new Error('cms-unavailable');
+    error.code = 'cms-unavailable';
+    throw error;
+  }
 
   if(response.status === 404){
     const error = new Error('cms-unavailable');
@@ -471,6 +508,22 @@ async function fetchCmsJson(url, options = {}){
     throw error;
   }
   return data;
+}
+
+function getPrivateUnlockErrorMessage(error){
+  if(isLegacyGithubPagesOrigin()){
+    return PRIVATE_UI_COPY[currentLang].modalLegacyRedirect;
+  }
+
+  if(error?.code === 'server-unavailable' || error?.code === 'cms-unavailable'){
+    return PRIVATE_UI_COPY[currentLang].modalServiceUnavailable;
+  }
+
+  if(error?.message === 'Invalid password'){
+    return PRIVATE_UI_COPY[currentLang].modalError;
+  }
+
+  return PRIVATE_UI_COPY[currentLang].modalError;
 }
 
 function getVisibleCmsUpdates(){
@@ -959,9 +1012,9 @@ function setupPrivateUI(){
 
       try {
         await unlockPrivateMode(password);
-      } catch {
+      } catch (error){
         if(privateError){
-          privateError.textContent = PRIVATE_UI_COPY[currentLang].modalError;
+          privateError.textContent = getPrivateUnlockErrorMessage(error);
           privateError.dataset.locked = 'true';
         }
       } finally {
@@ -985,6 +1038,9 @@ function setupPrivateUI(){
 }
 
 function setupI18nUI(){
+  if(redirectLegacyGithubPagesOrigin()){
+    return;
+  }
   const toggleBtn = document.getElementById('langToggle');
   if(toggleBtn) toggleBtn.addEventListener('click', toggleLang);
   initI18n();

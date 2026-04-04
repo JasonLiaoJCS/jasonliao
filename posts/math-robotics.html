@@ -3,6 +3,20 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
+  <script>
+    (function () {
+      const host = window.location.hostname.toLowerCase();
+      if (host !== 'jasonliaojcs.github.io') return;
+      const legacyBase = '/jasonliao';
+      const path = window.location.pathname.startsWith(legacyBase)
+        ? (window.location.pathname.slice(legacyBase.length) || '/')
+        : window.location.pathname;
+      const target = `https://jasonliao-pages.pages.dev${path}${window.location.search}${window.location.hash}`;
+      if (target !== window.location.href) {
+        window.location.replace(target);
+      }
+    })();
+  </script>
   <title>從數學到機器人控制 — Jason Liao</title>
   <meta name="description" content="談數學訓練如何成為控制與建模的底層優勢。">
   <meta name="robots" content="index,follow,max-image-preview:large">
