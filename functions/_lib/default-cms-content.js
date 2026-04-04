@@ -33,10 +33,22 @@ export const TRANSLATION_FIELD_GROUPS = [
 
 export const PRIVATE_PROFILE_TRANSLATION_GROUPS = [
   {
+    id: 'intro',
+    title: '熟客模式首頁與 About',
+    fields: [
+      { key: 'hero.lead', label: 'Hero 自介', type: 'textarea', rows: 5 },
+      { key: 'about.p1', label: 'About 第一段', type: 'textarea', rows: 3 },
+      { key: 'about.p2', label: 'About 第二段', type: 'textarea', rows: 5 },
+    ],
+  },
+  {
     id: 'identity',
     title: '熟客模式顯示文字',
     fields: [
       { key: 'about.profile.title', label: 'Profile 標題', type: 'text' },
+      { key: 'about.list.1.desc', label: 'Academic Background', type: 'textarea', rows: 3 },
+      { key: 'about.list.2.desc', label: 'Current Direction', type: 'textarea', rows: 3 },
+      { key: 'about.tl.3.p', label: '現在在做的事', type: 'textarea', rows: 5 },
       { key: 'bg.lead', label: '學經歷導言', type: 'textarea', rows: 4 },
     ],
   },
@@ -52,6 +64,15 @@ export const PRIVATE_PROFILE_TRANSLATION_GROUPS = [
       { key: 'bg.tl.3.p', label: '學經歷 3 內容', type: 'text' },
       { key: 'bg.tl.4.year', label: '學經歷 4 標題', type: 'text' },
       { key: 'bg.tl.4.p', label: '學經歷 4 內容', type: 'text' },
+    ],
+  },
+  {
+    id: 'research',
+    title: '研究與方向描述',
+    fields: [
+      { key: 'focus.list.1.desc', label: '六足機器人控制', type: 'textarea', rows: 4 },
+      { key: 'research.pub1.desc', label: 'Research 卡片 1', type: 'textarea', rows: 4 },
+      { key: 'research.pub2.desc', label: 'Research 卡片 2', type: 'textarea', rows: 4 },
     ],
   },
 ];
@@ -90,7 +111,13 @@ export const DEFAULT_PUBLIC_TRANSLATIONS = {
 export const DEFAULT_PRIVATE_PROFILE = {
   translations: {
     zh: {
+      'hero.lead': '我是 Jason Liao。更完整的個人背景與學經歷只在熟客模式中顯示。',
+      'about.p1': '我來自台灣，目前持續在工程與數理領域學習與研究。較完整的學歷資訊只在熟客模式顯示。',
+      'about.p2': '我喜歡推導，也喜歡把抽象模型轉化成可驗證、可模擬、可部署的系統。更具體的學術背景與研究脈絡會在熟客模式中補充。',
       'about.profile.title': 'Jason Liao',
+      'about.list.1.desc': '較完整的學術背景只在熟客模式中開放。',
+      'about.list.2.desc': '較完整的研究方向與實驗室脈絡只在熟客模式中開放。',
+      'about.tl.3.p': '目前的研究內容與所屬脈絡，會在熟客模式中提供較完整版本。',
       'bg.lead': '較完整的學經歷與照片只在熟客模式中開放。公開版本先保留較概括的輪廓。',
       'bg.tl.1.year': '國小',
       'bg.tl.1.p': '在台北建立最早期的學習基礎',
@@ -100,9 +127,18 @@ export const DEFAULT_PRIVATE_PROFILE = {
       'bg.tl.3.p': '在科學與工程之間逐漸確認方向',
       'bg.tl.4.year': '大學',
       'bg.tl.4.p': '目前的工作核心放在控制、建模與機器人研究',
+      'focus.list.1.desc': '更完整的研究單位與題目描述，只在熟客模式中顯示。',
+      'research.pub1.desc': '更完整的研究脈絡與目前所在單位，只在熟客模式中顯示。',
+      'research.pub2.desc': '更完整的學術底子與跨域背景，只在熟客模式中顯示。',
     },
     en: {
+      'hero.lead': 'I am Jason Liao. A fuller version of my background and academic profile is shown only in Acquaintance Mode.',
+      'about.p1': 'I am from Taiwan and continue to work across engineering and the mathematical sciences. The fuller academic version is shown only in Acquaintance Mode.',
+      'about.p2': 'I love derivation, and I love turning abstract models into systems that can be verified, simulated, and deployed. A more detailed academic and research narrative appears only in Acquaintance Mode.',
       'about.profile.title': 'Jason Liao',
+      'about.list.1.desc': 'A fuller academic background is shown only in Acquaintance Mode.',
+      'about.list.2.desc': 'A fuller description of my current research direction is shown only in Acquaintance Mode.',
+      'about.tl.3.p': 'A more complete version of my current research direction is available only in Acquaintance Mode.',
       'bg.lead': 'The fuller version of my academic background and portraits is shared only in Acquaintance Mode. The public version keeps things intentionally broad.',
       'bg.tl.1.year': 'Elementary',
       'bg.tl.1.p': 'An early academic foundation built in Taipei',
@@ -112,6 +148,9 @@ export const DEFAULT_PRIVATE_PROFILE = {
       'bg.tl.3.p': 'A period of committing more fully to science and engineering',
       'bg.tl.4.year': 'University',
       'bg.tl.4.p': 'Current work centered on control, modeling, and robotics',
+      'focus.list.1.desc': 'The fuller lab and research description is available only in Acquaintance Mode.',
+      'research.pub1.desc': 'The fuller research context and institution are shown only in Acquaintance Mode.',
+      'research.pub2.desc': 'The fuller academic foundation and cross-disciplinary path are shown only in Acquaintance Mode.',
     },
   },
   fields: {
