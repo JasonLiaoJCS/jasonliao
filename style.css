@@ -339,7 +339,7 @@ p{margin:0 0 18px; color:var(--muted)}
   color:#f5ede0;
 }
 
-/* ── Skills ── */
+/* ── Skills / Tools ── */
 .skills-grid{
   display:grid; grid-template-columns:repeat(3, 1fr); gap:26px;
 }
@@ -353,32 +353,22 @@ p{margin:0 0 18px; color:var(--muted)}
   font-size:1.2rem;
   margin-bottom:20px;
 }
-.skill-item{
-  margin-bottom:18px;
+.tool-list{
+  list-style:none; padding:0; margin:0;
+  display:grid; gap:0;
 }
-.skill-item:last-child{margin-bottom:0}
-.skill-header{
-  display:flex; justify-content:space-between; align-items:baseline;
-  margin-bottom:8px; font-size:.9rem;
+.tool-list li{
+  padding:14px 0;
+  border-bottom:1px solid rgba(255,255,255,.06);
 }
-.skill-header span:first-child{color:#f5ede0; font-weight:500}
-.skill-level{
-  font-size:.75rem; color:var(--gold-soft); text-transform:uppercase;
-  letter-spacing:.08em; font-weight:600;
+.tool-list li:last-child{border-bottom:none; padding-bottom:0}
+.tool-list li:first-child{padding-top:0}
+.tool-name{
+  color:#f5ede0; font-weight:600; font-size:.95rem;
+  margin-bottom:4px;
 }
-.skill-bar{
-  height:4px; border-radius:4px;
-  background:rgba(255,255,255,.08);
-  overflow:hidden;
-}
-.skill-fill{
-  height:100%; border-radius:4px;
-  background:linear-gradient(90deg, var(--gold), var(--gold-soft));
-  width:0%;
-  transition:width 1.2s cubic-bezier(.25,.46,.45,.94);
-}
-.skill-fill.animated{
-  width:var(--fill);
+.tool-desc{
+  color:var(--muted); font-size:.85rem; line-height:1.5;
 }
 
 /* ── Publications ── */
