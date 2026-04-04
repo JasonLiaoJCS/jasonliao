@@ -3,6 +3,7 @@ export function json(data, init = {}){
   headers.set('Content-Type', 'application/json; charset=utf-8');
   headers.set('Cache-Control', 'no-store');
   headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  headers.set('X-Robots-Tag', 'noindex, nofollow');
   return new Response(JSON.stringify(data), {
     ...init,
     headers,
