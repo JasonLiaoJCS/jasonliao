@@ -121,25 +121,13 @@ p{margin:0 0 18px; color:var(--muted)}
 .portrait-section{
   padding:12px 0 56px;
 }
-.portrait-shell{
+.portrait-showcase{
   display:grid;
-  grid-template-columns:.7fr 1.3fr;
-  gap:28px;
-  align-items:end;
+  grid-template-columns:minmax(0, 1.08fr) minmax(280px, .68fr);
+  gap:24px;
+  align-items:stretch;
 }
-.portrait-intro{
-  padding:10px 8px 10px 0;
-}
-.portrait-intro .lead{
-  max-width:28rem;
-}
-.portrait-gallery{
-  display:grid;
-  grid-template-columns:1.08fr .74fr;
-  gap:20px;
-  align-items:end;
-}
-.portrait-panel{
+.portrait-card{
   margin:0;
   overflow:hidden;
   border-radius:30px;
@@ -147,22 +135,38 @@ p{margin:0 0 18px; color:var(--muted)}
   background:#0d111a;
   box-shadow:0 24px 64px rgba(0,0,0,.26);
 }
-.portrait-panel img{
+.portrait-card img{
   width:100%;
   height:100%;
   display:block;
   object-fit:cover;
 }
-.portrait-panel-primary img{
+.portrait-card-primary img{
   aspect-ratio:4 / 5;
   object-position:center 18%;
   filter:saturate(.97) contrast(1.02);
 }
-.portrait-panel-secondary{
-  transform:translateY(36px);
+.portrait-side{
+  display:grid;
+  gap:20px;
+  grid-template-rows:auto 1fr;
 }
-.portrait-panel-secondary img{
-  aspect-ratio:3 / 4;
+.portrait-note{
+  padding:26px 28px;
+  border-radius:28px;
+  border:1px solid rgba(255,255,255,.08);
+  background:linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.03));
+  box-shadow:var(--shadow);
+}
+.portrait-note h3{
+  margin-bottom:10px;
+}
+.portrait-note p{
+  margin:0;
+  color:#d9d2c8;
+}
+.portrait-card-secondary img{
+  aspect-ratio:4 / 5;
   object-position:center 50%;
   filter:saturate(.92) contrast(1.02);
 }
@@ -319,12 +323,14 @@ p{margin:0 0 18px; color:var(--muted)}
   .hero-grid,.columns,.contact,.grid-2{grid-template-columns:1fr}
   .project-grid,.blog-grid{grid-template-columns:1fr 1fr}
   .stats{grid-template-columns:1fr 1fr}
-  .portrait-shell{
+  .portrait-showcase{
     grid-template-columns:1fr;
     gap:24px;
   }
-  .portrait-intro{
-    padding-right:0;
+  .portrait-side{
+    grid-template-columns:1fr 1fr;
+    grid-template-rows:none;
+    align-items:start;
   }
 }
 @media (max-width: 760px){
@@ -341,14 +347,11 @@ p{margin:0 0 18px; color:var(--muted)}
   .portrait-section{
     padding:0 0 42px;
   }
-  .portrait-gallery{
+  .portrait-side{
     grid-template-columns:1fr;
     gap:16px;
   }
-  .portrait-panel-secondary{
-    transform:none;
-  }
-  .portrait-panel-secondary img{
+  .portrait-card-secondary img{
     aspect-ratio:16 / 10;
     object-position:center 52%;
   }
