@@ -147,7 +147,7 @@ cloudflare/schema.sql
 - `Public` / `Acquaintance`
 - 中英文標題
 - 中英文摘要
-- 中英文 HTML 內容
+- 中英文 Markdown 內容
 - tags
 
 新的 managed posts 會走：
@@ -155,6 +155,17 @@ cloudflare/schema.sql
 ```text
 /notes/<slug>
 ```
+
+目前 Studio 文章編輯器是：
+
+- Markdown 編輯
+- 常用格式工具列
+- Live Preview 即時預覽
+
+另外保留相容層：
+
+- 舊的 HTML 文章仍然可以正常顯示
+- 新文章建議直接用 Markdown 寫
 
 ### Acquaintance Profile
 
@@ -178,12 +189,16 @@ cloudflare/schema.sql
 
 ## 10. 重要提醒
 
-### 目前仍保留靜態熟客模式 fallback
+### 舊的 `private-data.js` 已不是正式站主流程
 
-也就是說，在你正式切到 Cloudflare 後台之前，現在 repo 裡原本的熟客模式仍然還在。
-
-如果你之後確認 Cloudflare 版熟客模式已經完全可用，而且私密資料都已經改成由後台管理，再考慮移除舊的：
+更早以前曾經有一套靜態本地加密的熟客模式流程，核心檔案是：
 
 - `private-data.js`
 
-這樣公開 repo 的私密暴露面會再更小一點。
+但現在正式 Cloudflare 版的主流程已經改成：
+
+- Cloudflare Secrets 控制密碼
+- Cloudflare Functions 驗證熟客 session
+- D1 儲存熟客資料
+
+正式部署站上，舊的 `private-data.js` 路線已經被停用成安全 stub，不再是正式熟客資料來源。
