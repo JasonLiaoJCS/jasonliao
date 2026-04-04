@@ -107,13 +107,14 @@ $loginBody = @{
   username = $Username
   password = $Password
 } | ConvertTo-Json -Compress
+$loginBodyBytes = [System.Text.Encoding]::UTF8.GetBytes($loginBody)
 
 Write-Host "Signing in to Studio..."
 $loginResponse = Invoke-WebRequest `
   -Uri "$BaseUrl/api/admin/login" `
   -Method Post `
-  -ContentType "application/json" `
-  -Body $loginBody `
+  -ContentType "application/json; charset=utf-8" `
+  -Body $loginBodyBytes `
   -SessionVariable studioSession `
   -UseBasicParsing
 
@@ -124,13 +125,14 @@ if($loginResponse.StatusCode -lt 200 -or $loginResponse.StatusCode -ge 300){
 $profileBody = @{
   profile = $profile
 } | ConvertTo-Json -Depth 100 -Compress
+$profileBodyBytes = [System.Text.Encoding]::UTF8.GetBytes($profileBody)
 
 Write-Host "Uploading current private profile..."
 Invoke-WebRequest `
   -Uri "$BaseUrl/api/admin/private-profile" `
   -Method Put `
-  -ContentType "application/json" `
-  -Body $profileBody `
+  -ContentType "application/json; charset=utf-8" `
+  -Body $profileBodyBytes `
   -WebSession $studioSession `
   -UseBasicParsing | Out-Null
 
@@ -138,8 +140,8 @@ Write-Host "Saving private reset default..."
 Invoke-WebRequest `
   -Uri "$BaseUrl/api/admin/private-profile-default" `
   -Method Put `
-  -ContentType "application/json" `
-  -Body $profileBody `
+  -ContentType "application/json; charset=utf-8" `
+  -Body $profileBodyBytes `
   -WebSession $studioSession `
   -UseBasicParsing | Out-Null
 
