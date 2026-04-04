@@ -269,6 +269,14 @@ function getPrivatePayloadEntries(payload){
   return payload ? [payload] : [];
 }
 
+function canUseLegacyLocalPrivateMode(){
+  if(window.location.protocol === 'file:'){
+    return true;
+  }
+  const hostname = window.location.hostname;
+  return hostname === 'localhost' || hostname === '127.0.0.1';
+}
+
 function revokePrivateMedia(){
   privateMode.mediaUrls.forEach(url => URL.revokeObjectURL(url));
   privateMode.mediaUrls = [];
@@ -621,6 +629,11 @@ function closePrivateModal(){
 }
 
 async function loadPrivatePayload(){
+  if(!canUseLegacyLocalPrivateMode()){
+    const error = new Error('legacy-private-disabled');
+    error.code = 'legacy-private-disabled';
+    throw error;
+  }
   if(privateMode.payload) return privateMode.payload;
   if(typeof window.PRIVATE_PROFILE_PAYLOAD !== 'undefined') return window.PRIVATE_PROFILE_PAYLOAD;
   if(privateMode.scriptPromise) return privateMode.scriptPromise;
@@ -713,7 +726,8 @@ async function unlockPrivateMode(password){
     data = await tryServerPrivateUnlock(password);
     source = 'server';
   } catch (error){
-    const shouldFallbackToLocal = error.code === 'server-unavailable' || error.code === 'cms-unavailable';
+    const shouldFallbackToLocal = canUseLegacyLocalPrivateMode()
+      && (error.code === 'server-unavailable' || error.code === 'cms-unavailable');
     if(!shouldFallbackToLocal){
       throw error;
     }
