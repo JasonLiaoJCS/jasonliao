@@ -155,6 +155,8 @@ Save Updates
 - 英文內容
 - tags
 
+內容欄現在建議直接用 Markdown 寫，Studio 右側會同步顯示預覽。
+
 ### 4.5 Acquaintance Profile
 
 用途：
@@ -224,7 +226,7 @@ Reset Entire CMS
 4. 填 `Slug`
 5. `Visibility` 選 `Public`
 6. `Status` 選 `Published`
-7. 填標題、摘要、內容
+7. 填標題、摘要、Markdown 內容
 8. 按 `Save Post`
 9. 用 `Open Current URL` 檢查
 
@@ -238,7 +240,7 @@ Reset Entire CMS
 4. 填 `Slug`
 5. `Visibility` 選 `Acquaintance`
 6. `Status` 選 `Published`
-7. 填內容
+7. 填 Markdown 內容
 8. 按 `Save Post`
 
 這篇文章之後會是 CMS managed 的熟客限定文章。
@@ -287,26 +289,39 @@ Reset Entire CMS
 
 ## 7. 目前文章系統的重點限制
 
-### 文章內容目前是 HTML
+### 文章內容現在是 Markdown 編輯器 + 即時預覽
 
 也就是：
 
-- 你不是在富文本編輯器裡像 Medium 那樣打字
-- 你是直接填 HTML 內容
+- 你不用再手打原始 HTML
+- 你可以直接寫 Markdown
+- Studio 會提供常用格式工具列
+- Studio 會即時顯示視覺預覽
 
-例如一小段正文可能長這樣：
+例如一小段正文現在可以直接寫成：
 
-```html
-<p>這是第一段。</p>
-<p>這是第二段。</p>
+```md
+## 小標題
+
+這是第一段。
+
+- 第一點
+- 第二點
+
+這是 **重點**，這是 [連結](https://example.com)。
 ```
 
-如果你之後想要，我們可以再把它升級成：
+目前編輯體驗是：
 
-- Markdown 編輯器
-- WYSIWYG editor
+- Markdown 原始內容欄
+- 常用格式按鈕
+- Live Preview 視覺預覽
 
-但目前還不是。
+另外要注意：
+
+- 以前已經存在的 HTML 文章仍然可以正常顯示
+- 新文章建議直接用 Markdown 寫
+- 如果你把原本就是 HTML 的舊文章貼進去，系統也會相容，不會直接壞掉
 
 ---
 
@@ -651,4 +666,3 @@ https://github.com/JasonLiaoJCS/jasonliao
 - `STUDIO_QUICK_START.md`
 
 把它寫成超短版，只留「發文 / 改首頁 / 改熟客資料 / reset」4 個操作。
-

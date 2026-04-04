@@ -625,9 +625,20 @@ ADMIN_PASSWORD_HASH
 
 ## 20. 目前已知限制
 
-### 1. Studio 文章編輯器目前吃的是 HTML
+### 1. Studio 文章編輯器現在用 Markdown + 即時預覽
 
-不是 Notion editor，也不是 Markdown 所見即所得。
+現在後台發文不是再直接填 HTML。
+
+目前 Studio 提供的是：
+
+- Markdown 編輯
+- 常用格式工具列
+- Live Preview 即時視覺預覽
+
+另外保留一個相容層：
+
+- 舊的 HTML 文章仍然可以正常顯示
+- 新文章建議直接用 Markdown
 
 ### 2. Cloudflare 後台目前一種角色只有一組密碼
 
@@ -714,4 +725,3 @@ ADMIN_PASSWORD_HASH
 如果你之後要實際操作網站，請優先看另一份：
 
 - `SITE_MAINTENANCE_MANUAL.md`
-

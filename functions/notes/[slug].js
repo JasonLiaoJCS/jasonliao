@@ -1,15 +1,7 @@
 import { getAcquaintanceSession } from '../_lib/auth.js';
 import { getPostBySlug } from '../_lib/db.js';
 import { html } from '../_lib/http.js';
-
-function escapeHtml(value = ''){
-  return value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;');
-}
+import { escapeHtml, renderRichContent } from '../../shared/markdown.mjs';
 
 function renderLockedPage(slug){
   return `<!DOCTYPE html>
@@ -40,10 +32,15 @@ function renderLockedPage(slug){
 }
 
 function renderPostPage(post){
+  const renderedContent = {
+    zh: renderRichContent(post.content.zh || ''),
+    en: renderRichContent(post.content.en || ''),
+  };
+
   const postData = JSON.stringify({
     title: post.title,
     excerpt: post.excerpt,
-    content: post.content,
+    renderedContent,
     tags: post.tags,
     publishedAt: post.publishedAt,
   }).replace(/</g, '\\u003c');
@@ -75,8 +72,17 @@ function renderPostPage(post){
       .post-title{margin:0 0 18px}
       .post-excerpt{font-size:1.05rem;color:#d6cec1;max-width:720px}
       .post-body{margin-top:28px;color:#ddd6c9}
-      .post-body p{color:#ddd6c9}
-      .post-body h2,.post-body h3{margin-top:36px}
+      .post-body p{color:#ddd6c9;margin:0 0 18px}
+      .post-body h2,.post-body h3,.post-body h4{margin:36px 0 16px}
+      .post-body ul,.post-body ol{padding-left:1.3rem;margin:0 0 18px}
+      .post-body li + li{margin-top:8px}
+      .post-body blockquote{margin:24px 0;padding:18px 20px;border-left:3px solid rgba(217,177,111,.48);background:rgba(217,177,111,.08);border-radius:0 18px 18px 0}
+      .post-body pre{overflow:auto;margin:24px 0;padding:18px;border-radius:22px;background:#0e131d;border:1px solid rgba(255,255,255,.08)}
+      .post-body code{padding:2px 6px;border-radius:8px;background:rgba(255,255,255,.08);font-family:"IBM Plex Mono","SFMono-Regular",Consolas,monospace;font-size:.92em}
+      .post-body pre code{padding:0;background:none}
+      .post-body hr{border:none;height:1px;margin:32px 0;background:rgba(255,255,255,.12)}
+      .post-body a{color:var(--gold-soft);text-decoration:underline;text-underline-offset:3px}
+      .post-body img{display:block;max-width:100%;height:auto;margin:22px 0;border-radius:22px;border:1px solid rgba(255,255,255,.08)}
       .post-toolbar{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:28px}
       .post-toolbar .actions{display:flex;gap:12px;flex-wrap:wrap}
       .post-toggle{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:var(--gold-soft);font-weight:600;cursor:pointer}
@@ -112,7 +118,7 @@ function renderPostPage(post){
         <h1 class="post-title">${title}</h1>
         <p class="post-excerpt">${description}</p>
         <div class="tags" id="postTags">${tags}</div>
-        <div class="post-body" id="postBody">${post.content.zh || post.content.en || ''}</div>
+        <div class="post-body" id="postBody">${renderedContent.zh || renderedContent.en || ''}</div>
       </article>
     </main>
 
@@ -124,9 +130,15 @@ function renderPostPage(post){
       const postTitle = document.querySelector('.post-title');
       const postExcerpt = document.querySelector('.post-excerpt');
       let currentLang = 'zh';
+      const escapeHtml = value => String(value || '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
 
       function renderTags(){
-        postTags.innerHTML = (postData.tags || []).map(tag => '<span class="tag">' + tag + '</span>').join('');
+        postTags.innerHTML = (postData.tags || []).map(tag => '<span class="tag">' + escapeHtml(tag) + '</span>').join('');
       }
 
       function renderPost(lang){
@@ -136,7 +148,7 @@ function renderPostPage(post){
         langSwitch.textContent = lang === 'zh' ? 'EN' : '中文';
         postTitle.textContent = postData.title[lang] || postData.title.zh || postData.title.en || '';
         postExcerpt.textContent = postData.excerpt[lang] || postData.excerpt.zh || postData.excerpt.en || '';
-        postBody.innerHTML = postData.content[lang] || postData.content.zh || postData.content.en || '';
+        postBody.innerHTML = postData.renderedContent[lang] || postData.renderedContent.zh || postData.renderedContent.en || '';
         renderTags();
       }
 

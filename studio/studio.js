@@ -1,3 +1,5 @@
+import { escapeHtml, isLikelyHtml, renderRichContent } from '../shared/markdown.mjs';
+
 const studioState = {
   bootstrap: null,
   section: 'dashboard',
@@ -77,6 +79,173 @@ function showLogin(){
 function showApp(){
   studioRefs.loginView.hidden = true;
   studioRefs.appView.hidden = false;
+}
+
+const MARKDOWN_TOOLBAR_ACTIONS = [
+  { action: 'h2', label: 'H2' },
+  { action: 'h3', label: 'H3' },
+  { action: 'bold', label: 'Bold' },
+  { action: 'italic', label: 'Italic' },
+  { action: 'ul', label: '• List' },
+  { action: 'ol', label: '1. List' },
+  { action: 'quote', label: 'Quote' },
+  { action: 'link', label: 'Link' },
+  { action: 'code', label: 'Code' },
+  { action: 'divider', label: 'Divider' },
+];
+
+function getMarkdownPreviewMarkup(value = ''){
+  const rendered = renderRichContent(value);
+  if(rendered){
+    return rendered;
+  }
+  return '<p class="muted">內容會在這裡即時預覽。You can write in Markdown and see the rendered article here.</p>';
+}
+
+function renderMarkdownEditor({ id, label, value, languageLabel }){
+  const editorMode = isLikelyHtml(value || '') ? 'Legacy HTML' : 'Markdown';
+  return `
+    <section class="studio-markdown-editor" data-markdown-editor="${id}">
+      <div class="studio-language-pair-header">
+        <strong>${label}</strong>
+        <div class="studio-row-actions">
+          <div class="studio-language-badge">${languageLabel}</div>
+          <div class="studio-language-badge" data-markdown-mode="${id}">${editorMode}</div>
+        </div>
+      </div>
+      <div class="studio-markdown-toolbar">
+        ${MARKDOWN_TOOLBAR_ACTIONS.map(tool => `
+          <button class="btn magnetic" type="button" data-markdown-action="${tool.action}" data-editor-target="${id}">
+            ${tool.label}
+          </button>
+        `).join('')}
+      </div>
+      <label class="studio-form-field">
+        <span>${label}（Markdown）</span>
+        <textarea id="${id}" data-markdown-source="${id}" rows="16">${escapeHtml(value || '')}</textarea>
+      </label>
+      <div class="studio-markdown-preview-shell">
+        <div class="studio-mini-label">Live Preview</div>
+        <div class="studio-markdown-preview" data-markdown-preview="${id}">
+          ${getMarkdownPreviewMarkup(value)}
+        </div>
+      </div>
+      <div class="small muted studio-markdown-note">
+        新文章建議直接寫 Markdown；如果是舊文章的 HTML 內容，系統也會繼續相容並正常顯示。
+      </div>
+    </section>
+  `;
+}
+
+function focusTextarea(textarea){
+  textarea.focus();
+  triggerMarkdownInput(textarea);
+}
+
+function triggerMarkdownInput(textarea){
+  textarea.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+function wrapSelection(textarea, before, after, placeholder){
+  const start = textarea.selectionStart ?? textarea.value.length;
+  const end = textarea.selectionEnd ?? start;
+  const selected = textarea.value.slice(start, end) || placeholder;
+  const nextValue = `${before}${selected}${after}`;
+  textarea.setRangeText(nextValue, start, end, 'end');
+  const selectionStart = start + before.length;
+  textarea.setSelectionRange(selectionStart, selectionStart + selected.length);
+  focusTextarea(textarea);
+}
+
+function replaceSelectedLines(textarea, transform, fallback = ''){
+  const start = textarea.selectionStart ?? textarea.value.length;
+  const end = textarea.selectionEnd ?? start;
+  const selected = textarea.value.slice(start, end);
+  const seed = selected || fallback;
+  const lines = seed.split('\n');
+  const nextValue = lines.map((line, index) => transform(line, index)).join('\n');
+  textarea.setRangeText(nextValue, start, end, 'end');
+  textarea.setSelectionRange(start, start + nextValue.length);
+  focusTextarea(textarea);
+}
+
+function insertAtCursor(textarea, value){
+  const start = textarea.selectionStart ?? textarea.value.length;
+  const end = textarea.selectionEnd ?? start;
+  textarea.setRangeText(value, start, end, 'end');
+  textarea.setSelectionRange(start + value.length, start + value.length);
+  focusTextarea(textarea);
+}
+
+function applyMarkdownAction(textarea, action){
+  switch(action){
+    case 'h2':
+      replaceSelectedLines(textarea, line => `## ${(line || 'Section title').replace(/^#+\s*/, '')}`, 'Section title');
+      return;
+    case 'h3':
+      replaceSelectedLines(textarea, line => `### ${(line || 'Subsection').replace(/^#+\s*/, '')}`, 'Subsection');
+      return;
+    case 'bold':
+      wrapSelection(textarea, '**', '**', 'bold text');
+      return;
+    case 'italic':
+      wrapSelection(textarea, '_', '_', 'emphasis');
+      return;
+    case 'ul':
+      replaceSelectedLines(textarea, line => `- ${(line || 'List item').replace(/^[-*]\s+/, '')}`, 'List item');
+      return;
+    case 'ol':
+      replaceSelectedLines(textarea, (line, index) => `${index + 1}. ${(line || 'List item').replace(/^\d+\.\s+/, '')}`, 'List item');
+      return;
+    case 'quote':
+      replaceSelectedLines(textarea, line => `> ${line || 'Quoted line'}`, 'Quoted line');
+      return;
+    case 'link': {
+      const selected = textarea.value.slice(textarea.selectionStart ?? 0, textarea.selectionEnd ?? 0) || 'Link text';
+      const url = window.prompt('Link URL', 'https://');
+      if(!url){
+        return;
+      }
+      wrapSelection(textarea, '[', `](${url})`, selected);
+      return;
+    }
+    case 'code':
+      wrapSelection(textarea, '```\n', '\n```', 'code block');
+      return;
+    case 'divider':
+      insertAtCursor(textarea, '\n---\n');
+      return;
+    default:
+      return;
+  }
+}
+
+function bindMarkdownEditors(container){
+  container.querySelectorAll('[data-markdown-source]').forEach(textarea => {
+    const editorId = textarea.dataset.markdownSource;
+    const editor = container.querySelector(`[data-markdown-editor="${editorId}"]`);
+    const preview = container.querySelector(`[data-markdown-preview="${editorId}"]`);
+    const modeBadge = container.querySelector(`[data-markdown-mode="${editorId}"]`);
+    if(!editor || !preview || !modeBadge){
+      return;
+    }
+
+    const refreshPreview = () => {
+      const value = textarea.value;
+      preview.innerHTML = getMarkdownPreviewMarkup(value);
+      preview.classList.toggle('is-empty', !String(value).trim());
+      const mode = isLikelyHtml(value) ? 'Legacy HTML' : 'Markdown';
+      modeBadge.textContent = mode;
+      modeBadge.dataset.mode = mode.toLowerCase().replace(/\s+/g, '-');
+    };
+
+    textarea.addEventListener('input', refreshPreview);
+    refreshPreview();
+
+    editor.querySelectorAll('[data-markdown-action]').forEach(button => {
+      button.addEventListener('click', () => applyMarkdownAction(textarea, button.dataset.markdownAction));
+    });
+  });
 }
 
 function createId(){
@@ -169,15 +338,6 @@ function startStudioSessionProtection(){
   setStudioSessionMarker();
   updateStudioSessionHint();
   recordStudioActivity();
-}
-
-function escapeHtml(value = ''){
-  return value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;');
 }
 
 function getCurrentPost(){
@@ -512,15 +672,22 @@ function renderPostEditor(post){
         <span>Tags（用逗號分隔）</span>
         <input id="postTagsInput" type="text" value="${escapeHtml((post.tags || []).join(', '))}">
       </label>
-      <div class="studio-form-grid cols-2" style="margin-top:18px">
-        <label class="studio-form-field">
-          <span>中文內容（HTML）</span>
-          <textarea id="postContentZh" rows="16">${escapeHtml(post.content.zh || '')}</textarea>
-        </label>
-        <label class="studio-form-field">
-          <span>English Content (HTML)</span>
-          <textarea id="postContentEn" rows="16">${escapeHtml(post.content.en || '')}</textarea>
-        </label>
+      <div class="studio-post-editor-note" style="margin-top:18px">
+        Studio 文章現在支援 Markdown 編輯、常用格式工具列與即時預覽。舊的 HTML 文章也會繼續正常顯示。
+      </div>
+      <div class="studio-form-grid cols-2 studio-markdown-grid" style="margin-top:18px">
+        ${renderMarkdownEditor({
+          id: 'postContentZh',
+          label: '中文內容',
+          value: post.content.zh || '',
+          languageLabel: 'ZH',
+        })}
+        ${renderMarkdownEditor({
+          id: 'postContentEn',
+          label: 'English Content',
+          value: post.content.en || '',
+          languageLabel: 'EN',
+        })}
       </div>
       <div class="studio-row-actions" style="margin-top:20px">
         ${post.slug ? `<a class="btn magnetic" href="/notes/${escapeHtml(post.slug)}" target="_blank" rel="noopener">Open Current URL</a>` : ''}
@@ -594,6 +761,7 @@ function renderPosts(){
 
   panel.querySelector('#savePostBtn')?.addEventListener('click', saveCurrentPost);
   panel.querySelector('#deletePostBtn')?.addEventListener('click', deleteCurrentPost);
+  bindMarkdownEditors(panel);
 }
 
 function collectCurrentPostFromForm(){
@@ -880,7 +1048,7 @@ function renderDeployPanel(){
         <ol class="list">
           <li><span class="muted">把 repo 接到 Cloudflare Pages，並綁定這個專案根目錄作為 output。</span></li>
           <li><span class="muted">建立 D1 database，名稱可以用 <code>jasonliao-cms</code>。</span></li>
-          <li><span class="muted">設定 Secrets：<code>ADMIN_USERNAME</code>、<code>ADMIN_PASSWORD_HASH</code>、<code>ADMIN_SESSION_SECRET</code>、<code>ACQUAINTANCE_PASSWORD_HASH</code>。</span></li>
+          <li><span class="muted">設定 Secrets：<code>ADMIN_USERNAME</code>、<code>ADMIN_PASSWORD</code>、<code>ADMIN_SESSION_SECRET</code>、<code>ACQUAINTANCE_PASSWORD</code>。</span></li>
           <li><span class="muted">確認首頁公開網址維持不變，這樣 Google 既有索引不需要整個重來。</span></li>
         </ol>
       </section>

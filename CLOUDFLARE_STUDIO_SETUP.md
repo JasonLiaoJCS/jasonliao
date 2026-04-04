@@ -50,9 +50,9 @@ wrangler.toml
 你至少要在 Cloudflare Pages / Workers Secrets 裡設定：
 
 - `ADMIN_USERNAME`
-- `ADMIN_PASSWORD_HASH`
+- `ADMIN_PASSWORD`
 - `ADMIN_SESSION_SECRET`
-- `ACQUAINTANCE_PASSWORD_HASH`
+- `ACQUAINTANCE_PASSWORD`
 
 ### 想先快速排除登入問題時
 
@@ -69,9 +69,11 @@ wrangler.toml
 
 這樣就不需要先處理 `pbkdf2_sha256$...` 的 hash，也比較不容易因為複製格式出錯。
 
-### `ADMIN_PASSWORD_HASH` / `ACQUAINTANCE_PASSWORD_HASH` 怎麼產生
+### `ADMIN_PASSWORD_HASH` / `ACQUAINTANCE_PASSWORD_HASH` 還能不能用
 
-在專案根目錄執行：
+可以，但現在已經不是最推薦的主流程。
+
+如果你真的想用 hash 版 secret，再在專案根目錄執行：
 
 ```powershell
 node scripts\generate-site-password-hash.mjs
@@ -84,6 +86,13 @@ pbkdf2_sha256$...
 ```
 
 把那串值貼到 Cloudflare secret 裡即可。
+
+但如果你只是想穩定使用後台，直接設：
+
+- `ADMIN_PASSWORD`
+- `ACQUAINTANCE_PASSWORD`
+
+通常會更直觀，也比較不容易因為複製格式出錯。
 
 ## 5. `ADMIN_SESSION_SECRET` 建議
 

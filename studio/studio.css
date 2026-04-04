@@ -316,6 +316,134 @@
   gap:18px;
 }
 
+.studio-post-editor-note{
+  padding:16px 18px;
+  border-radius:20px;
+  border:1px solid rgba(217,177,111,.16);
+  background:rgba(217,177,111,.06);
+  color:#ded4c5;
+}
+
+.studio-markdown-grid{
+  align-items:start;
+}
+
+.studio-markdown-editor{
+  display:grid;
+  gap:14px;
+  padding:18px;
+  border-radius:24px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.025);
+}
+
+.studio-markdown-toolbar{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.studio-markdown-toolbar .btn{
+  padding:10px 12px;
+  border-radius:14px;
+}
+
+.studio-markdown-preview-shell{
+  display:grid;
+  gap:8px;
+}
+
+.studio-markdown-preview{
+  min-height:220px;
+  padding:18px;
+  border-radius:20px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(7,10,16,.56);
+  color:#ddd6c9;
+}
+
+.studio-markdown-preview.is-empty{
+  color:#b9b0a0;
+}
+
+.studio-markdown-preview p,
+.studio-markdown-preview ul,
+.studio-markdown-preview ol,
+.studio-markdown-preview blockquote,
+.studio-markdown-preview pre{
+  margin:0 0 16px;
+}
+
+.studio-markdown-preview h1,
+.studio-markdown-preview h2,
+.studio-markdown-preview h3,
+.studio-markdown-preview h4{
+  margin:0 0 14px;
+}
+
+.studio-markdown-preview ul,
+.studio-markdown-preview ol{
+  padding-left:1.2rem;
+}
+
+.studio-markdown-preview li + li{
+  margin-top:6px;
+}
+
+.studio-markdown-preview blockquote{
+  padding:14px 16px;
+  border-left:3px solid rgba(217,177,111,.5);
+  background:rgba(217,177,111,.07);
+  color:#e8decd;
+}
+
+.studio-markdown-preview pre{
+  overflow:auto;
+  padding:16px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.08);
+  background:#0d1119;
+}
+
+.studio-markdown-preview code{
+  padding:2px 6px;
+  border-radius:8px;
+  background:rgba(255,255,255,.08);
+  font-family:"IBM Plex Mono","SFMono-Regular",Consolas,monospace;
+  font-size:.92em;
+}
+
+.studio-markdown-preview pre code{
+  padding:0;
+  background:none;
+}
+
+.studio-markdown-preview hr{
+  border:none;
+  height:1px;
+  margin:24px 0;
+  background:rgba(255,255,255,.12);
+}
+
+.studio-markdown-preview a{
+  color:var(--gold-soft);
+  text-decoration:underline;
+  text-underline-offset:3px;
+}
+
+.studio-markdown-preview img{
+  display:block;
+  max-width:100%;
+  height:auto;
+  margin:16px 0;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.08);
+}
+
+.studio-markdown-note{
+  line-height:1.6;
+}
+
 .studio-empty{
   padding:24px;
   border-radius:20px;

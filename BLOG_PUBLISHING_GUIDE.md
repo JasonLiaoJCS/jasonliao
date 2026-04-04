@@ -20,6 +20,13 @@
 - 編輯公開首頁文案
 - 編輯熟客模式資料
 
+而且現在 Studio 文章編輯器已經升級成：
+
+- Markdown 編輯
+- 常用格式工具列
+- 即時視覺預覽
+- 舊 HTML 文章相容
+
 完整部署方式請看：
 
 - `CLOUDFLARE_STUDIO_SETUP.md`
@@ -55,6 +62,15 @@
 - 即使你在畫面上把它藏起來，原始碼、快取、搜尋引擎還是可能看得到
 
 所以如果要做真正的熟客限定文章，內容也必須像目前熟客模式資料一樣，先加密，再解密後顯示。
+
+### CMS managed 文章
+
+Studio 裡發的文章和 `posts/*.html` 是兩條不同路：
+
+- `posts/*.html`：舊的靜態文章，自己寫 HTML 檔
+- Studio Posts：存在 Cloudflare D1，由 `/notes/slug` 動態渲染
+
+Studio 這條現在已經支援 Markdown，所以新文章建議優先從 Studio 發。
 
 ## 2. 如何新增一篇公開文章
 
