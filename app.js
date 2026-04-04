@@ -123,7 +123,22 @@ const I18N_EN = {
 // Store original Chinese content
 const i18nOriginal = new Map();
 const i18nMetaOriginal = {};
-let currentLang = localStorage.getItem('site-lang') || 'zh';
+let i18nInitialized = false;
+function getStoredLang(){
+  try {
+    return window.localStorage.getItem('site-lang') || 'zh';
+  } catch {
+    return 'zh';
+  }
+}
+function setStoredLang(lang){
+  try {
+    window.localStorage.setItem('site-lang', lang);
+  } catch {
+    // ignore storage errors in restricted preview contexts
+  }
+}
+let currentLang = getStoredLang();
 let heroLeadTypeTimer = null;
 let heroLeadHasAnimated = false;
 
@@ -196,6 +211,9 @@ function renderHeroLead(animate = false){
 }
 
 function initI18n(){
+  if(i18nInitialized) return;
+  i18nInitialized = true;
+
   // Collect all translatable elements and store their original content
   document.querySelectorAll('[data-i18n]').forEach(el => {
     i18nOriginal.set(el.getAttribute('data-i18n'), el.textContent);
@@ -218,7 +236,7 @@ function applyLang(lang){
   currentLang = lang;
   document.documentElement.setAttribute('data-lang', lang);
   document.documentElement.lang = lang === 'zh' ? 'zh-Hant' : 'en';
-  localStorage.setItem('site-lang', lang);
+  setStoredLang(lang);
 
   const translations = getTranslations();
 
@@ -250,12 +268,17 @@ function toggleLang(){
   applyLang(currentLang === 'zh' ? 'en' : 'zh');
 }
 
-// Bind toggle button
-document.addEventListener('DOMContentLoaded', () => {
+function setupI18nUI(){
   const toggleBtn = document.getElementById('langToggle');
   if(toggleBtn) toggleBtn.addEventListener('click', toggleLang);
   initI18n();
-});
+}
+
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', setupI18nUI, { once: true });
+} else {
+  setupI18nUI();
+}
 
 // Mobile menu toggle
 const menuBtn = document.querySelector('.menu-btn');
