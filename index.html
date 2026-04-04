@@ -52,6 +52,10 @@
   <!-- Scroll Progress Bar -->
   <div class="scroll-progress" id="scrollProgress"></div>
 
+  <!-- Custom Cursor -->
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-glow" id="cursorGlow"></div>
+
   <nav class="nav">
     <div class="nav-inner">
       <a class="brand" href="#top" aria-label="Jason Liao home">
@@ -74,19 +78,20 @@
   <main id="top">
     <section class="hero">
       <div class="hero-glow"></div>
+      <canvas class="hero-particles" id="heroParticles"></canvas>
       <div class="container hero-grid">
         <div>
           <div class="eyebrow">Student Researcher — [private-affiliation]</div>
-          <h1>Reason as the bone,<br><span class="gold">passion as the heart.</span></h1>
+          <h1 class="hero-title-anim">Reason as the bone,<br><span class="gold">passion as the heart.</span></h1>
           <p class="lead">
             我是[private]（Jason Liao）。主修機械工程，也持續投入數學、控制與機器人開發。
             我喜歡理論推導，也喜歡把抽象模型一步一步做成能驗證、能實作、能真正派上用場的系統。
             我始終相信：真正有力量的技術，不只是能算、能做，更要能被理解、被傳遞，最後真的為世界帶來一點改變。
           </p>
           <div class="hero-actions">
-            <a class="btn btn-primary" href="#about">Explore Profile</a>
-            <a class="btn" href="#writing">Read the Blog</a>
-            <a class="btn btn-cv" href="#contact">
+            <a class="btn btn-primary magnetic" href="#about">Explore Profile</a>
+            <a class="btn magnetic" href="#writing">Read the Blog</a>
+            <a class="btn btn-cv magnetic" href="#contact">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               CV / Resume
             </a>
@@ -262,7 +267,7 @@
         <div class="eyebrow">Methods & Tools</div>
         <h2>Tools & Foundations</h2>
         <p class="lead">下面這些，是我目前最常用，也最願意繼續磨的東西。</p>
-        <div class="skills-grid reveal" style="margin-top:30px">
+        <div class="skills-grid reveal stagger-parent" style="margin-top:30px">
           <div class="skill-category">
             <h3>Engineering & Modeling</h3>
             <ul class="tool-list">
@@ -360,20 +365,20 @@
         <div class="section-number">06</div>
         <div class="eyebrow">Selected Directions</div>
         <h2>Project / Research Directions</h2>
-        <div class="project-grid reveal">
-          <article class="project-card">
+        <div class="project-grid reveal stagger-parent">
+          <article class="project-card tilt-card">
             <div class="meta">01 · Current Focus</div>
             <h3>Hexapod RHex Control</h3>
             <p>目前在[private-lab]進行六足機器人 RHex 的控制研究。重點放在強化學習與傳統控制的比較，希望把穩定性、適應性和整體效果做得更清楚，也做得更扎實。</p>
             <div class="tags"><span class="tag">Hexapod RHex</span><span class="tag">RL Control</span><span class="tag">Classical Control</span></div>
           </article>
-          <article class="project-card">
+          <article class="project-card tilt-card">
             <div class="meta">02 · Mathematical Foundation</div>
             <h3>Modeling with Mathematics</h3>
             <p>我一直很重視數學在工程裡的角色。對我來說，微分方程、線性代數、狀態空間不是課程內容而已，而是幫助我理解系統、建立模型、判斷方法是否可靠的基礎。</p>
             <div class="tags"><span class="tag">Modeling</span><span class="tag">Linear Algebra</span><span class="tag">Differential Equations</span></div>
           </article>
-          <article class="project-card">
+          <article class="project-card tilt-card">
             <div class="meta">03 · Long-term Interest</div>
             <h3>Thermofluids & Integration</h3>
             <p>雖然現在的研究主軸在控制與機器人，我一直都很喜歡熱流，也持續對數理、熱流與控制之間的整合保持興趣。對我來說，這不是支線，而是我想長期保留的一條路。</p>
@@ -393,20 +398,20 @@
           這裡留下的，是我一路走來的一些痕跡。
           有些關於研究，有些關於棒球，也有些只是某個當下很真實的想法。
         </p>
-        <div class="blog-grid reveal">
-          <a class="blog-card" href="posts/reason-passion.html">
+        <div class="blog-grid reveal stagger-parent">
+          <a class="blog-card tilt-card" href="posts/reason-passion.html">
             <div class="meta">Essay · Identity</div>
             <h3>理性為骨，熱血為心</h3>
             <p>寫我怎麼看待學習、熱愛、責任與未來，也寫我想成為什麼樣的人。</p>
             <div class="tags"><span class="tag">Identity</span><span class="tag">Manifesto</span></div>
           </a>
-          <a class="blog-card" href="posts/math-robotics.html">
+          <a class="blog-card tilt-card" href="posts/math-robotics.html">
             <div class="meta">Note · Research</div>
             <h3>從數學到機器人控制</h3>
             <p>寫我怎麼從喜歡推導，走到現在做控制與機器人研究；數學對我來說，不是裝飾，而是底子。</p>
             <div class="tags"><span class="tag">Control</span><span class="tag">Mathematics</span></div>
           </a>
-          <a class="blog-card" href="posts/baseball-engineering.html">
+          <a class="blog-card tilt-card" href="posts/baseball-engineering.html">
             <div class="meta">Essay · Life</div>
             <h3>棒球教會我的工程觀</h3>
             <p>寫台灣棒球帶給我的節奏、紀律與團隊感。很多我在研究裡重視的事，其實早就先在球場上學到了。</p>
@@ -428,8 +433,8 @@
               無論是學術交流、研究合作、機器人控制、數學建模，或只是想聊聊棒球，都很歡迎來信。
             </p>
             <div class="hero-actions">
-              <a class="btn btn-primary" href="mailto:[private-email]">Email Me</a>
-              <a class="btn" href="https://github.com/JasonLiaoJCS">GitHub</a>
+              <a class="btn btn-primary magnetic" href="mailto:[private-email]">Email Me</a>
+              <a class="btn magnetic" href="https://github.com/JasonLiaoJCS">GitHub</a>
             </div>
           </div>
           <div class="contact-panel">

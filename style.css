@@ -57,6 +57,141 @@ p{margin:0 0 18px; color:var(--muted)}
   color:#d9d2c8;
 }
 
+/* ── Custom Cursor ── */
+.cursor{
+  position:fixed; top:0; left:0; z-index:9999;
+  width:8px; height:8px; border-radius:50%;
+  background:var(--gold-soft);
+  pointer-events:none;
+  transform:translate(-50%,-50%);
+  transition:width .2s, height .2s, opacity .2s;
+  mix-blend-mode:difference;
+  opacity:0;
+}
+.cursor.active{width:14px; height:14px}
+.cursor-glow{
+  position:fixed; top:0; left:0; z-index:9998;
+  width:320px; height:320px; border-radius:50%;
+  background:radial-gradient(circle, rgba(217,177,111,.07) 0%, transparent 70%);
+  pointer-events:none;
+  transform:translate(-50%,-50%);
+  transition:opacity .4s;
+  opacity:0;
+}
+@media (pointer:fine){
+  .cursor{opacity:1}
+  .cursor-glow{opacity:1}
+}
+
+/* ── Hero Particles Canvas ── */
+.hero-particles{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  pointer-events:none;
+  z-index:0;
+}
+.hero .container{position:relative; z-index:1}
+
+/* ── Hero Title Animation ── */
+.hero-title-anim{
+  background-size:200% auto;
+  animation:shimmerTitle 6s ease-in-out infinite alternate;
+}
+@keyframes shimmerTitle{
+  0%{filter:brightness(1)}
+  50%{filter:brightness(1.08)}
+  100%{filter:brightness(1)}
+}
+
+/* ── Staggered Reveal ── */
+.stagger-parent > *{
+  opacity:0;
+  transform:translateY(30px);
+  transition:opacity .6s cubic-bezier(.25,.46,.45,.94), transform .6s cubic-bezier(.25,.46,.45,.94);
+}
+.stagger-parent.visible > *:nth-child(1){transition-delay:.05s}
+.stagger-parent.visible > *:nth-child(2){transition-delay:.15s}
+.stagger-parent.visible > *:nth-child(3){transition-delay:.25s}
+.stagger-parent.visible > *:nth-child(4){transition-delay:.35s}
+.stagger-parent.visible > *:nth-child(5){transition-delay:.45s}
+.stagger-parent.visible > *:nth-child(6){transition-delay:.55s}
+.stagger-parent.visible > *{
+  opacity:1;
+  transform:translateY(0);
+}
+
+/* ── 3D Tilt Card ── */
+.tilt-card{
+  transform-style:preserve-3d;
+  perspective:800px;
+  will-change:transform;
+}
+.tilt-card .meta,
+.tilt-card h3,
+.tilt-card p,
+.tilt-card .tags{
+  transform:translateZ(20px);
+}
+
+/* ── Magnetic Button ── */
+.magnetic{
+  transition:transform .3s cubic-bezier(.25,.46,.45,.94), border-color .25s ease;
+}
+
+/* ── Animated Gold Gradient (hero .gold span) ── */
+.hero-title-anim .gold{
+  background:linear-gradient(90deg, var(--gold-soft), var(--silver), var(--gold), var(--gold-soft));
+  background-size:300% 100%;
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  animation:flowGold 8s ease-in-out infinite;
+}
+@keyframes flowGold{
+  0%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+  100%{background-position:0% 50%}
+}
+
+/* ── Glow line dividers between sections ── */
+.section + .section::before{
+  content:"";
+  display:block;
+  width:120px; height:1px;
+  margin:0 auto 0;
+  background:linear-gradient(90deg, transparent, rgba(217,177,111,.3), transparent);
+}
+
+/* ── Hover glow on stat cards ── */
+.stat{
+  position:relative; overflow:hidden;
+}
+.stat::before{
+  content:""; position:absolute; inset:-50%; width:200%; height:200%;
+  background:radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(217,177,111,.12) 0%, transparent 60%);
+  opacity:0; transition:opacity .4s ease;
+  pointer-events:none;
+}
+.stat:hover::before{opacity:1}
+
+/* ── Glowing border on focus cards ── */
+.project-card::before,
+.blog-card::before{
+  content:""; position:absolute; inset:-1px;
+  border-radius:inherit;
+  padding:1px;
+  background:linear-gradient(135deg, rgba(217,177,111,.0), rgba(217,177,111,.0));
+  -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;
+  mask-composite:exclude;
+  transition:background .4s ease;
+  pointer-events:none;
+}
+.project-card:hover::before,
+.blog-card:hover::before{
+  background:linear-gradient(135deg, rgba(217,177,111,.35), rgba(217,221,229,.15), rgba(217,177,111,.2));
+}
+.project-card,.blog-card{position:relative; overflow:hidden}
+
 /* ── Scroll Progress Bar ── */
 .scroll-progress{
   position:fixed; top:0; left:0; height:3px; z-index:100;
@@ -535,6 +670,9 @@ p{margin:0 0 18px; color:var(--muted)}
   .stats{grid-template-columns:1fr 1fr}
   .skills-grid{grid-template-columns:1fr 1fr}
   .pub-item{grid-template-columns:100px 1fr; gap:16px}
+}
+@media (hover:none),(pointer:coarse){
+  .cursor,.cursor-glow{display:none !important}
 }
 @media (max-width: 760px){
   .nav-links{
