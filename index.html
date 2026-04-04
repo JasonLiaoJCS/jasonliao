@@ -49,6 +49,9 @@
   </script>
 </head>
 <body>
+  <!-- Scroll Progress Bar -->
+  <div class="scroll-progress" id="scrollProgress"></div>
+
   <nav class="nav">
     <div class="nav-inner">
       <a class="brand" href="#top" aria-label="Jason Liao home">
@@ -57,20 +60,23 @@
       </a>
       <button class="menu-btn" aria-label="Toggle menu">☰</button>
       <div class="nav-links">
-        <a href="#about">About</a>
-        <a href="#focus">Focus</a>
-        <a href="#projects">Projects</a>
-        <a href="#writing">Writing</a>
-        <a href="#contact">Contact</a>
+        <a href="#about" data-nav>About</a>
+        <a href="#focus" data-nav>Focus</a>
+        <a href="#skills" data-nav>Skills</a>
+        <a href="#publications" data-nav>Publications</a>
+        <a href="#projects" data-nav>Projects</a>
+        <a href="#writing" data-nav>Writing</a>
+        <a href="#contact" data-nav>Contact</a>
       </div>
     </div>
   </nav>
 
   <main id="top">
     <section class="hero">
+      <div class="hero-glow"></div>
       <div class="container hero-grid">
         <div>
-          <div class="eyebrow">Personal Website</div>
+          <div class="eyebrow">Student Researcher — [private-affiliation]</div>
           <h1>Reason as the bone,<br><span class="gold">passion as the heart.</span></h1>
           <p class="lead">
             我是[private]（Jason Liao）。主修機械工程，也持續投入數學、控制與機器人開發。
@@ -80,6 +86,10 @@
           <div class="hero-actions">
             <a class="btn btn-primary" href="#about">Explore Profile</a>
             <a class="btn" href="#writing">Read the Blog</a>
+            <a class="btn btn-cv" href="#contact">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              CV / Resume
+            </a>
           </div>
           <div class="hero-meta">
             <span class="chip">Mechanical Engineering</span>
@@ -94,9 +104,32 @@
       </div>
     </section>
 
+    <!-- News / Updates -->
+    <section class="section news-section" id="news">
+      <div class="container">
+        <div class="news-bar reveal">
+          <div class="eyebrow">Latest Updates</div>
+          <div class="news-items">
+            <div class="news-item">
+              <span class="news-date">2026</span>
+              <span>持續於[private-lab]進行六足機器人 RX 控制研究</span>
+            </div>
+            <div class="news-item">
+              <span class="news-date">Ongoing</span>
+              <span>強化學習 vs 傳統控制方法之比較實驗進行中</span>
+            </div>
+            <div class="news-item">
+              <span class="news-date">NTU</span>
+              <span>機械工程主修 / 土木工程雙主修 / 數學副修</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="section portrait-section" aria-labelledby="portrait-title">
       <div class="container">
-        <div class="portrait-showcase" aria-label="Portraits of Jason Liao">
+        <div class="portrait-showcase reveal" aria-label="Portraits of Jason Liao">
           <div class="portrait-heading">
             <div class="eyebrow">Portrait</div>
             <h3 id="portrait-title">Jason Liao / [private]</h3>
@@ -113,7 +146,8 @@
 
     <section class="section" id="about">
       <div class="container columns">
-        <div class="card">
+        <div class="card reveal">
+          <div class="section-number">01</div>
           <div class="eyebrow">About</div>
           <h2>不困於相，<br>循心而生。</h2>
           <p>
@@ -129,7 +163,7 @@
             <div class="stat"><strong>Robotics Lab</strong><span class="muted small">六足機器人控制研究</span></div>
           </div>
         </div>
-        <div class="card">
+        <div class="card reveal">
           <div class="eyebrow">Profile Snapshot</div>
           <h3>Jason Liao / [private]</h3>
           <ul class="list">
@@ -143,7 +177,7 @@
       </div>
 
       <div class="container">
-        <div class="timeline">
+        <div class="timeline reveal">
           <div class="timeline-item">
             <div class="year">01 · 數理起點</div>
             <p>我從小就很喜歡數學和物理。那種把一件事想清楚、推乾淨、講明白的感覺，對我來說一直很有吸引力。也因為這樣，我一開始一直覺得自己應該會走一條很典型的理科路線。</p>
@@ -162,7 +196,8 @@
 
     <section class="section">
       <div class="container">
-        <div class="card">
+        <div class="card reveal">
+          <div class="section-number">02</div>
           <div class="eyebrow">Background</div>
           <h2>學經歷</h2>
           <p class="lead">
@@ -192,9 +227,10 @@
 
     <section class="section" id="focus">
       <div class="container">
+        <div class="section-number">03</div>
         <div class="eyebrow">Core Focus</div>
         <h2>我正在投入的問題</h2>
-        <div class="grid-2" style="margin-top:30px">
+        <div class="grid-2 reveal" style="margin-top:30px">
           <div class="card">
             <h3>現在主要在做的事</h3>
             <ul class="list">
@@ -212,17 +248,112 @@
             </ul>
           </div>
         </div>
-        <div class="quote" style="margin-top:28px">
-          “Knowledge should be exacting enough to stand on its own, and alive enough to move people.”
+        <div class="quote reveal" style="margin-top:28px">
+          "Knowledge should be exacting enough to stand on its own, and alive enough to move people."
+        </div>
+      </div>
+    </section>
+
+    <!-- Technical Skills -->
+    <section class="section" id="skills">
+      <div class="container">
+        <div class="section-number">04</div>
+        <div class="eyebrow">Technical Proficiency</div>
+        <h2>Skills & Tools</h2>
+        <div class="skills-grid reveal" style="margin-top:30px">
+          <div class="skill-category">
+            <h3>Engineering & Simulation</h3>
+            <div class="skill-item">
+              <div class="skill-header"><span>MATLAB / Simulink</span><span class="skill-level">Advanced</span></div>
+              <div class="skill-bar"><div class="skill-fill" style="--fill:90%"></div></div>
+            </div>
+            <div class="skill-item">
+              <div class="skill-header"><span>SolidWorks / CAD</span><span class="skill-level">Intermediate</span></div>
+              <div class="skill-bar"><div class="skill-fill" style="--fill:70%"></div></div>
+            </div>
+            <div class="skill-item">
+              <div class="skill-header"><span>Control System Design</span><span class="skill-level">Advanced</span></div>
+              <div class="skill-bar"><div class="skill-fill" style="--fill:85%"></div></div>
+            </div>
+          </div>
+          <div class="skill-category">
+            <h3>Programming & ML</h3>
+            <div class="skill-item">
+              <div class="skill-header"><span>Python</span><span class="skill-level">Advanced</span></div>
+              <div class="skill-bar"><div class="skill-fill" style="--fill:88%"></div></div>
+            </div>
+            <div class="skill-item">
+              <div class="skill-header"><span>C / C++</span><span class="skill-level">Intermediate</span></div>
+              <div class="skill-bar"><div class="skill-fill" style="--fill:65%"></div></div>
+            </div>
+            <div class="skill-item">
+              <div class="skill-header"><span>Reinforcement Learning</span><span class="skill-level">Developing</span></div>
+              <div class="skill-bar"><div class="skill-fill" style="--fill:60%"></div></div>
+            </div>
+          </div>
+          <div class="skill-category">
+            <h3>Mathematics</h3>
+            <div class="skill-item">
+              <div class="skill-header"><span>Linear Algebra</span><span class="skill-level">Advanced</span></div>
+              <div class="skill-bar"><div class="skill-fill" style="--fill:92%"></div></div>
+            </div>
+            <div class="skill-item">
+              <div class="skill-header"><span>Differential Equations</span><span class="skill-level">Advanced</span></div>
+              <div class="skill-bar"><div class="skill-fill" style="--fill:88%"></div></div>
+            </div>
+            <div class="skill-item">
+              <div class="skill-header"><span>Numerical Methods</span><span class="skill-level">Intermediate</span></div>
+              <div class="skill-bar"><div class="skill-fill" style="--fill:72%"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Publications -->
+    <section class="section" id="publications">
+      <div class="container">
+        <div class="section-number">05</div>
+        <div class="eyebrow">Research Output</div>
+        <h2>Publications & Presentations</h2>
+        <p class="lead">研究成果與學術發表。隨著研究持續推進，這個區塊將會陸續更新。</p>
+        <div class="pub-list reveal" style="margin-top:30px">
+          <div class="pub-item">
+            <div class="pub-type">In Progress</div>
+            <div class="pub-content">
+              <h3>Comparison of Reinforcement Learning and Classical Control for Hexapod Robot Locomotion</h3>
+              <p class="pub-authors">Jason Liao ([private])</p>
+              <p class="pub-venue">[private-lab] — Ongoing Research</p>
+              <div class="tags">
+                <span class="tag">Hexapod RX</span>
+                <span class="tag">RL vs Classical</span>
+                <span class="tag">Locomotion Control</span>
+              </div>
+            </div>
+          </div>
+          <div class="pub-item">
+            <div class="pub-type">Coursework</div>
+            <div class="pub-content">
+              <h3>Selected Coursework in Control, Mathematics & Thermofluids</h3>
+              <p class="pub-authors">Mechanical Engineering, Civil Engineering & Mathematics — NTU</p>
+              <p class="pub-venue">控制系統、工程數學、流體力學、熱力學、線性代數、微分方程等核心課程</p>
+              <div class="tags">
+                <span class="tag">Control Systems</span>
+                <span class="tag">Engineering Math</span>
+                <span class="tag">Thermofluids</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
     <section class="section" id="projects">
       <div class="container">
+        <div class="section-number">06</div>
         <div class="eyebrow">Selected Themes</div>
         <h2>Project / Research Directions</h2>
-        <div class="project-grid">
+        <div class="project-grid reveal">
           <article class="project-card">
             <div class="meta">01 · Robotics</div>
             <h3>Hexapod RX Control</h3>
@@ -247,6 +378,7 @@
 
     <section class="section" id="writing">
       <div class="container">
+        <div class="section-number">07</div>
         <div class="eyebrow">Writing</div>
         <h2>Blog / Notes</h2>
         <p class="lead">
@@ -254,7 +386,7 @@
           有些關於研究，有些關於棒球，也有些只是某個當下很真實的想法。
           對我來說，文字不是裝飾，它更像是一種整理自己、也留住自己的方式。
         </p>
-        <div class="blog-grid">
+        <div class="blog-grid reveal">
           <a class="blog-card" href="posts/reason-passion.html">
             <div class="meta">Essay · Identity</div>
             <h3>理性為骨，熱血為心</h3>
@@ -279,9 +411,10 @@
 
     <section class="section" id="contact">
       <div class="container">
+        <div class="section-number">08</div>
         <div class="eyebrow">Contact</div>
         <h2>如果你也在意這些事，歡迎和我聯絡。</h2>
-        <div class="contact" style="margin-top:28px">
+        <div class="contact reveal" style="margin-top:28px">
           <div class="contact-panel">
             <h3>Get in Touch</h3>
             <p>
@@ -303,11 +436,27 @@
     </section>
   </main>
 
+  <!-- Back to Top -->
+  <button class="back-to-top" id="backToTop" aria-label="Back to top">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+  </button>
+
   <footer class="footer">
     <div class="container footer-inner">
       <div>
         <div class="brand" style="gap:10px"><span class="brand-mark"><span>JL</span></span><span>Jason Liao / [private]</span></div>
         <div class="small muted" style="margin-top:8px">以理性立身，以熱愛行路。</div>
+      </div>
+      <div class="footer-links">
+        <a href="#about">About</a>
+        <a href="#publications">Publications</a>
+        <a href="#projects">Projects</a>
+        <a href="#writing">Blog</a>
+        <a href="https://github.com/JasonLiaoJCS">GitHub</a>
+        <a href="mailto:[private-email]">Email</a>
+      </div>
+      <div class="footer-copy small muted">
+        &copy; 2026 Jason Liao. Built with purpose.
       </div>
     </div>
   </footer>
