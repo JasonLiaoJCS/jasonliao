@@ -25,7 +25,7 @@ async function main(){
   const hash = pbkdf2Sync(password, salt, iterations, 32, 'sha256');
   const encoded = `pbkdf2_sha256$${iterations}$${toBase64Url(salt)}$${toBase64Url(hash)}`;
 
-  console.log('\nUse this as your Cloudflare secret value:\n');
+  console.log('\nCopy exactly the next line only:\n');
   console.log(encoded);
 }
 

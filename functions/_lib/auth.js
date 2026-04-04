@@ -95,31 +95,42 @@ export function clearCookie(name){
 
 export async function verifyPassword(password, encodedHash){
   if(!password || !encodedHash) return false;
-  const [scheme, iterationsText, saltB64, hashB64] = encodedHash.split('$');
-  if(scheme !== 'pbkdf2_sha256') return false;
-  const iterations = Number(iterationsText);
-  if(!Number.isFinite(iterations) || iterations < 100000) return false;
+  try {
+    const parts = encodedHash.split('$');
+    if(parts.length !== 4) return false;
 
-  const salt = fromBase64Url(saltB64);
-  const expectedHash = fromBase64Url(hashB64);
-  const keyMaterial = await crypto.subtle.importKey(
-    'raw',
-    encoder.encode(password),
-    'PBKDF2',
-    false,
-    ['deriveBits'],
-  );
-  const derivedBits = await crypto.subtle.deriveBits(
-    {
-      name: 'PBKDF2',
-      salt,
-      iterations,
-      hash: 'SHA-256',
-    },
-    keyMaterial,
-    expectedHash.length * 8,
-  );
-  return timingSafeEqual(new Uint8Array(derivedBits), expectedHash);
+    const [scheme, iterationsText, saltB64, hashB64] = parts;
+    if(scheme !== 'pbkdf2_sha256') return false;
+
+    const iterations = Number(iterationsText);
+    if(!Number.isFinite(iterations) || iterations < 100000) return false;
+    if(!saltB64 || !hashB64) return false;
+
+    const salt = fromBase64Url(saltB64);
+    const expectedHash = fromBase64Url(hashB64);
+    if(!salt.length || !expectedHash.length) return false;
+
+    const keyMaterial = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(password),
+      'PBKDF2',
+      false,
+      ['deriveBits'],
+    );
+    const derivedBits = await crypto.subtle.deriveBits(
+      {
+        name: 'PBKDF2',
+        salt,
+        iterations,
+        hash: 'SHA-256',
+      },
+      keyMaterial,
+      expectedHash.length * 8,
+    );
+    return timingSafeEqual(new Uint8Array(derivedBits), expectedHash);
+  } catch {
+    return false;
+  }
 }
 
 function getSessionSecrets(env){
