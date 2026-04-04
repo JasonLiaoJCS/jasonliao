@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-Hant" data-lang="zh">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -35,27 +35,53 @@
         <a href="../index.html#about">About</a>
         <a href="../index.html#writing">Writing</a>
         <a href="../index.html#contact">Contact</a>
+        <button class="lang-toggle" id="langToggle" aria-label="Switch language">
+          <span class="lang-toggle-icon">🌐</span>
+          <span class="lang-toggle-label" id="langLabel">EN</span>
+        </button>
       </div>
     </div>
   </nav>
   <section class="post-hero">
     <div class="post-wrap">
-      <a class="back-link" href="../index.html#writing">← Back to blog</a>
+      <a class="back-link" href="../index.html#writing" data-i18n="back">← Back to blog</a>
       <div class="post-meta">Note · Research · Jason Liao</div>
-      <h1 style="font-size:clamp(3rem,7vw,5.4rem); margin-top:12px">從數學到機器人控制</h1>
-      <p class="lead">談數學訓練如何成為控制與建模的底層優勢。</p>
+      <h1 style="font-size:clamp(3rem,7vw,5.4rem); margin-top:12px" data-i18n="title">從數學到機器人控制</h1>
+      <p class="lead" data-i18n="subtitle">談數學訓練如何成為控制與建模的底層優勢。</p>
     </div>
   </section>
   <div class="post-wrap">
     <article>
-<p>如果把控制系統看成一門只靠調參數的技藝，那麼它的上限通常不會太高。因為真正穩定、可擴展、可驗證的控制設計，底層仍然需要數學。不是為了炫技，而是因為數學能夠替系統建立語法，替複雜現象建立邊界。</p>
-<p>我對數學的偏愛，並不只是因為它漂亮，而是因為它能迫使人誠實。狀態空間該怎麼定義，假設是否合理，線性化的範圍在哪裡，數值方法的誤差怎麼傳遞——這些問題，都不會因為敘述得有氣勢就自動成立。</p>
-<h2>推導不是拖慢速度，而是在保護未來</h2>
-<p>我很重視推導，並不是因為想把每件事都做得很學院，而是因為推導能提前暴露問題。當模型一開始就不對，後面再漂亮的程式、再華麗的圖表，往往都只是把錯誤包裝得更完整。</p>
-<p>也因此，無論是機器人動力學、滑模控制、強化學習中的狀態定義，或工程數學中的微分方程與線性代數，我都希望自己的理解能建立在足夠紮實的底座上。先把骨架搭好，後面的加速，才有意義。</p>
-<h2>理論與實作，其實不是對立面</h2>
-<p>我始終認為，最好的工程訓練，不是從理論跳去實作，或從實作倒逼理論，而是讓這兩者互相校正。推導告訴我系統應該如何，實驗提醒我世界其實如何；而真正的研究，就發生在這兩者不完全一致的地方。</p>
+<p data-i18n="p1">如果把控制系統看成一門只靠調參數的技藝，那麼它的上限通常不會太高。因為真正穩定、可擴展、可驗證的控制設計，底層仍然需要數學。不是為了炫技，而是因為數學能夠替系統建立語法，替複雜現象建立邊界。</p>
+<p data-i18n="p2">我對數學的偏愛，並不只是因為它漂亮，而是因為它能迫使人誠實。狀態空間該怎麼定義，假設是否合理，線性化的範圍在哪裡，數值方法的誤差怎麼傳遞——這些問題，都不會因為敘述得有氣勢就自動成立。</p>
+<h2 data-i18n="h2a">推導不是拖慢速度，而是在保護未來</h2>
+<p data-i18n="p3">我很重視推導，並不是因為想把每件事都做得很學院，而是因為推導能提前暴露問題。當模型一開始就不對，後面再漂亮的程式、再華麗的圖表，往往都只是把錯誤包裝得更完整。</p>
+<p data-i18n="p4">也因此，無論是機器人動力學、滑模控制、強化學習中的狀態定義，或工程數學中的微分方程與線性代數，我都希望自己的理解能建立在足夠紮實的底座上。先把骨架搭好，後面的加速，才有意義。</p>
+<h2 data-i18n="h2b">理論與實作，其實不是對立面</h2>
+<p data-i18n="p5">我始終認為，最好的工程訓練，不是從理論跳去實作，或從實作倒逼理論，而是讓這兩者互相校正。推導告訴我系統應該如何，實驗提醒我世界其實如何；而真正的研究，就發生在這兩者不完全一致的地方。</p>
 </article>
   </div>
+  <script>
+  const PAGE_I18N_META_EN = {
+    title: 'From Mathematics to Robot Control — Jason Liao',
+    description: 'On how mathematical training becomes the foundational advantage for control and modeling.',
+    ogTitle: 'From Mathematics to Robot Control — Jason Liao',
+    ogDescription: 'On how mathematical training becomes the foundational advantage for control and modeling.',
+    ogLocale: 'en_US'
+  };
+  const POST_I18N_EN = {
+    'back': '← Back to blog',
+    'title': 'From Mathematics to Robot Control',
+    'subtitle': 'On how mathematical training becomes the foundational advantage for control and modeling.',
+    'p1': "If you view control systems as a craft that relies solely on tuning parameters, its ceiling usually won't be very high. Because truly stable, scalable, and verifiable control design still requires mathematics at its core. Not for showing off, but because mathematics can establish grammar for systems and boundaries for complex phenomena.",
+    'p2': "My preference for mathematics isn't just because it's elegant, but because it forces honesty. How should state spaces be defined? Are the assumptions reasonable? Where are the bounds of linearization? How do numerical errors propagate? These questions don't automatically hold just because they're stated with conviction.",
+    'h2a': "Derivation doesn't slow you down — it protects the future",
+    'p3': "I value derivation not because I want everything to be academic, but because derivation exposes problems early. When the model is wrong from the start, no matter how beautiful the code or how impressive the charts that follow, they're often just wrapping the error more completely.",
+    'p4': "Because of this, whether it's robot dynamics, sliding mode control, state definitions in reinforcement learning, or differential equations and linear algebra in engineering mathematics — I want my understanding to be built on a solid enough foundation. Get the skeleton right first, and the acceleration that follows will actually mean something.",
+    'h2b': "Theory and practice are not opposites",
+    'p5': "I've always believed that the best engineering training doesn't jump from theory to practice, or force theory from practice, but lets the two calibrate each other. Derivation tells me how the system should behave; experiments remind me how the world actually behaves. And real research happens precisely where these two don't fully agree.",
+  };
+  </script>
+  <script src="../app.js"></script>
 </body>
 </html>

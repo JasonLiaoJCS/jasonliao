@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-Hant" data-lang="zh">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -35,25 +35,49 @@
         <a href="../index.html#about">About</a>
         <a href="../index.html#writing">Writing</a>
         <a href="../index.html#contact">Contact</a>
+        <button class="lang-toggle" id="langToggle" aria-label="Switch language">
+          <span class="lang-toggle-icon">🌐</span>
+          <span class="lang-toggle-label" id="langLabel">EN</span>
+        </button>
       </div>
     </div>
   </nav>
   <section class="post-hero">
     <div class="post-wrap">
-      <a class="back-link" href="../index.html#writing">← Back to blog</a>
+      <a class="back-link" href="../index.html#writing" data-i18n="back">← Back to blog</a>
       <div class="post-meta">Essay · Life · Jason Liao</div>
-      <h1 style="font-size:clamp(3rem,7vw,5.4rem); margin-top:12px">棒球教會我的工程觀</h1>
-      <p class="lead">在球場與工程之間，找到紀律、節奏與系統感。</p>
+      <h1 style="font-size:clamp(3rem,7vw,5.4rem); margin-top:12px" data-i18n="title">棒球教會我的工程觀</h1>
+      <p class="lead" data-i18n="subtitle">在球場與工程之間，找到紀律、節奏與系統感。</p>
     </div>
   </section>
   <div class="post-wrap">
     <article>
-<p>很多人以為棒球只是休閒、是情緒、是吶喊；但對我而言，棒球其實很像工程。它同樣講究節奏、分工、資訊、風險管理，甚至也講究你在長時間不確定裡，怎麼維持判斷與執行。</p>
-<p>一場比賽裡，真正決定勝負的，往往不只是最精彩的那一球，而是那些平常看起來很細碎、很普通、甚至容易被忽略的處理：投手的配球、守備的站位、跑者的判斷、教練的換投時機。工程也是。很多系統最後不是敗在大方向，而是敗在那些沒人想管的小地方。</p>
-<h2>熱愛不是多餘變數，而是長期主義的一部分</h2>
-<p>我很喜歡棒球，也很認真看待學術。這兩件事對我來說從來不衝突。因為熱愛一件事，本質上就是願意花更長的時間理解它、忍受它的反覆、在低潮時仍不離開它。這種能力，無論在球場或研究裡，都是珍貴的。</p>
-<p>棒球教會我的，不只是激情，而是紀律；不只是勝負，而是內容；不只是期待英雄，而是尊重系統。也因為如此，我希望自己未來無論走到哪裡，都能保留這種很樸素但很強的信念：事情要一球一球地打，路要一步一步地走，但心裡的火，不能熄。</p>
+<p data-i18n="p1">很多人以為棒球只是休閒、是情緒、是吶喊；但對我而言，棒球其實很像工程。它同樣講究節奏、分工、資訊、風險管理，甚至也講究你在長時間不確定裡，怎麼維持判斷與執行。</p>
+<p data-i18n="p2">一場比賽裡，真正決定勝負的，往往不只是最精彩的那一球，而是那些平常看起來很細碎、很普通、甚至容易被忽略的處理：投手的配球、守備的站位、跑者的判斷、教練的換投時機。工程也是。很多系統最後不是敗在大方向，而是敗在那些沒人想管的小地方。</p>
+<h2 data-i18n="h2a">熱愛不是多餘變數，而是長期主義的一部分</h2>
+<p data-i18n="p3">我很喜歡棒球，也很認真看待學術。這兩件事對我來說從來不衝突。因為熱愛一件事，本質上就是願意花更長的時間理解它、忍受它的反覆、在低潮時仍不離開它。這種能力，無論在球場或研究裡，都是珍貴的。</p>
+<p data-i18n="p4">棒球教會我的，不只是激情，而是紀律；不只是勝負，而是內容；不只是期待英雄，而是尊重系統。也因為如此，我希望自己未來無論走到哪裡，都能保留這種很樸素但很強的信念：事情要一球一球地打，路要一步一步地走，但心裡的火，不能熄。</p>
 </article>
   </div>
+  <script>
+  const PAGE_I18N_META_EN = {
+    title: 'What Baseball Taught Me About Engineering — Jason Liao',
+    description: 'Finding discipline, rhythm, and systems thinking between the ballfield and engineering.',
+    ogTitle: 'What Baseball Taught Me About Engineering — Jason Liao',
+    ogDescription: 'Finding discipline, rhythm, and systems thinking between the ballfield and engineering.',
+    ogLocale: 'en_US'
+  };
+  const POST_I18N_EN = {
+    'back': '← Back to blog',
+    'title': 'What Baseball Taught Me About Engineering',
+    'subtitle': 'Finding discipline, rhythm, and systems thinking between the ballfield and engineering.',
+    'p1': "Many people think baseball is just leisure, emotion, or cheering. But for me, baseball is actually a lot like engineering. It's equally about rhythm, division of labor, information, risk management — and even about how you maintain judgment and execution through long periods of uncertainty.",
+    'p2': "In a game, what truly decides the outcome often isn't the most spectacular play, but those seemingly trivial, ordinary, easily overlooked details: the pitcher's pitch selection, the fielder's positioning, the runner's judgment, the manager's timing on pitching changes. Engineering is the same. Many systems don't fail because of the big picture — they fail because of the small things nobody wanted to deal with.",
+    'h2a': "Passion isn't a redundant variable — it's part of long-term thinking",
+    'p3': "I love baseball, and I take academics seriously. These two things have never been in conflict for me. Because loving something is essentially being willing to spend longer understanding it, enduring its setbacks, and refusing to leave it during the lows. That ability is precious — whether on the field or in research.",
+    'p4': "What baseball taught me isn't just about excitement, but discipline. Not just about winning or losing, but about substance. Not just about expecting heroes, but about respecting the system. Because of this, I hope that wherever I go in the future, I can hold onto this simple but powerful belief: you play the game one pitch at a time, you walk the road one step at a time, but the fire inside — that can never go out.",
+  };
+  </script>
+  <script src="../app.js"></script>
 </body>
 </html>

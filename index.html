@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-Hant" data-lang="zh">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -71,6 +71,10 @@
         <a href="#projects" data-nav>Projects</a>
         <a href="#writing" data-nav>Writing</a>
         <a href="#contact" data-nav>Contact</a>
+        <button class="lang-toggle" id="langToggle" aria-label="Switch language">
+          <span class="lang-toggle-icon">🌐</span>
+          <span class="lang-toggle-label" id="langLabel">EN</span>
+        </button>
       </div>
     </div>
   </nav>
@@ -83,7 +87,7 @@
         <div>
           <div class="eyebrow">Student Researcher — [private-affiliation]</div>
           <h1 class="hero-title-anim">Reason as the bone,<br><span class="gold">passion as the heart.</span></h1>
-          <p class="lead">
+          <p class="lead" data-i18n="hero.lead">
             我是[private]（Jason Liao）。主修機械工程，也持續投入數學、控制與機器人開發。
             我喜歡理論推導，也喜歡把抽象模型一步一步做成能驗證、能實作、能真正派上用場的系統。
             我始終相信：真正有力量的技術，不只是能算、能做，更要能被理解、被傳遞，最後真的為世界帶來一點改變。
@@ -117,15 +121,15 @@
           <div class="news-items">
             <div class="news-item">
               <span class="news-date">2026</span>
-              <span>持續於[private-lab]進行六足機器人 RHex 控制研究</span>
+              <span data-i18n="news.1">持續於[private-lab]進行六足機器人 RHex 控制研究</span>
             </div>
             <div class="news-item">
               <span class="news-date">Ongoing</span>
-              <span>強化學習 vs 傳統控制方法之比較實驗進行中</span>
+              <span data-i18n="news.2">強化學習 vs 傳統控制方法之比較實驗進行中</span>
             </div>
             <div class="news-item">
               <span class="news-date">NTU</span>
-              <span>機械工程主修 / 土木工程雙主修 / 數學副修</span>
+              <span data-i18n="news.3">機械工程主修 / 土木工程雙主修 / 數學副修</span>
             </div>
           </div>
         </div>
@@ -136,7 +140,7 @@
       <div class="container">
         <div class="portrait-header reveal">
           <div class="eyebrow">Portrait</div>
-          <h3 id="portrait-title">Jason Liao / [private]</h3>
+          <h3 id="portrait-title" data-i18n="portrait.title">Jason Liao / [private]</h3>
         </div>
         <div class="portrait-gallery reveal" aria-label="Portraits of Jason Liao">
           <figure class="portrait-card portrait-card-primary">
@@ -156,28 +160,28 @@
         <div class="card reveal">
           <div class="section-number">01</div>
           <div class="eyebrow">About</div>
-          <h2>不困於相，<br>循心而生。</h2>
-          <p>
+          <h2 data-i18n-html="about.h2">不困於相，<br>循心而生。</h2>
+          <p data-i18n="about.p1">
             我來自台灣，目前在[private-affiliation]進行工程與數理領域的學習與研究。
           </p>
-          <p>
+          <p data-i18n="about.p2">
             我喜歡推導，也喜歡把抽象模型轉化成可驗證、可模擬、可部署的系統。從流體力學、熱流、應用數學，到控制理論、機器人與強化學習，這些年我一直在找一條夢想之路：讓自己真正喜歡的理論，最後能在工程裡落地，變成能被使用、也能對世界有幫助的東西。
           </p>
           <div class="stats">
-            <div class="stat"><strong>NTU</strong><span class="muted small">[private-affiliation]</span></div>
-            <div class="stat"><strong>Mechanical</strong><span class="muted small">主修機械工程</span></div>
-            <div class="stat"><strong>Civil + Math</strong><span class="muted small">土木雙主修・數學輔修</span></div>
-            <div class="stat"><strong>Bio-inspired Robotics Lab</strong><span class="muted small">六足機器人控制研究</span></div>
+            <div class="stat"><strong>NTU</strong><span class="muted small" data-i18n="about.stat1">[private-affiliation]</span></div>
+            <div class="stat"><strong>Mechanical</strong><span class="muted small" data-i18n="about.stat2">主修機械工程</span></div>
+            <div class="stat"><strong>Civil + Math</strong><span class="muted small" data-i18n="about.stat3">土木雙主修・數學輔修</span></div>
+            <div class="stat"><strong>Bio-inspired Robotics Lab</strong><span class="muted small" data-i18n="about.stat4">六足機器人控制研究</span></div>
           </div>
         </div>
         <div class="card reveal">
-          <div class="eyebrow">個人簡介</div>
-          <h3>Jason Liao / [private]</h3>
+          <div class="eyebrow" data-i18n="about.profile.eyebrow">個人簡介</div>
+          <h3 data-i18n="about.profile.title">Jason Liao / [private]</h3>
           <ul class="list">
-            <li><div class="mini-title">學術背景</div><span class="muted">[private-affiliation]機械工程學系，同時修習土木工程與數學。</span></li>
-            <li><div class="mini-title">目前方向</div><span class="muted">現於[private-lab]從事六足機器人控制研究，專注於強化學習與傳統控制方法的比較分析。</span></li>
-            <li><div class="mini-title">長期願景</div><span class="muted">希望未來能把理論、工程與真實世界接得更近，做出既紮實又真正有用的研究。</span></li>
-            <li><div class="mini-title">實驗室之外</div><span class="muted">學業以外，我最熱愛還是棒球。我是中華隊的忠實球迷，也是中信兄弟球迷；對我來說，棒球從來不只是比賽，而是一種很台灣、很熱血，也很真誠的情感連結。我很喜歡那種全場一起應援、全台灣人為同一件事團結起來、替場上拚搏的球員撐到最後一刻的氛圍。日本職棒我喜歡讀賣巨人，美國職棒我喜歡紐約洋基。除此之外，我也打 Valorant，喜歡競爭、節奏與臨場判斷帶來的快感。</span></li>
+            <li><div class="mini-title" data-i18n="about.list.1.title">學術背景</div><span class="muted" data-i18n="about.list.1.desc">[private-affiliation]機械工程學系，同時修習土木工程與數學。</span></li>
+            <li><div class="mini-title" data-i18n="about.list.2.title">目前方向</div><span class="muted" data-i18n="about.list.2.desc">現於[private-lab]從事六足機器人控制研究，專注於強化學習與傳統控制方法的比較分析。</span></li>
+            <li><div class="mini-title" data-i18n="about.list.3.title">長期願景</div><span class="muted" data-i18n="about.list.3.desc">希望未來能把理論、工程與真實世界接得更近，做出既紮實又真正有用的研究。</span></li>
+            <li><div class="mini-title" data-i18n="about.list.4.title">實驗室之外</div><span class="muted" data-i18n="about.list.4.desc">學業以外，我最熱愛還是棒球。我是中華隊的忠實球迷，也是中信兄弟球迷；對我來說，棒球從來不只是比賽，而是一種很台灣、很熱血，也很真誠的情感連結。我很喜歡那種全場一起應援、全台灣人為同一件事團結起來、替場上拚搏的球員撐到最後一刻的氛圍。日本職棒我喜歡讀賣巨人，美國職棒我喜歡紐約洋基。除此之外，我也打 Valorant，喜歡競爭、節奏與臨場判斷帶來的快感。</span></li>
           </ul>
         </div>
       </div>
@@ -185,16 +189,16 @@
       <div class="container">
         <div class="timeline reveal">
           <div class="timeline-item">
-            <div class="year">01 · 數理起點</div>
-            <p>我從小就很喜歡數學和物理。那種把一件事想清楚、推乾淨、講明白的感覺，對我來說一直很有吸引力。也因為這樣，我一開始一直覺得自己應該會走一條很典型的理科路線。</p>
+            <div class="year" data-i18n="about.tl.1.year">01 · 數理起點</div>
+            <p data-i18n="about.tl.1.p">我從小就很喜歡數學和物理。那種把一件事想清楚、推乾淨、講明白的感覺，對我來說一直很有吸引力。也因為這樣，我一開始一直覺得自己應該會走一條很典型的理科路線。</p>
           </div>
           <div class="timeline-item">
-            <div class="year">02 · 走進工程</div>
-            <p>後來真的進到工程領域之後，我才慢慢發現，原來以前喜歡的那些理論，不只是漂亮，它們也可以被做成真正能用的東西。從機械、流體、控制到建模，我愈來愈喜歡工程這件事，因為它讓我看到：原來知識不只可以解釋世界，也可以真的去改變世界。</p>
+            <div class="year" data-i18n="about.tl.2.year">02 · 走進工程</div>
+            <p data-i18n="about.tl.2.p">後來真的進到工程領域之後，我才慢慢發現，原來以前喜歡的那些理論，不只是漂亮，它們也可以被做成真正能用的東西。從機械、流體、控制到建模，我愈來愈喜歡工程這件事，因為它讓我看到：原來知識不只可以解釋世界，也可以真的去改變世界。</p>
           </div>
           <div class="timeline-item">
-            <div class="year">03 · 現在在做的事</div>
-            <p>現在我在臺灣大學仿生機器人實驗室做研究，主要在做六足機器人 RHex 的控制。現在最核心的問題，是強化學習在某些情境下，能不能比傳統控制做得更好、更穩，或者更有適應性。我現在做的，就是把這件事一步一步做清楚、做紮實。除此之外，我也一直對熱流和數理跨域整合很有興趣，因為我很喜歡那種理論與實作真正接起來的感覺。</p>
+            <div class="year" data-i18n="about.tl.3.year">03 · 現在在做的事</div>
+            <p data-i18n="about.tl.3.p">現在我在臺灣大學仿生機器人實驗室做研究，主要在做六足機器人 RHex 的控制。現在最核心的問題，是強化學習在某些情境下，能不能比傳統控制做得更好、更穩，或者更有適應性。我現在做的，就是把這件事一步一步做清楚、做紮實。除此之外，我也一直對熱流和數理跨域整合很有興趣，因為我很喜歡那種理論與實作真正接起來的感覺。</p>
           </div>
         </div>
       </div>
@@ -205,26 +209,26 @@
         <div class="card reveal">
           <div class="section-number">02</div>
           <div class="eyebrow">Background</div>
-          <h2>學經歷</h2>
-          <p class="lead">
+          <h2 data-i18n="bg.h2">學經歷</h2>
+          <p class="lead" data-i18n="bg.lead">
             一路走來，我很幸運地待過幾個對我很重要的地方。它們不只構成我的學歷，也慢慢形塑了我看世界、做研究、和理解自己的方式。
           </p>
           <div class="timeline">
             <div class="timeline-item">
-              <div class="year">國小</div>
-              <p>[private-school]</p>
+              <div class="year" data-i18n="bg.tl.1.year">國小</div>
+              <p data-i18n="bg.tl.1.p">[private-school]</p>
             </div>
             <div class="timeline-item">
-              <div class="year">國中</div>
-              <p>[private-school]</p>
+              <div class="year" data-i18n="bg.tl.2.year">國中</div>
+              <p data-i18n="bg.tl.2.p">[private-school]</p>
             </div>
             <div class="timeline-item">
-              <div class="year">高中</div>
-              <p>[private-school]<br>[private-academic-detail]</p>
+              <div class="year" data-i18n="bg.tl.3.year">高中</div>
+              <p data-i18n-html="bg.tl.3.p">[private-school]<br>[private-academic-detail]</p>
             </div>
             <div class="timeline-item">
-              <div class="year">大學</div>
-              <p>[private-affiliation]<br>主修機械工程學系<br>雙主修土木工程學系<br>輔修數學系</p>
+              <div class="year" data-i18n="bg.tl.4.year">大學</div>
+              <p data-i18n-html="bg.tl.4.p">[private-affiliation]<br>主修機械工程學系<br>雙主修土木工程學系<br>輔修數學系</p>
             </div>
           </div>
         </div>
@@ -235,22 +239,22 @@
       <div class="container">
         <div class="section-number">03</div>
         <div class="eyebrow">Core Focus</div>
-        <h2>我正在投入的問題</h2>
+        <h2 data-i18n="focus.h2">我正在投入的問題</h2>
         <div class="grid-2 reveal" style="margin-top:30px">
           <div class="card">
-            <h3>現在主要在做的事</h3>
+            <h3 data-i18n="focus.card1.title">現在主要在做的事</h3>
             <ul class="list">
-              <li><div class="mini-title">六足機器人控制</div><span class="muted">我現在在臺灣大學仿生機器人實驗室做研究，主題是六足機器人 RHex 的控制。現在最主要的方向，是用強化學習來控制機器人，並和傳統控制方法做比較，看看在穩定性、適應性和效果上，能不能找到更好的解法。</span></li>
-              <li><div class="mini-title">數學與工程建模</div><span class="muted">我一直很重視推導與建模。對我來說，數學不是附屬工具，而是幫助我把問題看清楚、把系統定義清楚、把方法站穩的根本。</span></li>
-              <li><div class="mini-title">熱流與跨域整合</div><span class="muted">雖然現在的主軸在控制與機器人，但我對熱流、數理與跨領域整合依然很有興趣。未來如果能把這些看似分散的東西慢慢接起來，我會很期待。</span></li>
+              <li><div class="mini-title" data-i18n="focus.list.1.title">六足機器人控制</div><span class="muted" data-i18n="focus.list.1.desc">我現在在臺灣大學仿生機器人實驗室做研究，主題是六足機器人 RHex 的控制。現在最主要的方向，是用強化學習來控制機器人，並和傳統控制方法做比較，看看在穩定性、適應性和效果上，能不能找到更好的解法。</span></li>
+              <li><div class="mini-title" data-i18n="focus.list.2.title">數學與工程建模</div><span class="muted" data-i18n="focus.list.2.desc">我一直很重視推導與建模。對我來說，數學不是附屬工具，而是幫助我把問題看清楚、把系統定義清楚、把方法站穩的根本。</span></li>
+              <li><div class="mini-title" data-i18n="focus.list.3.title">熱流與跨域整合</div><span class="muted" data-i18n="focus.list.3.desc">雖然現在的主軸在控制與機器人，但我對熱流、數理與跨領域整合依然很有興趣。未來如果能把這些看似分散的東西慢慢接起來，我會很期待。</span></li>
             </ul>
           </div>
           <div class="card">
-            <h3>我在意的事</h3>
+            <h3 data-i18n="focus.card2.title">我在意的事</h3>
             <ul class="list">
-              <li><div class="mini-title">準確</div><span class="muted">先把問題看準，把話說清楚。</span></li>
-              <li><div class="mini-title">扎實</div><span class="muted">我在意的不只是結果好不好看，也在意推導和實作能不能站得住。</span></li>
-              <li><div class="mini-title">溫度</div><span class="muted">做研究可以很嚴謹，但做人要充滿溫度。</span></li>
+              <li><div class="mini-title" data-i18n="focus.values.1.title">準確</div><span class="muted" data-i18n="focus.values.1.desc">先把問題看準，把話說清楚。</span></li>
+              <li><div class="mini-title" data-i18n="focus.values.2.title">扎實</div><span class="muted" data-i18n="focus.values.2.desc">我在意的不只是結果好不好看，也在意推導和實作能不能站得住。</span></li>
+              <li><div class="mini-title" data-i18n="focus.values.3.title">溫度</div><span class="muted" data-i18n="focus.values.3.desc">做研究可以很嚴謹，但做人要充滿溫度。</span></li>
             </ul>
           </div>
         </div>
@@ -266,22 +270,22 @@
         <div class="section-number">04</div>
         <div class="eyebrow">Methods & Tools</div>
         <h2>Tools & Foundations</h2>
-        <p class="lead">下面這些，是我目前最常用，也最願意繼續磨的東西。</p>
+        <p class="lead" data-i18n="skills.lead">下面這些，是我目前最常用，也最願意繼續磨的東西。</p>
         <div class="skills-grid reveal stagger-parent" style="margin-top:30px">
           <div class="skill-category">
             <h3>Engineering & Modeling</h3>
             <ul class="tool-list">
               <li>
                 <div class="tool-name">MATLAB / Simulink</div>
-                <div class="tool-desc">控制建模、系統模擬與分析</div>
+                <div class="tool-desc" data-i18n="skills.matlab">控制建模、系統模擬與分析</div>
               </li>
               <li>
                 <div class="tool-name">Mathematica</div>
-                <div class="tool-desc">推導、符號運算與數學視覺化</div>
+                <div class="tool-desc" data-i18n="skills.mathematica">推導、符號運算與數學視覺化</div>
               </li>
               <li>
                 <div class="tool-name">CAD / Inventor / SolidWorks</div>
-                <div class="tool-desc">機構表達、設計思考與工程溝通</div>
+                <div class="tool-desc" data-i18n="skills.cad">機構表達、設計思考與工程溝通</div>
               </li>
             </ul>
           </div>
@@ -290,15 +294,15 @@
             <ul class="tool-list">
               <li>
                 <div class="tool-name">Python</div>
-                <div class="tool-desc">分析、模擬與研究開發</div>
+                <div class="tool-desc" data-i18n="skills.python">分析、模擬與研究開發</div>
               </li>
               <li>
                 <div class="tool-name">C / C++</div>
-                <div class="tool-desc">基礎實作與效能導向程式</div>
+                <div class="tool-desc" data-i18n="skills.cpp">基礎實作與效能導向程式</div>
               </li>
               <li>
                 <div class="tool-name">Reinforcement Learning</div>
-                <div class="tool-desc">目前正在持續投入的重點方向</div>
+                <div class="tool-desc" data-i18n="skills.rl">目前正在持續投入的重點方向</div>
               </li>
             </ul>
           </div>
@@ -307,15 +311,15 @@
             <ul class="tool-list">
               <li>
                 <div class="tool-name">Linear Algebra</div>
-                <div class="tool-desc">建模與控制的底層語言</div>
+                <div class="tool-desc" data-i18n="skills.linalg">建模與控制的底層語言</div>
               </li>
               <li>
                 <div class="tool-name">Differential Equations</div>
-                <div class="tool-desc">理解系統動態最基本的工具</div>
+                <div class="tool-desc" data-i18n="skills.diffeq">理解系統動態最基本的工具</div>
               </li>
               <li>
                 <div class="tool-name">Numerical Methods</div>
-                <div class="tool-desc">把理論帶進計算與模擬的方法</div>
+                <div class="tool-desc" data-i18n="skills.numerical">把理論帶進計算與模擬的方法</div>
               </li>
             </ul>
           </div>
@@ -329,15 +333,15 @@
         <div class="section-number">05</div>
         <div class="eyebrow">Research & Current Work</div>
         <h2>Research & Ongoing Work</h2>
-        <p class="lead">目前還沒有正式論文發表，這裡先放我正在做的研究，以及幾個構成我現在這條路的重要方向。</p>
+        <p class="lead" data-i18n="research.lead">目前還沒有正式論文發表，這裡先放我正在做的研究，以及幾個構成我現在這條路的重要方向。</p>
         <div class="pub-list reveal" style="margin-top:30px">
           <div class="pub-item">
             <div class="pub-type">Current Research</div>
             <div class="pub-content">
-              <h3>六足機器人控制：強化學習與傳統控制的比較</h3>
-              <p class="pub-authors">Jason Liao（[private]）</p>
+              <h3 data-i18n="research.pub1.title">六足機器人控制：強化學習與傳統控制的比較</h3>
+              <p class="pub-authors" data-i18n="research.pub1.author">Jason Liao（[private]）</p>
               <p class="pub-venue">[private-lab]</p>
-              <p class="muted" style="font-size:.95rem; margin-top:8px">我目前在[private-lab]做六足機器人 RHex 的控制研究。現在最核心的問題，是強化學習在某些情境下，能不能比傳統控制做得更穩、更有效，也更有適應性。這是我現在最主要在做的事。</p>
+              <p class="muted" style="font-size:.95rem; margin-top:8px" data-i18n="research.pub1.desc">我目前在[private-lab]做六足機器人 RHex 的控制研究。現在最核心的問題，是強化學習在某些情境下，能不能比傳統控制做得更穩、更有效，也更有適應性。這是我現在最主要在做的事。</p>
               <div class="tags">
                 <span class="tag">Hexapod RHex</span>
                 <span class="tag">Reinforcement Learning</span>
@@ -349,10 +353,10 @@
           <div class="pub-item">
             <div class="pub-type">Academic Foundation</div>
             <div class="pub-content">
-              <h3>從數理到底層工程的學習路徑</h3>
+              <h3 data-i18n="research.pub2.title">從數理到底層工程的學習路徑</h3>
               <p class="pub-authors">[private-affiliation]</p>
               <p class="pub-venue">[private-academic-track]</p>
-              <p class="muted" style="font-size:.95rem; margin-top:8px">我的研究主軸現在在控制與機器人，但底子其實是一路從數學、物理、工程數學、線性代數、微分方程、流體力學、熱力學與力學慢慢累積起來的。這些東西不只是背景，而是我現在做研究時真正用來站穩的方法。</p>
+              <p class="muted" style="font-size:.95rem; margin-top:8px" data-i18n="research.pub2.desc">我的研究主軸現在在控制與機器人，但底子其實是一路從數學、物理、工程數學、線性代數、微分方程、流體力學、熱力學與力學慢慢累積起來的。這些東西不只是背景，而是我現在做研究時真正用來站穩的方法。</p>
             </div>
           </div>
         </div>
@@ -369,19 +373,19 @@
           <article class="project-card tilt-card">
             <div class="meta">01 · Current Focus</div>
             <h3>Hexapod RHex Control</h3>
-            <p>目前在[private-lab]進行六足機器人 RHex 的控制研究。重點放在強化學習與傳統控制的比較，希望把穩定性、適應性和整體效果做得更清楚，也做得更扎實。</p>
+            <p data-i18n="projects.card1.p">目前在[private-lab]進行六足機器人 RHex 的控制研究。重點放在強化學習與傳統控制的比較，希望把穩定性、適應性和整體效果做得更清楚，也做得更扎實。</p>
             <div class="tags"><span class="tag">Hexapod RHex</span><span class="tag">RL Control</span><span class="tag">Classical Control</span></div>
           </article>
           <article class="project-card tilt-card">
             <div class="meta">02 · Mathematical Foundation</div>
             <h3>Modeling with Mathematics</h3>
-            <p>我一直很重視數學在工程裡的角色。對我來說，微分方程、線性代數、狀態空間不是課程內容而已，而是幫助我理解系統、建立模型、判斷方法是否可靠的基礎。</p>
+            <p data-i18n="projects.card2.p">我一直很重視數學在工程裡的角色。對我來說，微分方程、線性代數、狀態空間不是課程內容而已，而是幫助我理解系統、建立模型、判斷方法是否可靠的基礎。</p>
             <div class="tags"><span class="tag">Modeling</span><span class="tag">Linear Algebra</span><span class="tag">Differential Equations</span></div>
           </article>
           <article class="project-card tilt-card">
             <div class="meta">03 · Long-term Interest</div>
             <h3>Thermofluids & Integration</h3>
-            <p>雖然現在的研究主軸在控制與機器人，我一直都很喜歡熱流，也持續對數理、熱流與控制之間的整合保持興趣。對我來說，這不是支線，而是我想長期保留的一條路。</p>
+            <p data-i18n="projects.card3.p">雖然現在的研究主軸在控制與機器人，我一直都很喜歡熱流，也持續對數理、熱流與控制之間的整合保持興趣。對我來說，這不是支線，而是我想長期保留的一條路。</p>
             <div class="tags"><span class="tag">Fluid Mechanics</span><span class="tag">Thermodynamics</span><span class="tag">Interdisciplinary Work</span></div>
           </article>
         </div>
@@ -394,27 +398,27 @@
         <div class="section-number">07</div>
         <div class="eyebrow">Writing</div>
         <h2>Blog / Notes</h2>
-        <p class="lead">
+        <p class="lead" data-i18n="writing.lead">
           這裡留下的，是我一路走來的一些痕跡。
           有些關於研究，有些關於棒球，也有些只是某個當下很真實的想法。
         </p>
         <div class="blog-grid reveal stagger-parent">
           <a class="blog-card tilt-card" href="posts/reason-passion.html">
-            <div class="meta">Essay · Identity</div>
-            <h3>理性為骨，熱血為心</h3>
-            <p>寫我怎麼看待學習、熱愛、責任與未來，也寫我想成為什麼樣的人。</p>
+            <div class="meta" data-i18n="writing.card1.meta">Essay · Identity</div>
+            <h3 data-i18n="writing.card1.title">理性為骨，熱血為心</h3>
+            <p data-i18n="writing.card1.desc">寫我怎麼看待學習、熱愛、責任與未來，也寫我想成為什麼樣的人。</p>
             <div class="tags"><span class="tag">Identity</span><span class="tag">Manifesto</span></div>
           </a>
           <a class="blog-card tilt-card" href="posts/math-robotics.html">
-            <div class="meta">Note · Research</div>
-            <h3>從數學到機器人控制</h3>
-            <p>寫我怎麼從喜歡推導，走到現在做控制與機器人研究；數學對我來說，不是裝飾，而是底子。</p>
+            <div class="meta" data-i18n="writing.card2.meta">Note · Research</div>
+            <h3 data-i18n="writing.card2.title">從數學到機器人控制</h3>
+            <p data-i18n="writing.card2.desc">寫我怎麼從喜歡推導，走到現在做控制與機器人研究；數學對我來說，不是裝飾，而是底子。</p>
             <div class="tags"><span class="tag">Control</span><span class="tag">Mathematics</span></div>
           </a>
           <a class="blog-card tilt-card" href="posts/baseball-engineering.html">
-            <div class="meta">Essay · Life</div>
-            <h3>棒球教會我的工程觀</h3>
-            <p>寫台灣棒球帶給我的節奏、紀律與團隊感。很多我在研究裡重視的事，其實早就先在球場上學到了。</p>
+            <div class="meta" data-i18n="writing.card3.meta">Essay · Life</div>
+            <h3 data-i18n="writing.card3.title">棒球教會我的工程觀</h3>
+            <p data-i18n="writing.card3.desc">寫台灣棒球帶給我的節奏、紀律與團隊感。很多我在研究裡重視的事，其實早就先在球場上學到了。</p>
             <div class="tags"><span class="tag">Baseball</span><span class="tag">Discipline</span></div>
           </a>
         </div>
@@ -425,11 +429,11 @@
       <div class="container">
         <div class="section-number">08</div>
         <div class="eyebrow">Contact</div>
-        <h2>歡迎和我聯絡</h2>
+        <h2 data-i18n="contact.h2">歡迎和我聯絡</h2>
         <div class="contact reveal" style="margin-top:28px">
           <div class="contact-panel">
             <h3>Get in Touch</h3>
-            <p>
+            <p data-i18n="contact.desc">
               無論是學術交流、研究合作、機器人控制、數學建模，或只是想聊聊棒球，都很歡迎來信。
             </p>
             <div class="hero-actions">
@@ -442,8 +446,8 @@
             <div class="contact-row"><span class="muted">Phone</span><strong>[private-phone]</strong></div>
             <div class="contact-row"><span class="muted">Instagram</span><strong>[private-instagram]</strong></div>
             <div class="contact-row"><span class="muted">GitHub</span><strong>github.com/JasonLiaoJCS</strong></div>
-            <div class="contact-row"><span class="muted">所在地</span><strong>台北 / [private-affiliation]</strong></div>
-            <div class="contact-row"><span class="muted">語言</span><strong>繁體中文 / English</strong></div>
+            <div class="contact-row"><span class="muted" data-i18n="contact.location.label">所在地</span><strong data-i18n="contact.location.value">台北 / [private-affiliation]</strong></div>
+            <div class="contact-row"><span class="muted" data-i18n="contact.lang.label">語言</span><strong data-i18n="contact.lang.value">繁體中文 / English</strong></div>
           </div>
         </div>
       </div>
@@ -458,8 +462,8 @@
   <footer class="footer">
     <div class="container footer-inner">
       <div>
-        <div class="brand" style="gap:10px"><span class="brand-mark"><span>JL</span></span><span>Jason Liao / [private]</span></div>
-        <div class="small muted" style="margin-top:8px">以理性立身，以熱血行路。</div>
+        <div class="brand" style="gap:10px"><span class="brand-mark"><span>JL</span></span><span data-i18n="footer.brand">Jason Liao / [private]</span></div>
+        <div class="small muted" style="margin-top:8px" data-i18n="footer.motto">以理性立身，以熱血行路。</div>
       </div>
       <div class="footer-links">
         <a href="#about">About</a>
@@ -475,6 +479,17 @@
     </div>
   </footer>
 
+  <script>
+  const PAGE_I18N_META_EN = {
+    title: 'Jason Liao | NTU Mechanical Engineering, Control, Mathematics & Robotics',
+    description: 'Jason Liao studies Mechanical Engineering at [private-affiliation], double majors in Civil Engineering, minors in Mathematics, and works on hexapod robot control, reinforcement learning, and classical control comparison at [private-lab].',
+    ogTitle: 'Jason Liao | NTU Mechanical Engineering, Control, Mathematics & Robotics',
+    ogDescription: 'Jason Liao studies Mechanical Engineering at [private-affiliation], double majors in Civil Engineering, minors in Mathematics, and works on hexapod robot control, reinforcement learning, and classical control comparison at [private-lab].',
+    twitterTitle: 'Jason Liao | NTU Mechanical Engineering, Control, Mathematics & Robotics',
+    twitterDescription: 'Jason Liao studies Mechanical Engineering at [private-affiliation], double majors in Civil Engineering, minors in Mathematics, and works on hexapod robot control, reinforcement learning, and classical control comparison at [private-lab].',
+    ogLocale: 'en_US'
+  };
+  </script>
   <script src="app.js"></script>
 </body>
 </html>

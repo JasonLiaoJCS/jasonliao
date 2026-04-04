@@ -57,6 +57,33 @@ p{margin:0 0 18px; color:var(--muted)}
   color:#d9d2c8;
 }
 
+/* ── Language Toggle ── */
+.lang-toggle{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:6px 14px 6px 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.04);
+  color:var(--gold-soft);
+  font-size:.82rem; font-weight:600;
+  cursor:pointer;
+  transition:all .3s ease;
+  letter-spacing:.06em;
+  white-space:nowrap;
+}
+.lang-toggle:hover{
+  border-color:rgba(217,177,111,.35);
+  background:rgba(217,177,111,.1);
+  transform:translateY(-1px);
+}
+.lang-toggle-icon{
+  font-size:.9rem;
+  line-height:1;
+}
+.lang-toggle-label{
+  font-family:"Inter",sans-serif;
+}
+
 /* ── Custom Cursor ── */
 .cursor{
   position:fixed; top:0; left:0; z-index:9999;

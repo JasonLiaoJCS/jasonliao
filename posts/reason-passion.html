@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-Hant" data-lang="zh">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -35,28 +35,55 @@
         <a href="../index.html#about">About</a>
         <a href="../index.html#writing">Writing</a>
         <a href="../index.html#contact">Contact</a>
+        <button class="lang-toggle" id="langToggle" aria-label="Switch language">
+          <span class="lang-toggle-icon">🌐</span>
+          <span class="lang-toggle-label" id="langLabel">EN</span>
+        </button>
       </div>
     </div>
   </nav>
   <section class="post-hero">
     <div class="post-wrap">
-      <a class="back-link" href="../index.html#writing">← Back to blog</a>
+      <a class="back-link" href="../index.html#writing" data-i18n="back">← Back to blog</a>
       <div class="post-meta">Essay · Identity · Jason Liao</div>
-      <h1 style="font-size:clamp(3rem,7vw,5.4rem); margin-top:12px">理性為骨，熱血為心</h1>
-      <p class="lead">關於學術、熱愛、責任與未來的自我宣言。</p>
+      <h1 style="font-size:clamp(3rem,7vw,5.4rem); margin-top:12px" data-i18n="title">理性為骨，熱血為心</h1>
+      <p class="lead" data-i18n="subtitle">關於學術、熱愛、責任與未來的自我宣言。</p>
     </div>
   </section>
   <div class="post-wrap">
     <article>
-<p>有些人把學術理解成履歷的裝飾，把熱愛理解成青春期的餘溫；但我一直覺得，真正能走遠的人，不是因為把自己包裝得很好，而是因為他心裡真的有一件願意長久相信的事。</p>
-<p>對我而言，知識從來不是冷的。數學的嚴謹、工程的結構、控制的邏輯，這些東西當然要求精確，也要求紀律；但更重要的是，它們讓我看見一種非常稀有的美：原來世界可以被理解，混亂可以被整理，模糊可以被推導成清楚的輪廓。</p>
-<p>也因此，我希望自己未來做的研究，不只是正確，不只是高分，不只是看起來厲害。我更在意的是，它是否真正扎實，是否真正能站得住，是否在面對時間、面對現實、面對更高標準時，依然不會崩塌。</p>
-<h2>不是把熱情壓下去，而是讓它長得更成熟</h2>
-<p>我一直很喜歡一句屬於自己的提醒：理性為骨，熱血為心。骨是支撐，心是方向。若只有熱情，人會燒得很快；若只有理性，則很容易在效率與結果之間，把自己活成一台漂亮但空心的機器。</p>
-<p>真正成熟的追求，不是把熱愛磨平，而是把它鍛鍊得更能承重。於是，推導要更嚴謹，實作要更誠實，寫作要更能把思考講清楚，做人也要更能在高標準裡保留溫度。</p>
-<h2>願望其實很簡單</h2>
-<p>希望有一天，自己做出的東西，能夠被世界認真對待；希望有一天，自己寫下的句子，能夠替某些迷惘的人留下光；也希望有一天，當我回頭看這一路時，能夠很平靜地說：我沒有背叛過真正想成為的那個人。</p>
+<p data-i18n="p1">有些人把學術理解成履歷的裝飾，把熱愛理解成青春期的餘溫；但我一直覺得，真正能走遠的人，不是因為把自己包裝得很好，而是因為他心裡真的有一件願意長久相信的事。</p>
+<p data-i18n="p2">對我而言，知識從來不是冷的。數學的嚴謹、工程的結構、控制的邏輯，這些東西當然要求精確，也要求紀律；但更重要的是，它們讓我看見一種非常稀有的美：原來世界可以被理解，混亂可以被整理，模糊可以被推導成清楚的輪廓。</p>
+<p data-i18n="p3">也因此，我希望自己未來做的研究，不只是正確，不只是高分，不只是看起來厲害。我更在意的是，它是否真正扎實，是否真正能站得住，是否在面對時間、面對現實、面對更高標準時，依然不會崩塌。</p>
+<h2 data-i18n="h2a">不是把熱情壓下去，而是讓它長得更成熟</h2>
+<p data-i18n="p4">我很喜歡一句屬於自己的提醒：理性為骨，熱血為心。骨是支撐，心是方向。若只有熱情，人會燒得很快；若只有理性，則很容易在效率與結果之間，把自己活成一台漂亮但空心的機器。</p>
+<p data-i18n="p5">真正成熟的追求，不是把熱愛磨平，而是把它鍛鍊得更能承重。於是，推導要更嚴謹，實作要更誠實，寫作要更能把思考講清楚，做人也要更能在高標準裡保留溫度。</p>
+<h2 data-i18n="h2b">願望其實很簡單</h2>
+<p data-i18n="p6">希望有一天，自己做出的東西，能夠被世界認真對待；希望有一天，自己寫下的句子，能夠替某些迷惘的人留下光；也希望有一天，當我回頭看這一路時，能夠很平靜地說：我沒有背叛過真正想成為的那個人。</p>
 </article>
   </div>
+  <script>
+  const PAGE_I18N_META_EN = {
+    title: 'Reason as the Bone, Passion as the Heart — Jason Liao',
+    description: 'A personal manifesto on academics, passion, responsibility, and the future.',
+    ogTitle: 'Reason as the Bone, Passion as the Heart — Jason Liao',
+    ogDescription: 'A personal manifesto on academics, passion, responsibility, and the future.',
+    ogLocale: 'en_US'
+  };
+  const POST_I18N_EN = {
+    'back': '← Back to blog',
+    'title': 'Reason as the Bone, Passion as the Heart',
+    'subtitle': 'A personal manifesto on academics, passion, responsibility, and the future.',
+    'p1': "Some people see academics as resume decoration, and passion as the afterglow of youth. But I've always felt that those who truly go far don't do so because they packaged themselves well — it's because they genuinely have something they're willing to believe in for the long haul.",
+    'p2': "For me, knowledge has never been cold. The rigor of mathematics, the structure of engineering, the logic of control — these things demand precision and discipline. But more importantly, they've shown me a rare kind of beauty: that the world can be understood, chaos can be organized, and ambiguity can be derived into clear contours.",
+    'p3': "Because of this, I hope the research I do in the future won't just be correct, won't just score well, and won't just look impressive. What I care about more is whether it's truly solid, whether it can truly stand on its own, and whether it will still hold up when facing time, reality, and higher standards.",
+    'h2a': "Not suppressing passion, but letting it mature",
+    'p4': "I've always liked a phrase I made for myself: reason as the bone, passion as the heart. Bone is support; heart is direction. With only passion, a person burns out fast. With only reason, it's easy to become a beautiful but hollow machine, caught between efficiency and outcomes.",
+    'p5': "Truly mature pursuit isn't about grinding passion down, but forging it to bear more weight. So derivations must be more rigorous, implementations more honest, writing must communicate thinking more clearly, and as a person, one must preserve warmth even within high standards.",
+    'h2b': "The wish is actually simple",
+    'p6': "I hope that one day, what I create will be taken seriously by the world. I hope that one day, the sentences I write will leave a light for those who feel lost. And I hope that one day, when I look back on this journey, I can say with peace: I never betrayed the person I truly wanted to become.",
+  };
+  </script>
+  <script src="../app.js"></script>
 </body>
 </html>

@@ -1,20 +1,50 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-Hant" data-lang="zh">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>404 — Jason Liao</title>
+  <meta name="description" content="這個頁面可能先飛往天際了。回到首頁，重新出發。">
+  <meta property="og:title" content="404 — Jason Liao">
+  <meta property="og:description" content="這個頁面可能先飛往天際了。回到首頁，重新出發。">
+  <meta property="og:locale" content="zh_TW">
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;700&display=swap" rel="stylesheet">
 </head>
 <body>
+  <nav class="nav">
+    <div class="nav-inner">
+      <a class="brand" href="index.html"><span class="brand-mark"><span>JL</span></span><span>Jason Liao</span></a>
+      <div class="nav-links" style="display:flex">
+        <a href="index.html">Home</a>
+        <button class="lang-toggle" id="langToggle" aria-label="Switch language">
+          <span class="lang-toggle-icon">🌐</span>
+          <span class="lang-toggle-label" id="langLabel">EN</span>
+        </button>
+      </div>
+    </div>
+  </nav>
   <div class="post-wrap" style="padding-top:120px">
     <div class="post-meta">404</div>
     <h1 style="font-size:clamp(3rem,8vw,6rem)">Page not found.</h1>
-    <p class="lead">這個頁面可能先飛往天際了。回到首頁，重新出發。</p>
-    <a class="btn btn-primary" href="index.html">Back Home</a>
+    <p class="lead" data-i18n="lead">這個頁面可能先飛往天際了。回到首頁，重新出發。</p>
+    <a class="btn btn-primary" href="index.html" data-i18n="cta">Back Home</a>
   </div>
+  <script>
+  const PAGE_I18N_EN = {
+    lead: 'This page may have drifted a little too far. Return home and start again.',
+    cta: 'Back Home'
+  };
+  const PAGE_I18N_META_EN = {
+    title: '404 — Jason Liao',
+    description: 'This page may have drifted a little too far. Return home and start again.',
+    ogTitle: '404 — Jason Liao',
+    ogDescription: 'This page may have drifted a little too far. Return home and start again.',
+    ogLocale: 'en_US'
+  };
+  </script>
+  <script src="app.js"></script>
 </body>
 </html>
