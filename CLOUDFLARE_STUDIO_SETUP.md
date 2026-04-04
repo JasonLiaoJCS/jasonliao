@@ -54,6 +54,21 @@ wrangler.toml
 - `ADMIN_SESSION_SECRET`
 - `ACQUAINTANCE_PASSWORD_HASH`
 
+### 想先快速排除登入問題時
+
+後端同時也支援比較簡單的直接密碼 secret：
+
+- `ADMIN_PASSWORD`
+- `ACQUAINTANCE_PASSWORD`
+
+如果你已經被 hash 搞亂、後台一直登不進去，最簡單的救援做法是：
+
+1. 先把 `ADMIN_USERNAME` 設成你確定的值，例如 `jason`
+2. 新增 `ADMIN_PASSWORD`，值直接就是你要登入後台時輸入的原始密碼
+3. 如果要測熟客模式，也新增 `ACQUAINTANCE_PASSWORD`
+
+這樣就不需要先處理 `pbkdf2_sha256$...` 的 hash，也比較不容易因為複製格式出錯。
+
 ### `ADMIN_PASSWORD_HASH` / `ACQUAINTANCE_PASSWORD_HASH` 怎麼產生
 
 在專案根目錄執行：

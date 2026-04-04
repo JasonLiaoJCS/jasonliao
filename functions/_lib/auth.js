@@ -31,6 +31,24 @@ function timingSafeEqual(left, right){
   return result === 0;
 }
 
+function normalizeSecret(value){
+  if(typeof value !== 'string') return '';
+  const trimmed = value.trim();
+  if(!trimmed) return '';
+  if(
+    (trimmed.startsWith('"') && trimmed.endsWith('"'))
+    || (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ){
+    return trimmed.slice(1, -1).trim();
+  }
+  return trimmed;
+}
+
+function verifyRawPassword(password, expected){
+  if(typeof password !== 'string' || !expected) return false;
+  return timingSafeEqual(encoder.encode(password), encoder.encode(expected));
+}
+
 async function signValue(value, secret){
   const key = await crypto.subtle.importKey(
     'raw',
@@ -135,10 +153,12 @@ export async function verifyPassword(password, encodedHash){
 
 function getSessionSecrets(env){
   return {
-    adminSecret: env.ADMIN_SESSION_SECRET || '',
-    adminUsername: env.ADMIN_USERNAME || '',
-    adminPasswordHash: env.ADMIN_PASSWORD_HASH || '',
-    acquaintancePasswordHash: env.ACQUAINTANCE_PASSWORD_HASH || '',
+    adminSecret: normalizeSecret(env.ADMIN_SESSION_SECRET || ''),
+    adminUsername: normalizeSecret(env.ADMIN_USERNAME || ''),
+    adminPasswordHash: normalizeSecret(env.ADMIN_PASSWORD_HASH || ''),
+    adminPasswordPlain: normalizeSecret(env.ADMIN_PASSWORD || ''),
+    acquaintancePasswordHash: normalizeSecret(env.ACQUAINTANCE_PASSWORD_HASH || ''),
+    acquaintancePasswordPlain: normalizeSecret(env.ACQUAINTANCE_PASSWORD || ''),
   };
 }
 
@@ -182,16 +202,36 @@ export async function getAcquaintanceSession(request, env){
 }
 
 export async function verifyAdminCredentials(username, password, env){
-  const { adminUsername, adminPasswordHash } = getSessionSecrets(env);
-  if(!adminUsername || !adminPasswordHash) return false;
-  if(username !== adminUsername) return false;
-  return verifyPassword(password, adminPasswordHash);
+  const {
+    adminUsername,
+    adminPasswordHash,
+    adminPasswordPlain,
+  } = getSessionSecrets(env);
+  const normalizedUsername = typeof username === 'string' ? username.trim() : '';
+  if(!adminUsername || normalizedUsername !== adminUsername) return false;
+  if(adminPasswordPlain){
+    return verifyRawPassword(password, adminPasswordPlain);
+  }
+  if(!adminPasswordHash) return false;
+  if(adminPasswordHash.startsWith('pbkdf2_sha256$')){
+    return verifyPassword(password, adminPasswordHash);
+  }
+  return verifyRawPassword(password, adminPasswordHash);
 }
 
 export async function verifyAcquaintancePassword(password, env){
-  const { acquaintancePasswordHash } = getSessionSecrets(env);
+  const {
+    acquaintancePasswordHash,
+    acquaintancePasswordPlain,
+  } = getSessionSecrets(env);
+  if(acquaintancePasswordPlain){
+    return verifyRawPassword(password, acquaintancePasswordPlain);
+  }
   if(!acquaintancePasswordHash) return false;
-  return verifyPassword(password, acquaintancePasswordHash);
+  if(acquaintancePasswordHash.startsWith('pbkdf2_sha256$')){
+    return verifyPassword(password, acquaintancePasswordHash);
+  }
+  return verifyRawPassword(password, acquaintancePasswordHash);
 }
 
 export function adminLogoutCookie(){
@@ -205,7 +245,14 @@ export function acquaintanceLogoutCookie(){
 export function getAuthConfig(env){
   const secrets = getSessionSecrets(env);
   return {
-    hasAdmin: Boolean(secrets.adminSecret && secrets.adminUsername && secrets.adminPasswordHash),
-    hasAcquaintance: Boolean(secrets.adminSecret && secrets.acquaintancePasswordHash),
+    hasAdmin: Boolean(
+      secrets.adminSecret
+      && secrets.adminUsername
+      && (secrets.adminPasswordPlain || secrets.adminPasswordHash)
+    ),
+    hasAcquaintance: Boolean(
+      secrets.adminSecret
+      && (secrets.acquaintancePasswordPlain || secrets.acquaintancePasswordHash)
+    ),
   };
 }
