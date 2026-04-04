@@ -3,19 +3,19 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Jason Liao [private] | 台大機械・控制・數學・機器人</title>
-  <meta name="description" content="[private] Jason Liao，[private-affiliation]機械工程主修、土木工程雙主修、數學副修，現於[private-lab]投入六足機器人控制、強化學習與傳統控制比較，也熱愛台灣棒球。">
+  <title>Jason Liao | 控制・數學・機器人</title>
+  <meta name="description" content="Jason Liao 的個人網站，分享控制、機器人、數學建模、工程思考與寫作。">
   <meta name="theme-color" content="#0b0e16">
   <meta name="robots" content="index,follow,max-image-preview:large">
   <meta name="google-site-verification" content="[removed-token]" />
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Jason Liao [private] | 台大機械・控制・數學・機器人">
-  <meta property="og:description" content="[private] Jason Liao，[private-affiliation]機械工程主修、土木工程雙主修、數學副修，現於[private-lab]投入六足機器人控制、強化學習與傳統控制比較，也熱愛台灣棒球。">
+  <meta property="og:title" content="Jason Liao | 控制・數學・機器人">
+  <meta property="og:description" content="Jason Liao 的個人網站，分享控制、機器人、數學建模、工程思考與寫作。">
   <meta property="og:image" content="assets/og-cover.png">
   <meta property="og:locale" content="zh_TW">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Jason Liao [private] | 台大機械・控制・數學・機器人">
-  <meta name="twitter:description" content="[private] Jason Liao，[private-affiliation]機械工程主修、土木工程雙主修、數學副修，現於[private-lab]投入六足機器人控制、強化學習與傳統控制比較，也熱愛台灣棒球。">
+  <meta name="twitter:title" content="Jason Liao | 控制・數學・機器人">
+  <meta name="twitter:description" content="Jason Liao 的個人網站，分享控制、機器人、數學建模、工程思考與寫作。">
   <meta name="twitter:image" content="assets/og-cover.png">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
@@ -28,14 +28,9 @@
     "@context":"https://schema.org",
     "@type":"Person",
     "name":"Jason Liao",
-    "alternateName":"[private]",
     "jobTitle":"Student Researcher",
-    "description":"Jason Liao（[private]）是[private-affiliation]學生，主修機械工程，雙主修土木工程，副修數學，現於[private-lab]投入六足機器人控制研究，關注控制、機器人、數學建模、熱流與台灣棒球。",
-    "knowsAbout":["Mechanical Engineering","Civil Engineering","Mathematics","Control Systems","Robotics","Reinforcement Learning","Fluid Mechanics","Thermodynamics","Taiwan Baseball"],
-    "affiliation":{
-      "@type":"CollegeOrUniversity",
-      "name":"[private-affiliation]"
-    }
+    "description":"Jason Liao writes about control systems, robotics, mathematical modeling, engineering thinking, and personal notes on learning.",
+    "knowsAbout":["Control Systems","Robotics","Mathematics","Engineering Modeling","Reinforcement Learning","Fluid Mechanics","Thermodynamics","Taiwan Baseball"]
   }
   </script>
   <script type="application/ld+json">
@@ -75,6 +70,10 @@
           <span class="lang-toggle-icon">🌐</span>
           <span class="lang-toggle-label" id="langLabel">EN</span>
         </button>
+        <button class="private-toggle" id="privateToggle" aria-label="Toggle acquaintance mode">
+          <span class="private-toggle-status" aria-hidden="true"></span>
+          <span class="private-toggle-label" id="privateToggleLabel">熟客模式</span>
+        </button>
       </div>
     </div>
   </nav>
@@ -85,10 +84,10 @@
       <canvas class="hero-particles" id="heroParticles"></canvas>
       <div class="container hero-grid">
         <div>
-          <div class="eyebrow">Student Researcher — [private-affiliation]</div>
+          <div class="eyebrow" data-i18n="hero.eyebrow">Personal Website</div>
           <h1 class="hero-title-anim">Reason as the bone,<br><span class="gold">passion as the heart.</span></h1>
           <p class="lead" data-i18n="hero.lead">
-            我是[private]（Jason Liao）。主修機械工程，也持續投入數學、控制與機器人開發。
+            我是 Jason Liao，持續投入數學、控制與機器人開發。
             我喜歡理論推導，也喜歡把抽象模型一步一步做成能驗證、能實作、能真正派上用場的系統。
             我始終相信：真正有力量的技術，不只是能算、能做，更要能被理解、被傳遞，最後真的為世界帶來一點改變。
           </p>
@@ -121,7 +120,7 @@
           <div class="news-items">
             <div class="news-item">
               <span class="news-date">2026</span>
-              <span data-i18n="news.1">持續於[private-lab]進行六足機器人 RHex 控制研究</span>
+              <span data-i18n="news.1">持續進行六足機器人控制與學習式方法研究</span>
             </div>
             <div class="news-item">
               <span class="news-date">Ongoing</span>
@@ -129,7 +128,7 @@
             </div>
             <div class="news-item">
               <span class="news-date">NTU</span>
-              <span data-i18n="news.3">機械工程主修 / 土木工程雙主修 / 數學副修</span>
+              <span data-i18n="news.3">工程 / 數學 / 控制與機器人</span>
             </div>
           </div>
         </div>
@@ -140,17 +139,11 @@
       <div class="container">
         <div class="portrait-header reveal">
           <div class="eyebrow">Portrait</div>
-          <h3 id="portrait-title" data-i18n="portrait.title">Jason Liao / [private]</h3>
+          <h3 id="portrait-title" data-i18n="portrait.title">Selected Portraits</h3>
         </div>
         <div class="portrait-gallery reveal" aria-label="Portraits of Jason Liao">
-          <figure class="portrait-card portrait-card-primary">
-            <img src="assets/jason-portrait-garden.jpg" alt="Portrait of Jason Liao standing among flowers and greenery" loading="eager" decoding="async">
-            <figcaption>Taipei, Taiwan</figcaption>
-          </figure>
-          <figure class="portrait-card portrait-card-secondary">
-            <img src="assets/jason-portrait-snow.jpg" alt="Jason Liao skiing on a snowy mountain" loading="lazy" decoding="async">
-            <figcaption>Winter Adventure</figcaption>
-          </figure>
+          <figure class="portrait-card portrait-card-private portrait-card-primary" id="portraitPrimary"></figure>
+          <figure class="portrait-card portrait-card-private portrait-card-secondary" id="portraitSecondary"></figure>
         </div>
       </div>
     </section>
@@ -162,24 +155,24 @@
           <div class="eyebrow">About</div>
           <h2 data-i18n-html="about.h2">不困於相，<br>循心而生。</h2>
           <p data-i18n="about.p1">
-            我來自台灣，目前在[private-affiliation]進行工程與數理領域的學習與研究。
+            我來自台灣，目前在工程與數理領域持續學習與研究。
           </p>
           <p data-i18n="about.p2">
             我喜歡推導，也喜歡把抽象模型轉化成可驗證、可模擬、可部署的系統。從流體力學、熱流、應用數學，到控制理論、機器人與強化學習，這些年我一直在找一條夢想之路：讓自己真正喜歡的理論，最後能在工程裡落地，變成能被使用、也能對世界有幫助的東西。
           </p>
           <div class="stats">
-            <div class="stat"><strong>NTU</strong><span class="muted small" data-i18n="about.stat1">[private-affiliation]</span></div>
-            <div class="stat"><strong>Mechanical</strong><span class="muted small" data-i18n="about.stat2">主修機械工程</span></div>
-            <div class="stat"><strong>Civil + Math</strong><span class="muted small" data-i18n="about.stat3">土木雙主修・數學輔修</span></div>
-            <div class="stat"><strong>Bio-inspired Robotics Lab</strong><span class="muted small" data-i18n="about.stat4">六足機器人控制研究</span></div>
+            <div class="stat"><strong>Engineering</strong><span class="muted small" data-i18n="about.stat1">系統思考與工程實作</span></div>
+            <div class="stat"><strong>Mathematics</strong><span class="muted small" data-i18n="about.stat2">推導、建模與分析</span></div>
+            <div class="stat"><strong>Control</strong><span class="muted small" data-i18n="about.stat3">學習式方法與傳統方法比較</span></div>
+            <div class="stat"><strong>Robotics</strong><span class="muted small" data-i18n="about.stat4">移動系統與研究開發</span></div>
           </div>
         </div>
         <div class="card reveal">
           <div class="eyebrow" data-i18n="about.profile.eyebrow">個人簡介</div>
-          <h3 data-i18n="about.profile.title">Jason Liao / [private]</h3>
+          <h3 data-i18n="about.profile.title">Jason Liao</h3>
           <ul class="list">
-            <li><div class="mini-title" data-i18n="about.list.1.title">學術背景</div><span class="muted" data-i18n="about.list.1.desc">[private-affiliation]機械工程學系，同時修習土木工程與數學。</span></li>
-            <li><div class="mini-title" data-i18n="about.list.2.title">目前方向</div><span class="muted" data-i18n="about.list.2.desc">現於[private-lab]從事六足機器人控制研究，專注於強化學習與傳統控制方法的比較分析。</span></li>
+            <li><div class="mini-title" data-i18n="about.list.1.title">學術背景</div><span class="muted" data-i18n="about.list.1.desc">持續在工程、數學與控制導向的問題之間來回工作。</span></li>
+            <li><div class="mini-title" data-i18n="about.list.2.title">目前方向</div><span class="muted" data-i18n="about.list.2.desc">目前的核心工作聚焦在機器人控制、學習式方法，以及和傳統方法的嚴謹比較。</span></li>
             <li><div class="mini-title" data-i18n="about.list.3.title">長期願景</div><span class="muted" data-i18n="about.list.3.desc">希望未來能把理論、工程與真實世界接得更近，做出既紮實又真正有用的研究。</span></li>
             <li><div class="mini-title" data-i18n="about.list.4.title">實驗室之外</div><span class="muted" data-i18n="about.list.4.desc">學業以外，我最熱愛還是棒球。我是中華隊的忠實球迷，也是中信兄弟球迷；對我來說，棒球從來不只是比賽，而是一種很台灣、很熱血，也很真誠的情感連結。我很喜歡那種全場一起應援、全台灣人為同一件事團結起來、替場上拚搏的球員撐到最後一刻的氛圍。日本職棒我喜歡讀賣巨人，美國職棒我喜歡紐約洋基。除此之外，我也打 Valorant，喜歡競爭、節奏與臨場判斷帶來的快感。</span></li>
           </ul>
@@ -198,7 +191,7 @@
           </div>
           <div class="timeline-item">
             <div class="year" data-i18n="about.tl.3.year">03 · 現在在做的事</div>
-            <p data-i18n="about.tl.3.p">現在我在臺灣大學仿生機器人實驗室做研究，主要在做六足機器人 RHex 的控制。現在最核心的問題，是強化學習在某些情境下，能不能比傳統控制做得更好、更穩，或者更有適應性。我現在做的，就是把這件事一步一步做清楚、做紮實。除此之外，我也一直對熱流和數理跨域整合很有興趣，因為我很喜歡那種理論與實作真正接起來的感覺。</p>
+            <p data-i18n="about.tl.3.p">現在我主要在做六足機器人 RHex 的控制研究。最核心的問題，是強化學習在某些情境下，能不能比傳統控制做得更好、更穩，或者更有適應性。我現在做的，就是把這件事一步一步做清楚、做紮實。除此之外，我也一直對熱流和數理跨域整合很有興趣，因為我很喜歡那種理論與實作真正接起來的感覺。</p>
           </div>
         </div>
       </div>
@@ -211,24 +204,24 @@
           <div class="eyebrow">Background</div>
           <h2 data-i18n="bg.h2">學經歷</h2>
           <p class="lead" data-i18n="bg.lead">
-            一路走來，我很幸運地待過幾個對我很重要的地方。它們不只構成我的學歷，也慢慢形塑了我看世界、做研究、和理解自己的方式。
+            較完整的學經歷與照片只在熟客模式中開放。公開版本先保留較概括的輪廓。
           </p>
           <div class="timeline">
             <div class="timeline-item">
               <div class="year" data-i18n="bg.tl.1.year">國小</div>
-              <p data-i18n="bg.tl.1.p">[private-school]</p>
+              <p data-i18n="bg.tl.1.p">在台北建立最早期的學習基礎</p>
             </div>
             <div class="timeline-item">
               <div class="year" data-i18n="bg.tl.2.year">國中</div>
-              <p data-i18n="bg.tl.2.p">[private-school]</p>
+              <p data-i18n="bg.tl.2.p">持續在數學與物理上累積興趣</p>
             </div>
             <div class="timeline-item">
               <div class="year" data-i18n="bg.tl.3.year">高中</div>
-              <p data-i18n-html="bg.tl.3.p">[private-school]<br>[private-academic-detail]</p>
+              <p data-i18n-html="bg.tl.3.p">在科學與工程之間逐漸確認方向</p>
             </div>
             <div class="timeline-item">
               <div class="year" data-i18n="bg.tl.4.year">大學</div>
-              <p data-i18n-html="bg.tl.4.p">[private-affiliation]<br>主修機械工程學系<br>雙主修土木工程學系<br>輔修數學系</p>
+              <p data-i18n-html="bg.tl.4.p">目前的工作核心放在控制、建模與機器人研究</p>
             </div>
           </div>
         </div>
@@ -244,7 +237,7 @@
           <div class="card">
             <h3 data-i18n="focus.card1.title">現在主要在做的事</h3>
             <ul class="list">
-              <li><div class="mini-title" data-i18n="focus.list.1.title">六足機器人控制</div><span class="muted" data-i18n="focus.list.1.desc">我現在在臺灣大學仿生機器人實驗室做研究，主題是六足機器人 RHex 的控制。現在最主要的方向，是用強化學習來控制機器人，並和傳統控制方法做比較，看看在穩定性、適應性和效果上，能不能找到更好的解法。</span></li>
+              <li><div class="mini-title" data-i18n="focus.list.1.title">六足機器人控制</div><span class="muted" data-i18n="focus.list.1.desc">我現在的工作主題是六足機器人 RHex 的控制。最主要的方向，是用強化學習來控制機器人，並和傳統控制方法做比較，看看在穩定性、適應性和效果上，能不能找到更好的解法。</span></li>
               <li><div class="mini-title" data-i18n="focus.list.2.title">數學與工程建模</div><span class="muted" data-i18n="focus.list.2.desc">我一直很重視推導與建模。對我來說，數學不是附屬工具，而是幫助我把問題看清楚、把系統定義清楚、把方法站穩的根本。</span></li>
               <li><div class="mini-title" data-i18n="focus.list.3.title">熱流與跨域整合</div><span class="muted" data-i18n="focus.list.3.desc">雖然現在的主軸在控制與機器人，但我對熱流、數理與跨領域整合依然很有興趣。未來如果能把這些看似分散的東西慢慢接起來，我會很期待。</span></li>
             </ul>
@@ -339,9 +332,9 @@
             <div class="pub-type">Current Research</div>
             <div class="pub-content">
               <h3 data-i18n="research.pub1.title">六足機器人控制：強化學習與傳統控制的比較</h3>
-              <p class="pub-authors" data-i18n="research.pub1.author">Jason Liao（[private]）</p>
-              <p class="pub-venue">[private-lab]</p>
-              <p class="muted" style="font-size:.95rem; margin-top:8px" data-i18n="research.pub1.desc">我目前在[private-lab]做六足機器人 RHex 的控制研究。現在最核心的問題，是強化學習在某些情境下，能不能比傳統控制做得更穩、更有效，也更有適應性。這是我現在最主要在做的事。</p>
+              <p class="pub-authors" data-i18n="research.pub1.author">Jason Liao</p>
+              <p class="pub-venue" data-i18n="research.pub1.venue">Current Robotics Research</p>
+              <p class="muted" style="font-size:.95rem; margin-top:8px" data-i18n="research.pub1.desc">我目前的研究重心在六足機器人控制。現在最核心的問題，是強化學習在某些情境下，能不能比傳統控制做得更穩、更有效，也更有適應性。這是我現在最主要在做的事。</p>
               <div class="tags">
                 <span class="tag">Hexapod RHex</span>
                 <span class="tag">Reinforcement Learning</span>
@@ -354,8 +347,8 @@
             <div class="pub-type">Academic Foundation</div>
             <div class="pub-content">
               <h3 data-i18n="research.pub2.title">從數理到底層工程的學習路徑</h3>
-              <p class="pub-authors">[private-affiliation]</p>
-              <p class="pub-venue">[private-academic-track]</p>
+              <p class="pub-authors" data-i18n="research.pub2.author">Current Research Track</p>
+              <p class="pub-venue" data-i18n="research.pub2.venue">Engineering / Mathematics / Modeling</p>
               <p class="muted" style="font-size:.95rem; margin-top:8px" data-i18n="research.pub2.desc">我的研究主軸現在在控制與機器人，但底子其實是一路從數學、物理、工程數學、線性代數、微分方程、流體力學、熱力學與力學慢慢累積起來的。這些東西不只是背景，而是我現在做研究時真正用來站穩的方法。</p>
             </div>
           </div>
@@ -373,7 +366,7 @@
           <article class="project-card tilt-card">
             <div class="meta">01 · Current Focus</div>
             <h3>Hexapod RHex Control</h3>
-            <p data-i18n="projects.card1.p">目前在[private-lab]進行六足機器人 RHex 的控制研究。重點放在強化學習與傳統控制的比較，希望把穩定性、適應性和整體效果做得更清楚，也做得更扎實。</p>
+            <p data-i18n="projects.card1.p">目前在做的是六足機器人 RHex 的控制研究。重點放在強化學習與傳統控制的比較，希望把穩定性、適應性和整體效果做得更清楚，也做得更扎實。</p>
             <div class="tags"><span class="tag">Hexapod RHex</span><span class="tag">RL Control</span><span class="tag">Classical Control</span></div>
           </article>
           <article class="project-card tilt-card">
@@ -434,19 +427,19 @@
           <div class="contact-panel">
             <h3>Get in Touch</h3>
             <p data-i18n="contact.desc">
-              無論是學術交流、研究合作、機器人控制、數學建模，或只是想聊聊棒球，都很歡迎來信。
+              直接聯絡資訊與較完整的個人檔案只在熟客模式中開放。公開版本中，GitHub 仍然是最適合的聯絡入口。
             </p>
             <div class="hero-actions">
-              <a class="btn btn-primary magnetic" href="mailto:[private-email]">Email Me</a>
+              <a class="btn btn-primary magnetic" href="#private-access" id="directContactBtn" data-i18n="contact.directCta">熟客模式</a>
               <a class="btn magnetic" href="https://github.com/JasonLiaoJCS">GitHub</a>
             </div>
           </div>
           <div class="contact-panel">
-            <div class="contact-row"><span class="muted">Email</span><strong>[private-email]</strong></div>
-            <div class="contact-row"><span class="muted">Phone</span><strong>[private-phone]</strong></div>
-            <div class="contact-row"><span class="muted">Instagram</span><strong>[private-instagram]</strong></div>
+            <div class="contact-row"><span class="muted">Email</span><strong data-private-field="email" data-i18n="private.placeholder">熟客模式中開放</strong></div>
+            <div class="contact-row"><span class="muted">Phone</span><strong data-private-field="phone" data-i18n="private.placeholder">熟客模式中開放</strong></div>
+            <div class="contact-row"><span class="muted">Instagram</span><strong data-private-field="instagram" data-i18n="private.placeholder">熟客模式中開放</strong></div>
             <div class="contact-row"><span class="muted">GitHub</span><strong>github.com/JasonLiaoJCS</strong></div>
-            <div class="contact-row"><span class="muted" data-i18n="contact.location.label">所在地</span><strong data-i18n="contact.location.value">台北 / [private-affiliation]</strong></div>
+            <div class="contact-row"><span class="muted" data-i18n="contact.location.label">所在地</span><strong data-i18n="contact.location.value">台北，台灣</strong></div>
             <div class="contact-row"><span class="muted" data-i18n="contact.lang.label">語言</span><strong data-i18n="contact.lang.value">繁體中文 / English</strong></div>
           </div>
         </div>
@@ -459,10 +452,30 @@
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
   </button>
 
+  <div class="private-modal" id="privateModal" aria-hidden="true">
+    <div class="private-modal-backdrop" data-private-close></div>
+    <div class="private-modal-panel" role="dialog" aria-modal="true" aria-labelledby="privateModalTitle">
+      <button class="private-modal-close" type="button" aria-label="Close private access panel" data-private-close>&times;</button>
+      <div class="eyebrow" data-i18n="private.modal.eyebrow">Acquaintance Mode</div>
+      <h3 id="privateModalTitle" data-i18n="private.modal.title">開啟熟客模式</h3>
+      <p class="muted" data-i18n="private.modal.desc">為了降低個資外露風險，照片、直接聯絡方式、中文姓名與完整學經歷只在本機驗證密碼後顯示。</p>
+      <form class="private-form" id="privateForm">
+        <label class="private-label" for="privatePassword" data-i18n="private.modal.label">Password</label>
+        <input class="private-input" id="privatePassword" name="password" type="password" autocomplete="current-password" spellcheck="false">
+        <p class="private-error small" id="privateError" aria-live="polite"></p>
+        <div class="private-actions">
+          <button class="btn btn-primary magnetic" id="privateSubmit" type="submit" data-i18n="private.modal.submit">Unlock</button>
+          <button class="btn magnetic" type="button" data-private-close data-i18n="private.modal.cancel">Cancel</button>
+        </div>
+      </form>
+      <p class="small muted" data-i18n="private.modal.note">密碼只在你的瀏覽器本地驗證，不會送到伺服器。</p>
+    </div>
+  </div>
+
   <footer class="footer">
     <div class="container footer-inner">
       <div>
-        <div class="brand" style="gap:10px"><span class="brand-mark"><span>JL</span></span><span data-i18n="footer.brand">Jason Liao / [private]</span></div>
+        <div class="brand" style="gap:10px"><span class="brand-mark"><span>JL</span></span><span data-i18n="footer.brand">Jason Liao</span></div>
         <div class="small muted" style="margin-top:8px" data-i18n="footer.motto">以理性立身，以熱血行路。</div>
       </div>
       <div class="footer-links">
@@ -471,7 +484,7 @@
         <a href="#projects">Projects</a>
         <a href="#writing">Blog</a>
         <a href="https://github.com/JasonLiaoJCS">GitHub</a>
-        <a href="mailto:[private-email]">Email</a>
+        <a href="#private-access" id="footerContactLink" data-i18n="contact.directCta">熟客模式</a>
       </div>
       <div class="footer-copy small muted">
         &copy; 2026 Jason Liao. Built with purpose.
@@ -481,12 +494,12 @@
 
   <script>
   const PAGE_I18N_META_EN = {
-    title: 'Jason Liao | NTU Mechanical Engineering, Control, Mathematics & Robotics',
-    description: 'Jason Liao studies Mechanical Engineering at [private-affiliation], double majors in Civil Engineering, minors in Mathematics, and works on hexapod robot control, reinforcement learning, and classical control comparison at [private-lab].',
-    ogTitle: 'Jason Liao | NTU Mechanical Engineering, Control, Mathematics & Robotics',
-    ogDescription: 'Jason Liao studies Mechanical Engineering at [private-affiliation], double majors in Civil Engineering, minors in Mathematics, and works on hexapod robot control, reinforcement learning, and classical control comparison at [private-lab].',
-    twitterTitle: 'Jason Liao | NTU Mechanical Engineering, Control, Mathematics & Robotics',
-    twitterDescription: 'Jason Liao studies Mechanical Engineering at [private-affiliation], double majors in Civil Engineering, minors in Mathematics, and works on hexapod robot control, reinforcement learning, and classical control comparison at [private-lab].',
+    title: 'Jason Liao | Control, Mathematics & Robotics',
+    description: 'Jason Liao’s personal site on control, robotics, mathematical modeling, engineering thinking, and reflective writing.',
+    ogTitle: 'Jason Liao | Control, Mathematics & Robotics',
+    ogDescription: 'Jason Liao’s personal site on control, robotics, mathematical modeling, engineering thinking, and reflective writing.',
+    twitterTitle: 'Jason Liao | Control, Mathematics & Robotics',
+    twitterDescription: 'Jason Liao’s personal site on control, robotics, mathematical modeling, engineering thinking, and reflective writing.',
     ogLocale: 'en_US'
   };
   </script>
