@@ -1,0 +1,8 @@
+name = "jasonliao-site"
+compatibility_date = "2026-04-05"
+pages_build_output_dir = "."
+
+[[d1_databases]]
+binding = "CMS_DB"
+database_name = "jasonliao-cms"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"

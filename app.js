@@ -122,13 +122,13 @@ const I18N_EN = {
   'private.placeholder': 'Available in Acquaintance Mode',
   'private.modal.eyebrow': 'Acquaintance Mode',
   'private.modal.title': 'Unlock private profile details',
-  'private.modal.desc': 'To reduce personal-data exposure, portraits, direct contact details, the Chinese name, and the full academic background are shown only after local password verification.',
+  'private.modal.desc': 'To reduce personal-data exposure, portraits, direct contact details, the Chinese name, and the full academic background are shown only after password verification.',
   'private.modal.label': 'Password',
   'private.modal.submit': 'Unlock',
   'private.modal.cancel': 'Cancel',
   'private.modal.toggleShow': 'Show',
   'private.modal.toggleHide': 'Hide',
-  'private.modal.note': 'The password is verified locally in your browser and is never sent to a server. Acquaintance Mode locks again after 10 minutes of inactivity.',
+  'private.modal.note': 'Acquaintance Mode unlocks protected details only after verification and locks again after 10 minutes of inactivity.',
 
   // Footer
   'footer.motto': "Stand on reason, walk with passion.",
@@ -150,9 +150,23 @@ const privateMode = {
   payload: null,
   scriptPromise: null,
   mediaUrls: [],
+  source: null,
   lastActivityAt: 0,
   lastActivityHandledAt: 0,
   idleTimer: null,
+};
+const cmsState = {
+  backendEnabled: false,
+  serverAcquaintanceEnabled: false,
+  publicTranslations: { zh: {}, en: {} },
+  publicUpdates: [],
+  publicPosts: [],
+  privateUpdates: [],
+  privatePosts: [],
+  bootstrapPromise: null,
+};
+const cmsOriginalMarkup = {
+  news: null,
 };
 const PRIVATE_UI_COPY = {
   zh: {
@@ -160,7 +174,7 @@ const PRIVATE_UI_COPY = {
     toggleOn: '熟客模式 ON',
     unlockButton: 'Email Me',
     footerEmail: 'Email',
-    modalError: '密碼不正確，或目前瀏覽器不支援本機解密。',
+    modalError: '密碼不正確，或目前的熟客模式驗證不可用。',
     modalLoading: '驗證中...',
     passwordPlaceholder: '輸入密碼',
     portraitLocked: [
@@ -179,7 +193,7 @@ const PRIVATE_UI_COPY = {
     toggleOn: 'Acquaintance Mode On',
     unlockButton: 'Email Me',
     footerEmail: 'Email',
-    modalError: 'Incorrect password, or this browser does not support local decryption.',
+    modalError: 'Incorrect password, or acquaintance verification is currently unavailable.',
     modalLoading: 'Unlocking...',
     passwordPlaceholder: 'Enter password',
     portraitLocked: [
@@ -224,9 +238,10 @@ function getTranslations(){
 
 function getBaseTranslation(key, lang){
   const translations = getTranslations();
+  const cmsTranslation = cmsState.publicTranslations?.[lang]?.[key];
   return lang === 'en'
-    ? (translations[key] || i18nOriginal.get(key) || '')
-    : (I18N_ZH[key] || i18nOriginal.get(key) || '');
+    ? (cmsTranslation || translations[key] || i18nOriginal.get(key) || '')
+    : (cmsTranslation || I18N_ZH[key] || i18nOriginal.get(key) || '');
 }
 
 function getPrivateTranslation(key, lang){
@@ -312,16 +327,20 @@ function evaluatePrivateSessionExpiry(){
 }
 
 function createPrivateImageUrl(entry){
+  if(entry?.dataUrl) return entry.dataUrl;
+  if(entry?.url) return entry.url;
   const bytes = base64ToUint8Array(entry.data);
   const blob = new Blob([bytes], { type: entry.mime });
   const url = URL.createObjectURL(blob);
-  privateMode.mediaUrls.push(url);
+  if(url.startsWith('blob:')){
+    privateMode.mediaUrls.push(url);
+  }
   return url;
 }
 
 function renderPortraitCard(card, entry, fallbackCopy){
   if(!card) return;
-  if(privateMode.unlocked && entry){
+  if(privateMode.unlocked && entry && (entry.data || entry.dataUrl || entry.url)){
     const imageUrl = createPrivateImageUrl(entry);
     const img = document.createElement('img');
     img.src = imageUrl;
@@ -422,6 +441,151 @@ function refreshPrivateUI(){
   updatePrivateToggleUI();
   updatePrivateModalUI();
   renderProtectedPortraits();
+  renderCmsCollections();
+}
+
+async function fetchCmsJson(url, options = {}){
+  const response = await fetch(url, {
+    credentials: 'same-origin',
+    ...options,
+  });
+
+  if(response.status === 404){
+    const error = new Error('cms-unavailable');
+    error.code = 'cms-unavailable';
+    throw error;
+  }
+
+  const data = await response.json().catch(() => ({}));
+  if(!response.ok){
+    const error = new Error(data.error || 'cms-request-failed');
+    error.code = data.error || 'cms-request-failed';
+    throw error;
+  }
+  return data;
+}
+
+function getVisibleCmsUpdates(){
+  const updates = [...cmsState.publicUpdates];
+  if(privateMode.unlocked && privateMode.source === 'server'){
+    updates.push(...cmsState.privateUpdates);
+  }
+  return updates
+    .slice()
+    .sort((left, right) => (left.sortOrder ?? 0) - (right.sortOrder ?? 0));
+}
+
+function getVisibleCmsPosts(){
+  const posts = [...cmsState.publicPosts];
+  if(privateMode.unlocked && privateMode.source === 'server'){
+    posts.push(...cmsState.privatePosts);
+  }
+  return posts.slice();
+}
+
+function bindTiltEffect(card){
+  if(!card || card.dataset.tiltBound === 'true') return;
+  card.dataset.tiltBound = 'true';
+  card.addEventListener('mousemove', event => {
+    const rect = card.getBoundingClientRect();
+    const x = (event.clientX - rect.left) / rect.width - 0.5;
+    const y = (event.clientY - rect.top) / rect.height - 0.5;
+    card.style.transform = `perspective(800px) rotateY(${x * 8}deg) rotateX(${-y * 8}deg) translateY(-5px)`;
+  });
+  card.addEventListener('mouseleave', () => {
+    card.style.transform = 'perspective(800px) rotateY(0) rotateX(0) translateY(0)';
+    card.style.transition = 'transform .5s cubic-bezier(.25,.46,.45,.94)';
+  });
+  card.addEventListener('mouseenter', () => {
+    card.style.transition = 'transform .1s ease-out';
+  });
+}
+
+function renderCmsUpdates(){
+  const container = document.querySelector('.news-items');
+  if(!container) return;
+  if(cmsOriginalMarkup.news === null){
+    cmsOriginalMarkup.news = container.innerHTML;
+  }
+  const items = getVisibleCmsUpdates();
+  if(!items.length){
+    container.innerHTML = cmsOriginalMarkup.news;
+    return;
+  }
+
+  container.innerHTML = items.map(item => `
+    <div class="news-item">
+      <span class="news-date">${item.dateLabel || ''}</span>
+      <span>${currentLang === 'en' ? (item.en || item.zh || '') : (item.zh || item.en || '')}</span>
+    </div>
+  `).join('');
+}
+
+function renderCmsPosts(){
+  const grid = document.querySelector('.blog-grid');
+  if(!grid) return;
+  grid.querySelectorAll('.cms-post-card').forEach(card => card.remove());
+
+  const posts = getVisibleCmsPosts();
+  if(!posts.length){
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  posts.forEach(post => {
+    const link = document.createElement('a');
+    link.className = 'blog-card tilt-card cms-post-card';
+    link.href = post.path;
+    const meta = privateMode.unlocked && privateMode.source === 'server' && post.visibility === 'acquaintance'
+      ? 'Acquaintance Note'
+      : 'Managed Post';
+    const title = currentLang === 'en' ? (post.title?.en || post.title?.zh || '') : (post.title?.zh || post.title?.en || '');
+    const excerpt = currentLang === 'en' ? (post.excerpt?.en || post.excerpt?.zh || '') : (post.excerpt?.zh || post.excerpt?.en || '');
+    const tags = (post.tags || []).map(tag => `<span class="tag">${tag}</span>`).join('');
+    link.innerHTML = `
+      <div class="meta">${meta}</div>
+      <h3>${title}</h3>
+      <p>${excerpt}</p>
+      <div class="tags">${tags}</div>
+    `;
+    fragment.append(link);
+    bindTiltEffect(link);
+  });
+  grid.prepend(fragment);
+}
+
+function renderCmsCollections(){
+  renderCmsUpdates();
+  renderCmsPosts();
+}
+
+async function loadCmsBootstrap(){
+  if(cmsState.bootstrapPromise) return cmsState.bootstrapPromise;
+
+  cmsState.bootstrapPromise = fetchCmsJson('/api/public/bootstrap')
+    .then(payload => {
+      cmsState.backendEnabled = true;
+      cmsState.serverAcquaintanceEnabled = Boolean(payload.serverAcquaintanceEnabled);
+      cmsState.publicTranslations = payload.translations || { zh: {}, en: {} };
+      cmsState.publicUpdates = payload.updates || [];
+      cmsState.publicPosts = payload.posts || [];
+      applyLang(currentLang);
+      return payload;
+    })
+    .catch(error => {
+      if(error.code === 'cms-unavailable'){
+        cmsState.backendEnabled = false;
+        cmsState.serverAcquaintanceEnabled = false;
+        return null;
+      }
+      console.warn('CMS bootstrap failed', error);
+      return null;
+    })
+    .finally(() => {
+      cmsState.bootstrapPromise = null;
+    });
+
+  return cmsState.bootstrapPromise;
 }
 
 function openPrivateModal(){
@@ -522,10 +686,45 @@ async function decryptPrivatePayload(password){
   throw new Error('private payload decrypt failed');
 }
 
+async function tryServerPrivateUnlock(password){
+  if(!cmsState.serverAcquaintanceEnabled){
+    const error = new Error('server-unavailable');
+    error.code = 'server-unavailable';
+    throw error;
+  }
+
+  await fetchCmsJson('/api/acquaintance/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password }),
+  });
+
+  const payload = await fetchCmsJson('/api/acquaintance/bootstrap');
+  cmsState.privateUpdates = payload.updates || [];
+  cmsState.privatePosts = payload.posts || [];
+  return payload.profile || null;
+}
+
 async function unlockPrivateMode(password){
-  const data = await decryptPrivatePayload(password);
+  let data = null;
+  let source = 'local';
+
+  try {
+    data = await tryServerPrivateUnlock(password);
+    source = 'server';
+  } catch (error){
+    const shouldFallbackToLocal = error.code === 'server-unavailable' || error.code === 'cms-unavailable';
+    if(!shouldFallbackToLocal){
+      throw error;
+    }
+    data = await decryptPrivatePayload(password);
+    cmsState.privateUpdates = [];
+    cmsState.privatePosts = [];
+  }
+
   privateMode.unlocked = true;
   privateMode.payload = data;
+  privateMode.source = source;
   privateMode.lastActivityAt = Date.now();
   privateMode.lastActivityHandledAt = privateMode.lastActivityAt;
   applyLang(currentLang);
@@ -534,10 +733,20 @@ async function unlockPrivateMode(password){
 }
 
 function lockPrivateMode(){
+  if(privateMode.source === 'server'){
+    fetch('/api/acquaintance/logout', {
+      method: 'POST',
+      credentials: 'same-origin',
+      keepalive: true,
+    }).catch(() => {});
+  }
   privateMode.unlocked = false;
   privateMode.payload = null;
+  privateMode.source = null;
   privateMode.lastActivityAt = 0;
   privateMode.lastActivityHandledAt = 0;
+  cmsState.privateUpdates = [];
+  cmsState.privatePosts = [];
   clearPrivateAutoLockTimer();
   revokePrivateMedia();
   applyLang(currentLang);
@@ -766,6 +975,7 @@ function setupI18nUI(){
   if(toggleBtn) toggleBtn.addEventListener('click', toggleLang);
   initI18n();
   setupPrivateUI();
+  loadCmsBootstrap();
 }
 
 if(document.readyState === 'loading'){

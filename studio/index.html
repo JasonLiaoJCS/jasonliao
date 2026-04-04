@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="googlebot" content="noindex,nofollow">
+  <title>Studio | JasonLiao</title>
+  <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="studio.css">
+</head>
+<body class="studio-body">
+  <div class="studio-shell">
+    <section class="studio-login" id="studioLoginView">
+      <div class="studio-login-panel">
+        <div class="eyebrow">Private Studio</div>
+        <h1>Content, privacy, and publishing.</h1>
+        <p class="lead">這裡是你之後管理網站內容、熟客資料、updates 與文章的後台。頁面本身不會出現在站內導覽，也預設不讓搜尋引擎收錄。</p>
+        <form class="studio-login-form" id="studioLoginForm">
+          <label>
+            <span>Username</span>
+            <input type="text" id="studioUsername" autocomplete="username">
+          </label>
+          <label>
+            <span>Password</span>
+            <input type="password" id="studioPassword" autocomplete="current-password">
+          </label>
+          <p class="studio-error" id="studioLoginError" aria-live="polite"></p>
+          <div class="studio-login-actions">
+            <button class="btn btn-primary magnetic" type="submit">Sign In</button>
+            <a class="btn magnetic" href="../index.html">Back to Site</a>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="studio-app" id="studioAppView" hidden>
+      <aside class="studio-sidebar">
+        <div class="studio-brand">
+          <div class="brand-mark"><span>JL</span></div>
+          <div>
+            <strong>JasonLiao Studio</strong>
+            <div class="small muted" id="studioSessionHint">Secure editorial workspace</div>
+          </div>
+        </div>
+        <nav class="studio-nav" id="studioNav"></nav>
+        <div class="studio-sidebar-footer">
+          <button class="btn magnetic" id="studioLogoutBtn" type="button">Log Out</button>
+        </div>
+      </aside>
+
+      <main class="studio-main">
+        <header class="studio-header">
+          <div>
+            <div class="eyebrow">Admin Console</div>
+            <h2 id="studioSectionTitle">Dashboard</h2>
+          </div>
+          <div class="studio-header-actions">
+            <a class="btn magnetic" href="../index.html" target="_blank" rel="noopener">Open Site</a>
+            <div class="studio-status-pill" id="studioStatusPill">Ready</div>
+          </div>
+        </header>
+
+        <section class="studio-panel" id="studioDashboardPanel"></section>
+        <section class="studio-panel" id="studioTranslationsPanel" hidden></section>
+        <section class="studio-panel" id="studioUpdatesPanel" hidden></section>
+        <section class="studio-panel" id="studioPostsPanel" hidden></section>
+        <section class="studio-panel" id="studioPrivatePanel" hidden></section>
+        <section class="studio-panel" id="studioDeployPanel" hidden></section>
+      </main>
+    </section>
+  </div>
+
+  <script src="studio.js"></script>
+</body>
+</html>

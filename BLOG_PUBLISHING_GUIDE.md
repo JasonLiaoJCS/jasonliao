@@ -2,6 +2,30 @@
 
 這份文件說明你之後要如何更新網站、發布新的 blog，以及目前公開文章和熟客限定文章的差別。
 
+## 0. 新架構先看這裡
+
+現在 repo 已經多了一套新的 Cloudflare Studio / CMS 架構。
+
+如果你之後已經把 Cloudflare Pages + Functions + D1 接好，日常發文會優先改成：
+
+```text
+/studio/
+```
+
+也就是你可以直接從後台：
+
+- 新增公開文章
+- 新增熟客限定文章
+- 編輯 updates
+- 編輯公開首頁文案
+- 編輯熟客模式資料
+
+完整部署方式請看：
+
+- `CLOUDFLARE_STUDIO_SETUP.md`
+
+這份 `BLOG_PUBLISHING_GUIDE.md` 仍然保留，是因為你目前站上還有靜態 fallback。
+
 ## 1. 目前網站的文章分成哪兩種
 
 ### 公開文章
