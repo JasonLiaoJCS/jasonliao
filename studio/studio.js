@@ -1,7 +1,15 @@
-import { escapeHtml, isLikelyHtml, renderRichContent } from '../shared/markdown.mjs';
+import {
+  createEmbeddedImageToken,
+  escapeHtml,
+  extractEmbeddedImageDocument,
+  isLikelyHtml,
+  renderRichContent,
+  serializeEmbeddedImageDocument,
+} from '../shared/markdown.mjs';
 
 const studioState = {
   bootstrap: null,
+  markdownEditorAssets: {},
   section: 'dashboard',
   selectedPostId: null,
   username: null,
@@ -137,8 +145,9 @@ const MARKDOWN_TOOLBAR_ACTIONS = [
   { action: 'divider', label: 'Divider' },
 ];
 
-function getMarkdownPreviewMarkup(value = ''){
-  const rendered = renderRichContent(value);
+function getMarkdownPreviewMarkup(value = '', manifest = null){
+  const serialized = manifest ? serializeEmbeddedImageDocument(value, manifest) : value;
+  const rendered = renderRichContent(serialized);
   if(rendered){
     return rendered;
   }
@@ -146,7 +155,9 @@ function getMarkdownPreviewMarkup(value = ''){
 }
 
 function renderMarkdownEditor({ id, label, value, languageLabel }){
-  const editorMode = isLikelyHtml(value || '') ? 'Legacy HTML' : 'Markdown';
+  const editorDocument = extractEmbeddedImageDocument(value || '');
+  studioState.markdownEditorAssets[id] = editorDocument.manifest;
+  const editorMode = isLikelyHtml(editorDocument.content || '') ? 'Legacy HTML' : 'Markdown';
   return `
     <section class="studio-markdown-editor" data-markdown-editor="${id}">
       <div class="studio-language-pair-header">
@@ -185,16 +196,16 @@ function renderMarkdownEditor({ id, label, value, languageLabel }){
       </div>
       <label class="studio-form-field">
         <span>${label}（Markdown）</span>
-        <textarea id="${id}" data-markdown-source="${id}" rows="16">${escapeHtml(value || '')}</textarea>
+        <textarea id="${id}" data-markdown-source="${id}" rows="16">${escapeHtml(editorDocument.content || '')}</textarea>
       </label>
       <div class="studio-markdown-preview-shell">
         <div class="studio-mini-label">Live Preview</div>
         <div class="studio-markdown-preview" data-markdown-preview="${id}">
-          ${getMarkdownPreviewMarkup(value)}
+          ${getMarkdownPreviewMarkup(editorDocument.content, editorDocument.manifest)}
         </div>
       </div>
       <div class="small muted studio-markdown-note">
-        新文章建議直接寫 Markdown；如果是舊文章的 HTML 內容，系統也會繼續相容並正常顯示。
+        新文章建議直接寫 Markdown；圖片會以短代碼顯示在編輯器中，預覽與正式文章仍會正常顯示。
       </div>
     </section>
   `;
@@ -266,6 +277,22 @@ function escapeMarkdownImageAlt(value = ''){
   return String(value).replace(/[\[\]]/g, '').trim();
 }
 
+function getMarkdownImageManifest(editorId){
+  if(!studioState.markdownEditorAssets[editorId]){
+    studioState.markdownEditorAssets[editorId] = {};
+  }
+  return studioState.markdownEditorAssets[editorId];
+}
+
+function createUniqueMarkdownImageId(editorId){
+  const manifest = getMarkdownImageManifest(editorId);
+  let candidate = `img-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+  while(manifest[candidate]){
+    candidate = `img-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+  }
+  return candidate;
+}
+
 function isSupportedMarkdownImageFile(file){
   if(!file){
     return false;
@@ -331,9 +358,14 @@ async function createEmbeddedMarkdownImage(file){
   };
 }
 
-function buildEmbeddedMarkdownImages(images){
+function buildEmbeddedMarkdownImages(editorId, images){
+  const manifest = getMarkdownImageManifest(editorId);
   return images
-    .map(image => `![${image.alt}](${image.dataUrl})`)
+    .map(image => {
+      const imageId = createUniqueMarkdownImageId(editorId);
+      manifest[imageId] = { src: image.dataUrl };
+      return `![${image.alt}](${createEmbeddedImageToken(imageId)})`;
+    })
     .join('\n\n');
 }
 
@@ -394,7 +426,7 @@ function bindMarkdownEditors(container){
 
     const refreshPreview = () => {
       const value = textarea.value;
-      preview.innerHTML = getMarkdownPreviewMarkup(value);
+      preview.innerHTML = getMarkdownPreviewMarkup(value, getMarkdownImageManifest(editorId));
       preview.classList.toggle('is-empty', !String(value).trim());
       const mode = isLikelyHtml(value) ? 'Legacy HTML' : 'Markdown';
       modeBadge.textContent = mode;
@@ -436,7 +468,7 @@ function bindMarkdownEditors(container){
         }
 
         if(embeddedImages.length){
-          insertBlockAtCursor(textarea, buildEmbeddedMarkdownImages(embeddedImages));
+          insertBlockAtCursor(textarea, buildEmbeddedMarkdownImages(editorId, embeddedImages));
         }
 
         imageTrigger.disabled = false;
@@ -956,6 +988,7 @@ function renderPosts(){
   const panel = studioRefs.panels.posts;
   const posts = studioState.bootstrap.posts || [];
   const currentPost = getCurrentPost();
+  studioState.markdownEditorAssets = {};
 
   panel.innerHTML = `
     <div class="studio-toolbar">
@@ -1036,8 +1069,14 @@ function collectCurrentPostFromForm(){
       en: document.getElementById('postExcerptEn').value,
     },
     content: {
-      zh: document.getElementById('postContentZh').value,
-      en: document.getElementById('postContentEn').value,
+      zh: serializeEmbeddedImageDocument(
+        document.getElementById('postContentZh').value,
+        studioState.markdownEditorAssets.postContentZh,
+      ),
+      en: serializeEmbeddedImageDocument(
+        document.getElementById('postContentEn').value,
+        studioState.markdownEditorAssets.postContentEn,
+      ),
     },
     tags: document.getElementById('postTagsInput').value
       .split(',')
