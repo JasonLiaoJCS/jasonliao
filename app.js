@@ -113,6 +113,21 @@ const I18N_EN = {
   'writing.card3.meta': "Essay · Life",
   'writing.card3.title': "What Baseball Taught Me About Engineering",
   'writing.card3.desc': "On the rhythm, discipline, and sense of team that Taiwanese baseball gave me. Many things I value in research, I first learned on the field.",
+  'writing.featured.badge': 'Featured Story',
+  'writing.featured.note': 'Research logs, life notes, baseball, and the thoughts that deserve a more permanent place.',
+  'writing.featured.cta': 'Open Story',
+  'writing.side.kicker': 'Editorial Notes',
+  'writing.side.title': 'This is where process, taste, and the way I think become visible.',
+  'writing.side.desc': 'If the homepage is the formal introduction, the blog is the part that feels alive: not only outcomes, but rhythm, curiosity, and what I am learning in public.',
+  'writing.side.stat1': 'featured stories right now',
+  'writing.side.stat2.value': 'Research · Life · Baseball',
+  'writing.side.stat2': 'core recurring themes',
+  'writing.recent.kicker': 'Recent Posts',
+  'writing.recent.title': 'Start with the latest notes',
+  'writing.archive.jump': 'Browse archive',
+  'writing.archive.eyebrow': 'Archive',
+  'writing.archive.title': 'Selected writing',
+  'writing.archive.desc': 'Essays, research notes, and field notes that continue shaping this site.',
   'blogPortal.eyebrow': 'Field Notes',
   'blogPortal.title': 'I write here regularly, not only about research, but also about life.',
   'blogPortal.desc': 'This is where I keep a living record of study, daily life, baseball, growth, and the thoughts that felt real enough to write down. If you want the most human side of this site, start here.',
@@ -593,26 +608,91 @@ function renderCmsUpdates(){
 }
 
 function renderCmsPosts(){
-  const grid = document.querySelector('.blog-grid');
+  const grid = document.querySelector('.writing-archive-grid') || document.querySelector('.blog-grid');
+  const featuredLink = document.querySelector('[data-writing-featured-link]');
+  const featuredMeta = document.querySelector('[data-writing-featured-meta]');
+  const featuredTitle = document.querySelector('[data-writing-featured-title]');
+  const featuredExcerpt = document.querySelector('[data-writing-featured-excerpt]');
+  const featuredTags = document.querySelector('[data-writing-featured-tags]');
+  const recentList = document.querySelector('[data-writing-recent-list]');
+  const writingCount = document.querySelector('[data-writing-count]');
+  const archiveHead = document.querySelector('.writing-archive-head');
   if(!grid) return;
+
   grid.querySelectorAll('.cms-post-card').forEach(card => card.remove());
+  const fallbackCards = [...grid.querySelectorAll('.blog-card:not(.cms-post-card)')];
 
   const posts = getVisibleCmsPosts();
   if(!posts.length){
+    if(featuredLink){
+      featuredLink.hidden = false;
+    }
+    if(recentList){
+      recentList.hidden = false;
+    }
+    fallbackCards.forEach(card => {
+      card.hidden = false;
+    });
+    if(archiveHead){
+      archiveHead.hidden = false;
+    }
     return;
   }
 
+  const escapeHtml = value => String(value || '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+  const getLocalizedPostField = field => currentLang === 'en'
+    ? (field?.en || field?.zh || '')
+    : (field?.zh || field?.en || '');
+  const formatMeta = post => {
+    if(privateMode.unlocked && privateMode.source === 'server' && post.visibility === 'acquaintance'){
+      return currentLang === 'en' ? 'Acquaintance Note' : '熟客筆記';
+    }
+    return currentLang === 'en' ? 'Managed Post' : '精選文章';
+  };
+  const buildTags = tags => (tags || []).slice(0, 4).map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('');
+
+  const featuredPost = posts[0];
+  if(featuredPost && featuredLink && featuredMeta && featuredTitle && featuredExcerpt && featuredTags){
+    featuredLink.href = featuredPost.path;
+    featuredMeta.textContent = formatMeta(featuredPost);
+    featuredTitle.textContent = getLocalizedPostField(featuredPost.title);
+    featuredExcerpt.textContent = getLocalizedPostField(featuredPost.excerpt);
+    featuredTags.innerHTML = buildTags(featuredPost.tags);
+  }
+
+  if(recentList){
+    recentList.innerHTML = posts.slice(0, 4).map(post => `
+      <a class="writing-recent-item" href="${post.path}">
+        <span class="writing-recent-meta">${formatMeta(post)}</span>
+        <strong>${escapeHtml(getLocalizedPostField(post.title))}</strong>
+      </a>
+    `).join('');
+    recentList.hidden = false;
+  }
+
+  if(writingCount){
+    writingCount.textContent = String(posts.length).padStart(2, '0');
+  }
+
+  fallbackCards.forEach(card => {
+    card.hidden = true;
+  });
+
+  const archivePosts = posts.length > 1 ? posts.slice(1) : posts.slice(0, 1);
   const fragment = document.createDocumentFragment();
-  posts.forEach(post => {
+  archivePosts.forEach(post => {
     const link = document.createElement('a');
     link.className = 'blog-card tilt-card cms-post-card';
     link.href = post.path;
-    const meta = privateMode.unlocked && privateMode.source === 'server' && post.visibility === 'acquaintance'
-      ? 'Acquaintance Note'
-      : 'Managed Post';
-    const title = currentLang === 'en' ? (post.title?.en || post.title?.zh || '') : (post.title?.zh || post.title?.en || '');
-    const excerpt = currentLang === 'en' ? (post.excerpt?.en || post.excerpt?.zh || '') : (post.excerpt?.zh || post.excerpt?.en || '');
-    const tags = (post.tags || []).map(tag => `<span class="tag">${tag}</span>`).join('');
+    const meta = formatMeta(post);
+    const title = getLocalizedPostField(post.title);
+    const excerpt = getLocalizedPostField(post.excerpt);
+    const tags = buildTags(post.tags);
     link.innerHTML = `
       <div class="meta">${meta}</div>
       <h3>${title}</h3>
@@ -623,6 +703,10 @@ function renderCmsPosts(){
     bindTiltEffect(link);
   });
   grid.prepend(fragment);
+
+  if(archiveHead){
+    archiveHead.hidden = !archivePosts.length;
+  }
 }
 
 function renderCmsCollections(){
