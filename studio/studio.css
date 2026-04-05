@@ -1261,6 +1261,138 @@
   .studio-post-layout{grid-template-columns:1fr}
 }
 
+/* ── Post Workflow Pro --------------------------------------------------- */
+.studio-post-workflow-head{
+  display:flex;
+  justify-content:space-between;
+  gap:16px;
+  align-items:flex-start;
+  flex-wrap:wrap;
+}
+
+.studio-checklist{
+  display:grid;
+  gap:12px;
+}
+
+.studio-check-item{
+  display:grid;
+  grid-template-columns:auto minmax(0, 1fr) auto;
+  gap:14px;
+  align-items:center;
+  padding:14px 16px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.025);
+}
+
+.studio-check-item.ok{
+  border-color:rgba(79,198,140,.22);
+  background:rgba(79,198,140,.06);
+}
+
+.studio-check-item.warn{
+  border-color:rgba(217,177,111,.22);
+  background:rgba(217,177,111,.06);
+}
+
+.studio-check-indicator{
+  width:30px;
+  height:30px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(255,255,255,.08);
+  color:var(--gold-soft);
+  font-weight:800;
+  background:rgba(255,255,255,.04);
+}
+
+.studio-check-item.ok .studio-check-indicator{
+  color:#d8ffe8;
+  border-color:rgba(79,198,140,.24);
+  background:rgba(79,198,140,.12);
+}
+
+.studio-check-copy{
+  display:grid;
+  gap:4px;
+}
+
+.studio-check-copy strong{
+  color:#f7efe4;
+  font-size:.96rem;
+}
+
+.studio-check-copy span{
+  color:#c8c0b2;
+  font-size:.9rem;
+  line-height:1.6;
+}
+
+.studio-check-state{
+  color:#cfc6b8;
+  font-size:.78rem;
+  font-weight:700;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  text-align:right;
+}
+
+.studio-cover-preview-shell{
+  min-height:240px;
+  overflow:hidden;
+  border-radius:26px;
+  border:1px solid rgba(255,255,255,.08);
+  background:linear-gradient(180deg, rgba(16,20,29,.96), rgba(9,12,18,.98));
+}
+
+.studio-cover-preview-image{
+  display:block;
+  width:100%;
+  height:100%;
+  min-height:240px;
+  max-height:340px;
+  object-fit:cover;
+}
+
+.studio-cover-placeholder{
+  min-height:240px;
+  display:grid;
+  place-items:center;
+  gap:10px;
+  padding:28px;
+  text-align:center;
+}
+
+.studio-cover-placeholder strong{
+  color:#f6eee2;
+  font-size:1.05rem;
+}
+
+.studio-cover-placeholder span{
+  max-width:40ch;
+  color:#bfb6a8;
+  line-height:1.7;
+}
+
+@media (max-width: 760px){
+  .studio-check-item{
+    grid-template-columns:auto 1fr;
+  }
+
+  .studio-check-state{
+    grid-column:2;
+    text-align:left;
+  }
+
+  .studio-cover-preview-shell,
+  .studio-cover-preview-image,
+  .studio-cover-placeholder{
+    min-height:200px;
+  }
+}
+
 @media (max-width:720px){
   .studio-shell{
     width:min(100%, calc(100% - 16px));

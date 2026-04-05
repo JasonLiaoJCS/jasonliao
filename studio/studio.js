@@ -13,6 +13,15 @@ const studioState = {
   section: 'dashboard',
   selectedPostId: null,
   username: null,
+  postEditor: {
+    autosaveTimer: null,
+    dirty: false,
+    currentPostId: null,
+    savedSnapshot: '',
+    restoredDraftAt: null,
+    autosavedAt: null,
+    hasLocalDraft: false,
+  },
 };
 
 const STUDIO_IDLE_TIMEOUT_MS = 10 * 60 * 1000;
@@ -25,6 +34,9 @@ const MARKDOWN_IMAGE_MAX_FILE_SIZE = 12 * 1024 * 1024;
 const MARKDOWN_IMAGE_MAX_DIMENSION = 1800;
 const MARKDOWN_IMAGE_JPEG_QUALITY = 0.86;
 const MARKDOWN_IMAGE_PNG_KEEP_THRESHOLD = 1.2 * 1024 * 1024;
+const STUDIO_POST_DRAFT_KEY_PREFIX = 'jl-studio-post-draft:';
+const STUDIO_POST_AUTOSAVE_DELAY_MS = 1200;
+const STUDIO_POST_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 const studioSessionState = {
   idleTimer: null,
@@ -155,8 +167,13 @@ function getMarkdownPreviewMarkup(value = '', manifest = null){
   return '<p class="muted">內容會在這裡即時預覽。You can write in Markdown and see the rendered article here.</p>';
 }
 
-function renderMarkdownEditor({ id, label, value, languageLabel }){
-  const editorDocument = extractEmbeddedImageDocument(value || '');
+function renderMarkdownEditor({ id, label, value, languageLabel, manifest = null }){
+  const editorDocument = manifest
+    ? {
+      content: String(value || ''),
+      manifest: normalizePostDraftAssets({ [id]: manifest })[id] || deepClone(manifest),
+    }
+    : extractEmbeddedImageDocument(value || '');
   studioState.markdownEditorAssets[id] = editorDocument.manifest;
   const editorMode = isLikelyHtml(editorDocument.content || '') ? 'Legacy HTML' : 'Markdown';
   return `
@@ -530,6 +547,338 @@ function createId(){
   return `item-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function deepClone(value){
+  if(typeof structuredClone === 'function'){
+    return structuredClone(value);
+  }
+  return JSON.parse(JSON.stringify(value));
+}
+
+function safeLocalStorageGetItem(key){
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function safeLocalStorageSetItem(key, value){
+  try {
+    window.localStorage.setItem(key, value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function safeLocalStorageRemoveItem(key){
+  try {
+    window.localStorage.removeItem(key);
+  } catch {
+    // ignore storage issues
+  }
+}
+
+function listLocalStorageKeys(){
+  try {
+    return Object.keys(window.localStorage);
+  } catch {
+    return [];
+  }
+}
+
+function createEmptyCoverImage(){
+  return {
+    src: '',
+    alt: {
+      zh: '',
+      en: '',
+    },
+  };
+}
+
+function normalizePostCoverImage(coverImage = {}){
+  return {
+    src: String(coverImage?.src || '').trim(),
+    alt: {
+      zh: String(coverImage?.alt?.zh || '').trim(),
+      en: String(coverImage?.alt?.en || '').trim(),
+    },
+  };
+}
+
+function normalizePostDraftAssets(assets = {}){
+  return {
+    postContentZh: deepClone(assets?.postContentZh || {}),
+    postContentEn: deepClone(assets?.postContentEn || {}),
+  };
+}
+
+function normalizePostDraftShape(post = {}){
+  return {
+    id: String(post.id || '').trim(),
+    slug: String(post.slug || '').trim(),
+    visibility: post.visibility === 'acquaintance' ? 'acquaintance' : 'public',
+    status: post.status === 'published' ? 'published' : 'draft',
+    publishedAt: String(post.publishedAt || '').trim(),
+    title: {
+      zh: String(post.title?.zh || ''),
+      en: String(post.title?.en || ''),
+    },
+    excerpt: {
+      zh: String(post.excerpt?.zh || ''),
+      en: String(post.excerpt?.en || ''),
+    },
+    content: {
+      zh: String(post.content?.zh || ''),
+      en: String(post.content?.en || ''),
+    },
+    tags: Array.isArray(post.tags)
+      ? post.tags.map(tag => String(tag || '').trim()).filter(Boolean)
+      : [],
+    coverImage: normalizePostCoverImage(post.coverImage),
+    localDraftOnly: Boolean(post.localDraftOnly),
+  };
+}
+
+function getPostDraftStorageKey(postId){
+  return `${STUDIO_POST_DRAFT_KEY_PREFIX}${postId}`;
+}
+
+function normalizeStoredPostDraft(payload){
+  if(!payload || typeof payload !== 'object'){
+    return null;
+  }
+  const post = normalizePostDraftShape(payload.post || {});
+  if(!post.id){
+    return null;
+  }
+  return {
+    version: 1,
+    savedAt: String(payload.savedAt || ''),
+    post,
+    assets: normalizePostDraftAssets(payload.assets),
+  };
+}
+
+function readLocalPostDraft(postId){
+  if(!postId){
+    return null;
+  }
+  const raw = safeLocalStorageGetItem(getPostDraftStorageKey(postId));
+  if(!raw){
+    return null;
+  }
+  try {
+    return normalizeStoredPostDraft(JSON.parse(raw));
+  } catch {
+    safeLocalStorageRemoveItem(getPostDraftStorageKey(postId));
+    return null;
+  }
+}
+
+function writeLocalPostDraft(postId, payload){
+  const normalized = normalizeStoredPostDraft(payload);
+  if(!normalized){
+    return false;
+  }
+  return safeLocalStorageSetItem(
+    getPostDraftStorageKey(postId),
+    JSON.stringify(normalized),
+  );
+}
+
+function removeLocalPostDraft(postId){
+  if(!postId){
+    return;
+  }
+  safeLocalStorageRemoveItem(getPostDraftStorageKey(postId));
+}
+
+function listLocalPostDrafts(){
+  return listLocalStorageKeys()
+    .filter(key => key.startsWith(STUDIO_POST_DRAFT_KEY_PREFIX))
+    .map(key => {
+      const postId = key.slice(STUDIO_POST_DRAFT_KEY_PREFIX.length);
+      return readLocalPostDraft(postId);
+    })
+    .filter(Boolean);
+}
+
+function buildComparableSavedPost(post = {}){
+  const zhDocument = extractEmbeddedImageDocument(post.content?.zh || '');
+  const enDocument = extractEmbeddedImageDocument(post.content?.en || '');
+  return {
+    ...normalizePostDraftShape({
+      ...post,
+      content: {
+        zh: zhDocument.content || '',
+        en: enDocument.content || '',
+      },
+    }),
+    assets: normalizePostDraftAssets({
+      postContentZh: zhDocument.manifest,
+      postContentEn: enDocument.manifest,
+    }),
+  };
+}
+
+function buildComparablePostSnapshot(post = {}, assets = {}){
+  const normalized = normalizePostDraftShape(post);
+  const comparable = {
+    slug: normalized.slug,
+    visibility: normalized.visibility,
+    status: normalized.status,
+    publishedAt: normalized.publishedAt,
+    title: normalized.title,
+    excerpt: normalized.excerpt,
+    content: normalized.content,
+    tags: normalized.tags,
+    coverImage: normalized.coverImage,
+    assets: normalizePostDraftAssets(assets),
+  };
+  return JSON.stringify(comparable);
+}
+
+function mergeLocalDraftPosts(posts = []){
+  const merged = Array.isArray(posts) ? [...posts] : [];
+  listLocalPostDrafts().forEach(draft => {
+    if(merged.some(item => item.id === draft.post.id)){
+      return;
+    }
+    merged.unshift({
+      ...normalizePostDraftShape(draft.post),
+      updatedAt: draft.savedAt || null,
+      path: draft.post.slug ? `/notes/${draft.post.slug}` : '',
+      localDraftOnly: true,
+    });
+  });
+  return merged;
+}
+
+function formatStudioTimestamp(value){
+  if(!value){
+    return '';
+  }
+  const date = new Date(value);
+  if(Number.isNaN(date.getTime())){
+    return '';
+  }
+  return date.toLocaleString([], {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function stripPostDraftText(value = ''){
+  return String(value || '')
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, ' $1 ')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, ' $1 ')
+    .replace(/<\/?[^>]+>/g, ' ')
+    .replace(/[#>*_`~\-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function estimateStudioReadingMinutes(post){
+  const sample = stripPostDraftText(post?.content?.zh || post?.content?.en || '');
+  if(!sample){
+    return 1;
+  }
+  const latinWords = (sample.match(/[A-Za-z0-9_]+/g) || []).length;
+  const cjkChars = (sample.match(/[\u3400-\u9fff]/g) || []).length;
+  const wordEquivalent = latinWords + (cjkChars / 2);
+  return Math.max(1, Math.round(wordEquivalent / 220));
+}
+
+function evaluatePostChecklist(post){
+  const normalized = normalizePostDraftShape(post);
+  const titleReady = Boolean(normalized.title.zh.trim() || normalized.title.en.trim());
+  const excerptReady = Boolean(normalized.excerpt.zh.trim() || normalized.excerpt.en.trim());
+  const contentReady = Boolean(stripPostDraftText(normalized.content.zh) || stripPostDraftText(normalized.content.en));
+  const slugFilled = Boolean(normalized.slug);
+  const slugReady = slugFilled && STUDIO_POST_SLUG_PATTERN.test(normalized.slug);
+  const publishDateReady = Boolean(normalized.publishedAt);
+  const tagsReady = normalized.tags.length > 0;
+  const coverReady = Boolean(normalized.coverImage.src);
+  const publishing = normalized.status === 'published';
+
+  const items = [
+    {
+      key: 'slug',
+      label: 'Slug ready',
+      detail: slugReady
+        ? normalized.slug
+        : (slugFilled ? 'Use lowercase letters, numbers, and hyphens only.' : 'Add a slug before saving to the site.'),
+      ok: slugReady,
+      required: true,
+    },
+    {
+      key: 'title',
+      label: 'Title',
+      detail: titleReady ? 'At least one language has a title.' : 'Add a Chinese or English title.',
+      ok: titleReady,
+      required: publishing,
+    },
+    {
+      key: 'excerpt',
+      label: 'Excerpt',
+      detail: excerptReady ? 'Summary is ready for cards and previews.' : 'Add a short summary for cards and previews.',
+      ok: excerptReady,
+      required: publishing,
+    },
+    {
+      key: 'content',
+      label: 'Article body',
+      detail: contentReady ? `Estimated ${estimateStudioReadingMinutes(normalized)} min read.` : 'Write the article body in at least one language.',
+      ok: contentReady,
+      required: publishing,
+    },
+    {
+      key: 'publishedAt',
+      label: 'Publish date',
+      detail: publishDateReady ? normalized.publishedAt : 'Choose a publish date before publishing.',
+      ok: publishDateReady,
+      required: publishing,
+    },
+    {
+      key: 'cover',
+      label: 'Cover image',
+      detail: coverReady ? 'Homepage feature and article hero will use it.' : 'Recommended for a stronger blog card and preview.',
+      ok: coverReady,
+      required: false,
+    },
+    {
+      key: 'tags',
+      label: 'Tags',
+      detail: tagsReady ? `${normalized.tags.length} tag${normalized.tags.length > 1 ? 's' : ''} ready.` : 'Recommended for navigation and context.',
+      ok: tagsReady,
+      required: false,
+    },
+  ];
+
+  return {
+    items,
+    blockers: items.filter(item => item.required && !item.ok),
+  };
+}
+
+function renderChecklistMarkup(report){
+  return report.items.map(item => `
+    <div class="studio-check-item ${item.ok ? 'ok' : item.required ? 'warn' : 'optional'}">
+      <div class="studio-check-indicator" aria-hidden="true">${item.ok ? '✓' : item.required ? '!' : '·'}</div>
+      <div class="studio-check-copy">
+        <strong>${escapeHtml(item.label)}</strong>
+        <span>${escapeHtml(item.detail)}</span>
+      </div>
+      <div class="studio-check-state">${item.ok ? 'Ready' : item.required ? 'Needed' : 'Optional'}</div>
+    </div>
+  `).join('');
+}
+
 function hasStudioSessionMarker(){
   try {
     return sessionStorage.getItem(STUDIO_SESSION_STORAGE_KEY) === '1';
@@ -586,11 +935,15 @@ function recordStudioActivity(){
 
 async function clearStudioSession(reason = 'Signed out', tone = 'neutral', options = {}){
   const { showLoginError = false } = options;
+  if(studioState.section === 'posts'){
+    persistCurrentPostDraft({ silent: true });
+  }
   stopStudioSessionProtection();
   clearStudioSessionMarker();
   studioState.bootstrap = null;
   studioState.username = null;
   studioState.selectedPostId = null;
+  resetPostEditorState();
   showLogin();
   studioRefs.loginError.textContent = showLoginError ? reason : '';
   updateStudioSessionHint();
@@ -645,6 +998,9 @@ function renderNav(){
 
   studioRefs.nav.querySelectorAll('button').forEach(button => {
     button.addEventListener('click', () => {
+      if(!confirmPostContextChange()){
+        return;
+      }
       studioState.section = button.dataset.section;
       renderStudio();
     });
@@ -934,13 +1290,251 @@ async function resetUpdatesToDefault(){
   setStudioStatus('Updates restored to default', 'success');
 }
 
-function renderPostEditor(post){
+function clearPostAutosaveTimer(){
+  if(studioState.postEditor.autosaveTimer){
+    window.clearTimeout(studioState.postEditor.autosaveTimer);
+    studioState.postEditor.autosaveTimer = null;
+  }
+}
+
+function resetPostEditorState(){
+  clearPostAutosaveTimer();
+  studioState.postEditor.dirty = false;
+  studioState.postEditor.currentPostId = null;
+  studioState.postEditor.savedSnapshot = '';
+  studioState.postEditor.restoredDraftAt = null;
+  studioState.postEditor.autosavedAt = null;
+  studioState.postEditor.hasLocalDraft = false;
+}
+
+function getHydratedEditorPost(post){
+  if(!post){
+    return null;
+  }
+
+  const localDraft = readLocalPostDraft(post.id);
+  const savedComparable = buildComparableSavedPost(post);
+  if(localDraft){
+    return {
+      post: normalizePostDraftShape(localDraft.post),
+      assets: normalizePostDraftAssets(localDraft.assets),
+      localDraft,
+      savedSnapshot: post.localDraftOnly
+        ? ''
+        : buildComparablePostSnapshot(savedComparable, savedComparable.assets),
+    };
+  }
+
+  return {
+    post: normalizePostDraftShape(savedComparable),
+    assets: normalizePostDraftAssets(savedComparable.assets),
+    localDraft: null,
+    savedSnapshot: post.localDraftOnly
+      ? ''
+      : buildComparablePostSnapshot(savedComparable, savedComparable.assets),
+  };
+}
+
+function renderPostCoverPreviewMarkup(coverImage){
+  const cover = normalizePostCoverImage(coverImage);
+  if(!cover.src){
+    return `
+      <div class="studio-cover-placeholder">
+        <strong>No cover image yet</strong>
+        <span>Upload a PNG/JPG or paste an image URL. This will be used on the article page and blog feature cards.</span>
+      </div>
+    `;
+  }
+
+  const altText = cover.alt.zh || cover.alt.en || 'Post cover preview';
+  return `<img class="studio-cover-preview-image" src="${escapeHtml(cover.src)}" alt="${escapeHtml(altText)}">`;
+}
+
+function syncPostCoverPreview(){
+  const previewShell = document.getElementById('postCoverPreviewShell');
+  if(!previewShell){
+    return;
+  }
+  const coverImage = normalizePostCoverImage({
+    src: document.getElementById('postCoverSrc')?.value || '',
+    alt: {
+      zh: document.getElementById('postCoverAltZh')?.value || '',
+      en: document.getElementById('postCoverAltEn')?.value || '',
+    },
+  });
+  previewShell.innerHTML = renderPostCoverPreviewMarkup(coverImage);
+}
+
+function collectCurrentPostDraftFromForm(){
+  const post = getCurrentPost();
+  if(!post) return null;
+
+  const postContentZh = document.getElementById('postContentZh')?.value || '';
+  const postContentEn = document.getElementById('postContentEn')?.value || '';
+  const zhManifest = pruneMarkdownImageManifest('postContentZh', postContentZh);
+  const enManifest = pruneMarkdownImageManifest('postContentEn', postContentEn);
+
+  return {
+    ...normalizePostDraftShape({
+      ...post,
+      slug: document.getElementById('postSlug')?.value.trim() || '',
+      visibility: document.getElementById('postVisibility')?.value || 'public',
+      status: document.getElementById('postStatus')?.value || 'draft',
+      publishedAt: document.getElementById('postPublishedAt')?.value || '',
+      title: {
+        zh: document.getElementById('postTitleZh')?.value || '',
+        en: document.getElementById('postTitleEn')?.value || '',
+      },
+      excerpt: {
+        zh: document.getElementById('postExcerptZh')?.value || '',
+        en: document.getElementById('postExcerptEn')?.value || '',
+      },
+      content: {
+        zh: postContentZh,
+        en: postContentEn,
+      },
+      tags: (document.getElementById('postTagsInput')?.value || '')
+        .split(',')
+        .map(tag => tag.trim())
+        .filter(Boolean),
+      coverImage: {
+        src: document.getElementById('postCoverSrc')?.value || '',
+        alt: {
+          zh: document.getElementById('postCoverAltZh')?.value || '',
+          en: document.getElementById('postCoverAltEn')?.value || '',
+        },
+      },
+      localDraftOnly: Boolean(post.localDraftOnly),
+    }),
+    assets: {
+      postContentZh: deepClone(zhManifest),
+      postContentEn: deepClone(enManifest),
+    },
+  };
+}
+
+function updatePostWorkflowUI(){
+  const draft = collectCurrentPostDraftFromForm();
+  if(!draft){
+    return;
+  }
+
+  const currentPost = getCurrentPost();
+  const currentSnapshot = buildComparablePostSnapshot(draft, draft.assets);
+  const dirty = currentPost?.localDraftOnly || currentSnapshot !== studioState.postEditor.savedSnapshot;
+  const checklist = evaluatePostChecklist(draft);
+  studioState.postEditor.dirty = Boolean(dirty);
+
+  const dirtyPill = document.getElementById('postDirtyPill');
+  if(dirtyPill){
+    dirtyPill.textContent = dirty ? 'Unpublished Changes' : 'Site Saved';
+    dirtyPill.classList.toggle('private', dirty);
+  }
+
+  const autosavePill = document.getElementById('postAutosavePill');
+  if(autosavePill){
+    if(studioState.postEditor.autosaveTimer){
+      autosavePill.textContent = 'Autosaving...';
+    } else if(studioState.postEditor.autosavedAt){
+      autosavePill.textContent = `Autosaved ${formatStudioTimestamp(studioState.postEditor.autosavedAt)}`;
+    } else if(studioState.postEditor.hasLocalDraft){
+      autosavePill.textContent = 'Local Draft Ready';
+    } else {
+      autosavePill.textContent = 'Autosave On';
+    }
+  }
+
+  const hint = document.getElementById('postDraftHint');
+  if(hint){
+    if(dirty && studioState.postEditor.autosavedAt){
+      hint.textContent = `目前內容和網站正式版本不同，最近一次本機 autosave 在 ${formatStudioTimestamp(studioState.postEditor.autosavedAt)}。按 Save Post 才會真正更新網站。`;
+    } else if(dirty){
+      hint.textContent = '偵測到尚未發佈的變更。系統會先暫存在本機，等你確認後再正式保存到網站。';
+    } else {
+      hint.textContent = '目前表單內容和網站上的版本一致。';
+    }
+  }
+
+  const checklistNode = document.getElementById('postPublishChecklist');
+  if(checklistNode){
+    checklistNode.innerHTML = renderChecklistMarkup(checklist);
+  }
+
+  const discardBtn = document.getElementById('discardLocalDraftBtn');
+  if(discardBtn){
+    discardBtn.hidden = !studioState.postEditor.hasLocalDraft;
+  }
+}
+
+function renderPostEditor(editorState){
+  const post = editorState.post;
+  const checklist = evaluatePostChecklist(post);
+  const restoredAt = editorState.localDraft?.savedAt ? formatStudioTimestamp(editorState.localDraft.savedAt) : '';
   return `
+    <div class="studio-card studio-post-workflow-card">
+      <div class="studio-post-workflow-head">
+        <div>
+          <div class="eyebrow">Workflow</div>
+          <h4>Autosave, preview, and publish readiness</h4>
+        </div>
+        <div class="studio-row-actions">
+          <span class="studio-pill ${editorState.localDraft ? 'private' : ''}" id="postDirtyPill">${editorState.localDraft ? 'Local Draft Restored' : 'Ready to Edit'}</span>
+          <span class="studio-pill" id="postAutosavePill">${restoredAt ? `Restored ${escapeHtml(restoredAt)}` : 'Autosave On'}</span>
+        </div>
+      </div>
+      <div class="studio-post-editor-note" id="postDraftHint">
+        ${editorState.localDraft
+          ? `已載入本機 autosave 草稿（${escapeHtml(restoredAt || 'just now')}）。這些變更還沒有正式發佈到網站。`
+          : '編輯時會自動把草稿暫存在本機，切頁或重整時不容易把內容弄丟。'}
+      </div>
+      <div class="studio-checklist" id="postPublishChecklist" style="margin-top:18px">
+        ${renderChecklistMarkup(checklist)}
+      </div>
+      <div class="studio-row-actions" style="margin-top:18px">
+        <button class="btn magnetic" id="previewDraftBtn" type="button">Preview Draft</button>
+        <button class="btn magnetic" id="discardLocalDraftBtn" type="button" ${editorState.localDraft ? '' : 'hidden'}>Discard Local Draft</button>
+      </div>
+    </div>
+
+    <div class="studio-card studio-post-cover-card">
+      <div class="studio-row-actions" style="justify-content:space-between">
+        <div>
+          <div class="eyebrow">Cover Image</div>
+          <h4>文章封面</h4>
+        </div>
+        <span class="studio-pill">Homepage + Article</span>
+      </div>
+      <div class="studio-cover-preview-shell" id="postCoverPreviewShell" style="margin-top:18px">
+        ${renderPostCoverPreviewMarkup(post.coverImage)}
+      </div>
+      <div class="studio-form-grid cols-2" style="margin-top:18px">
+        <label class="studio-form-field">
+          <span>Cover Image URL</span>
+          <input id="postCoverSrc" type="text" value="${escapeHtml(post.coverImage?.src || '')}" placeholder="https://... or data:image/...">
+        </label>
+        <label class="studio-form-field">
+          <span>Upload PNG / JPG</span>
+          <input id="postCoverUpload" type="file" accept="${MARKDOWN_IMAGE_ACCEPT}">
+        </label>
+        <label class="studio-form-field">
+          <span>中文 Alt</span>
+          <input id="postCoverAltZh" type="text" value="${escapeHtml(post.coverImage?.alt?.zh || '')}">
+        </label>
+        <label class="studio-form-field">
+          <span>English Alt</span>
+          <input id="postCoverAltEn" type="text" value="${escapeHtml(post.coverImage?.alt?.en || '')}">
+        </label>
+      </div>
+      <div class="studio-row-actions" style="margin-top:16px">
+        <button class="btn magnetic" id="clearPostCoverBtn" type="button">Remove Cover</button>
+      </div>
+    </div>
+
     <div class="studio-card">
       <div class="studio-form-grid cols-2">
         <label class="studio-form-field">
           <span>Slug</span>
-          <input id="postSlug" type="text" value="${escapeHtml(post.slug || '')}">
+          <input id="postSlug" type="text" value="${escapeHtml(post.slug || '')}" placeholder="example-post-slug">
         </label>
         <label class="studio-form-field">
           <span>Publish Date</span>
@@ -984,7 +1578,7 @@ function renderPostEditor(post){
         <input id="postTagsInput" type="text" value="${escapeHtml((post.tags || []).join(', '))}">
       </label>
       <div class="studio-post-editor-note" style="margin-top:18px">
-        Studio 文章現在支援 Markdown 編輯、常用格式工具列、PNG/JPG 圖片插入與即時預覽。舊的 HTML 文章也會繼續正常顯示。
+        Studio 文章現在支援 Markdown 編輯、常用格式工具列、PNG/JPG 圖片插入、封面圖欄位、draft 預覽與自動儲存。
       </div>
       <div class="studio-form-grid cols-2 studio-markdown-grid" style="margin-top:18px">
         ${renderMarkdownEditor({
@@ -992,28 +1586,262 @@ function renderPostEditor(post){
           label: '中文內容',
           value: post.content.zh || '',
           languageLabel: 'ZH',
+          manifest: editorState.assets.postContentZh,
         })}
         ${renderMarkdownEditor({
           id: 'postContentEn',
           label: 'English Content',
           value: post.content.en || '',
           languageLabel: 'EN',
+          manifest: editorState.assets.postContentEn,
         })}
       </div>
       <div class="studio-row-actions" style="margin-top:20px">
         ${post.slug ? `<a class="btn magnetic" href="/notes/${escapeHtml(post.slug)}" target="_blank" rel="noopener">Open Current URL</a>` : ''}
-        <button class="btn magnetic" id="deletePostBtn" type="button">Delete Post</button>
+        <button class="btn magnetic" id="deletePostBtn" type="button">${post.localDraftOnly ? 'Delete Local Draft' : 'Delete Post'}</button>
       </div>
     </div>
   `;
 }
 
+function persistCurrentPostDraft({ silent = false } = {}){
+  const draft = collectCurrentPostDraftFromForm();
+  if(!draft?.id){
+    return false;
+  }
+
+  const savedAt = new Date().toISOString();
+  const ok = writeLocalPostDraft(draft.id, {
+    savedAt,
+    post: {
+      ...draft,
+      localDraftOnly: Boolean(getCurrentPost()?.localDraftOnly),
+    },
+    assets: draft.assets,
+  });
+
+  clearPostAutosaveTimer();
+
+  if(ok){
+    studioState.postEditor.hasLocalDraft = true;
+    studioState.postEditor.autosavedAt = savedAt;
+    updatePostWorkflowUI();
+    if(!silent){
+      setStudioStatus('Draft autosaved locally', 'neutral');
+    }
+    return true;
+  }
+
+  setStudioStatus('Autosave could not store this draft locally. Please save the post manually.', 'error');
+  return false;
+}
+
+function schedulePostAutosave(){
+  clearPostAutosaveTimer();
+  studioState.postEditor.autosaveTimer = window.setTimeout(() => {
+    persistCurrentPostDraft({ silent: true });
+  }, STUDIO_POST_AUTOSAVE_DELAY_MS);
+  updatePostWorkflowUI();
+}
+
+function confirmPostContextChange(){
+  if(studioState.section !== 'posts' || !studioState.postEditor.dirty){
+    return true;
+  }
+  persistCurrentPostDraft({ silent: true });
+  return window.confirm('This post still has local draft changes that are not saved to the live site yet. They have been autosaved locally. Continue?');
+}
+
+function buildPreviewHtml(post){
+  const normalized = normalizePostDraftShape(post);
+  const renderedContent = {
+    zh: renderRichContent(post.content?.zh || ''),
+    en: renderRichContent(post.content?.en || ''),
+  };
+  const coverImage = normalizePostCoverImage(post.coverImage);
+  const previewData = JSON.stringify({
+    title: normalized.title,
+    excerpt: normalized.excerpt,
+    renderedContent,
+    tags: normalized.tags,
+    publishedAt: normalized.publishedAt,
+    readingMinutes: estimateStudioReadingMinutes(normalized),
+  }).replace(/</g, '\\u003c');
+  const title = escapeHtml(normalized.title.zh || normalized.title.en || 'Draft Preview');
+  const description = escapeHtml(normalized.excerpt.zh || normalized.excerpt.en || 'Studio draft preview');
+  const tags = normalized.tags.map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('');
+  const coverMarkup = coverImage.src
+    ? `<div class="post-cover"><img src="${escapeHtml(coverImage.src)}" alt="${escapeHtml(coverImage.alt.zh || coverImage.alt.en || title)}"></div>`
+    : '';
+
+  return `<!DOCTYPE html>
+  <html lang="zh-Hant" data-lang="zh">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="robots" content="noindex,nofollow">
+    <title>${title}</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+      .post-shell{padding:132px 0 110px}.post-hero,.post-panel{width:min(960px, calc(100% - 40px));margin:0 auto}
+      .post-hero{position:relative;overflow:hidden;display:grid;gap:20px;padding:38px 40px;border-radius:34px;border:1px solid rgba(255,255,255,.1);background:radial-gradient(circle at 82% 18%, rgba(217,177,111,.16), transparent 24%),linear-gradient(160deg, rgba(17,21,31,.96), rgba(8,10,16,.985));box-shadow:0 28px 82px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.05)}
+      .post-hero::before{content:"";position:absolute;inset:16px;border-radius:26px;border:1px solid rgba(255,255,255,.06);background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.008));pointer-events:none}.post-hero > *{position:relative;z-index:1}
+      .post-toolbar{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}.post-toolbar .actions{display:flex;gap:12px;flex-wrap:wrap}
+      .post-toggle{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:var(--gold-soft);font-weight:600;cursor:pointer}
+      .post-meta{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:flex-start}.post-meta-cluster{display:flex;gap:10px;flex-wrap:wrap}
+      .post-chip{display:inline-flex;align-items:center;padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:#e7decf;font-size:.85rem}
+      .post-title{margin:0;font-size:clamp(2.5rem, 5vw, 4.4rem);line-height:.95;letter-spacing:-.03em;max-width:12ch}.post-excerpt{margin:0;font-size:1.08rem;color:#d6cec1;max-width:64ch;line-height:1.85}
+      .post-cover img{display:block;width:100%;max-height:420px;object-fit:cover;border-radius:28px;border:1px solid rgba(255,255,255,.08)}
+      .post-panel{margin-top:24px;padding:42px;border-radius:32px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);box-shadow:0 24px 80px rgba(0,0,0,.28)}.post-body-wrap{max-width:70ch}.post-body{color:#ddd6c9}.post-body p{color:#ddd6c9;margin:0 0 18px}.post-body h2,.post-body h3,.post-body h4{margin:36px 0 16px}.post-body ul,.post-body ol{padding-left:1.3rem;margin:0 0 18px}.post-body li + li{margin-top:8px}.post-body blockquote{margin:24px 0;padding:18px 20px;border-left:3px solid rgba(217,177,111,.48);background:rgba(217,177,111,.08);border-radius:0 18px 18px 0}.post-body pre{overflow:auto;margin:24px 0;padding:18px;border-radius:22px;background:#0e131d;border:1px solid rgba(255,255,255,.08)}.post-body code{padding:2px 6px;border-radius:8px;background:rgba(255,255,255,.08);font-family:"IBM Plex Mono","SFMono-Regular",Consolas,monospace;font-size:.92em}.post-body pre code{padding:0;background:none}.post-body hr{border:none;height:1px;margin:32px 0;background:rgba(255,255,255,.12)}.post-body a{color:var(--gold-soft);text-decoration:underline;text-underline-offset:3px}.post-body img{display:block;max-width:100%;height:auto;margin:22px 0;border-radius:22px;border:1px solid rgba(255,255,255,.08)}
+      @media (max-width:720px){.post-hero,.post-panel{width:min(100%, calc(100% - 24px));padding:28px 22px}.post-title{max-width:none}}
+    </style>
+  </head>
+  <body>
+    <nav class="nav"><div class="nav-inner"><a class="brand" href="/" aria-label="Jason Liao home"><span class="brand-mark"><span>JL</span></span><span>Jason Liao</span></a><div class="nav-links" style="display:flex"><span class="post-chip">Studio Draft Preview</span></div></div></nav>
+    <main class="post-shell">
+      <section class="post-hero">
+        <div class="post-toolbar"><a class="btn" href="javascript:window.close()">Close Preview</a><div class="actions"><button class="post-toggle" id="langSwitch" type="button">EN</button></div></div>
+        <div class="post-meta"><div class="eyebrow">Draft Preview</div><div class="post-meta-cluster"><span class="post-chip" id="postPublished">${escapeHtml(normalized.publishedAt || 'Draft')}</span><span class="post-chip" id="postReadingTime">${estimateStudioReadingMinutes(normalized)} min read</span></div></div>
+        ${coverMarkup}
+        <h1 class="post-title">${title}</h1>
+        <p class="post-excerpt">${description}</p>
+        <div class="tags" id="postTags">${tags}</div>
+      </section>
+      <article class="post-panel"><div class="post-body-wrap"><div class="post-body" id="postBody">${renderedContent.zh || renderedContent.en || ''}</div></div></article>
+    </main>
+    <script>
+      const previewData = ${previewData};
+      const langSwitch = document.getElementById('langSwitch');
+      const postBody = document.getElementById('postBody');
+      const postTags = document.getElementById('postTags');
+      const postTitle = document.querySelector('.post-title');
+      const postExcerpt = document.querySelector('.post-excerpt');
+      const postPublished = document.getElementById('postPublished');
+      const postReadingTime = document.getElementById('postReadingTime');
+      let currentLang = 'zh';
+      const escapeHtml = value => String(value || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
+      function renderTags(){ postTags.innerHTML = (previewData.tags || []).map(tag => '<span class="tag">' + escapeHtml(tag) + '</span>').join(''); }
+      function renderPost(lang){
+        currentLang = lang;
+        document.documentElement.lang = lang === 'zh' ? 'zh-Hant' : 'en';
+        document.documentElement.dataset.lang = lang;
+        langSwitch.textContent = lang === 'zh' ? 'EN' : '中文';
+        postTitle.textContent = previewData.title[lang] || previewData.title.zh || previewData.title.en || '';
+        postExcerpt.textContent = previewData.excerpt[lang] || previewData.excerpt.zh || previewData.excerpt.en || '';
+        postBody.innerHTML = previewData.renderedContent[lang] || previewData.renderedContent.zh || previewData.renderedContent.en || '';
+        postPublished.textContent = previewData.publishedAt || 'Draft';
+        postReadingTime.textContent = lang === 'zh' ? '閱讀約 ' + previewData.readingMinutes + ' 分鐘' : previewData.readingMinutes + ' min read';
+        renderTags();
+      }
+      langSwitch.addEventListener('click', () => renderPost(currentLang === 'zh' ? 'en' : 'zh'));
+      renderPost('zh');
+    </script>
+  </body>
+  </html>`;
+}
+
+function previewCurrentPost(){
+  const post = collectCurrentPostFromForm();
+  if(!post){
+    return;
+  }
+  const previewUrl = URL.createObjectURL(new Blob([buildPreviewHtml(post)], { type: 'text/html' }));
+  const previewWindow = window.open(previewUrl, '_blank', 'noopener');
+  if(!previewWindow){
+    URL.revokeObjectURL(previewUrl);
+    setStudioStatus('Preview was blocked by the browser. Please allow pop-ups for Studio.', 'error');
+    return;
+  }
+  window.setTimeout(() => URL.revokeObjectURL(previewUrl), 60000);
+  setStudioStatus('Draft preview opened in a new tab', 'success');
+}
+
+function discardCurrentLocalDraft(){
+  const post = getCurrentPost();
+  if(!post){
+    return;
+  }
+  if(!window.confirm(`Discard the local draft for "${post.title.zh || post.title.en || post.slug || 'Untitled'}"?`)){
+    return;
+  }
+  removeLocalPostDraft(post.id);
+  clearPostAutosaveTimer();
+  studioState.postEditor.hasLocalDraft = false;
+  studioState.postEditor.autosavedAt = null;
+  if(post.localDraftOnly){
+    studioState.bootstrap.posts = (studioState.bootstrap.posts || []).filter(item => item.id !== post.id);
+    ensureSelectedPost();
+  }
+  renderPosts();
+  setStudioStatus('Local draft discarded', 'success');
+}
+
+function bindPostEditorInteractions(panel){
+  const handleFieldChange = () => {
+    syncPostCoverPreview();
+    schedulePostAutosave();
+  };
+
+  panel.querySelectorAll('#postSlug, #postPublishedAt, #postVisibility, #postStatus, #postTitleZh, #postTitleEn, #postExcerptZh, #postExcerptEn, #postTagsInput, #postCoverSrc, #postCoverAltZh, #postCoverAltEn, #postContentZh, #postContentEn')
+    .forEach(field => {
+      field.addEventListener('input', handleFieldChange);
+      field.addEventListener('change', handleFieldChange);
+    });
+
+  panel.querySelector('#previewDraftBtn')?.addEventListener('click', previewCurrentPost);
+  panel.querySelector('#discardLocalDraftBtn')?.addEventListener('click', discardCurrentLocalDraft);
+  panel.querySelector('#postCoverUpload')?.addEventListener('change', async event => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if(!file){
+      return;
+    }
+    try {
+      setStudioStatus('Processing cover image...', 'pending');
+      const cover = await createEmbeddedMarkdownImage(file);
+      const coverSrc = document.getElementById('postCoverSrc');
+      const coverAltZh = document.getElementById('postCoverAltZh');
+      const coverAltEn = document.getElementById('postCoverAltEn');
+      if(coverSrc){
+        coverSrc.value = cover.dataUrl;
+      }
+      if(coverAltZh && !coverAltZh.value.trim()){
+        coverAltZh.value = cover.alt;
+      }
+      if(coverAltEn && !coverAltEn.value.trim()){
+        coverAltEn.value = cover.alt;
+      }
+      syncPostCoverPreview();
+      schedulePostAutosave();
+      setStudioStatus('Cover image updated', 'success');
+    } catch (error){
+      setStudioStatus(error.message || 'Unable to process cover image', 'error');
+    }
+  });
+
+  panel.querySelector('#clearPostCoverBtn')?.addEventListener('click', () => {
+    const coverSrc = document.getElementById('postCoverSrc');
+    const coverAltZh = document.getElementById('postCoverAltZh');
+    const coverAltEn = document.getElementById('postCoverAltEn');
+    if(coverSrc) coverSrc.value = '';
+    if(coverAltZh) coverAltZh.value = '';
+    if(coverAltEn) coverAltEn.value = '';
+    syncPostCoverPreview();
+    schedulePostAutosave();
+  });
+
+  updatePostWorkflowUI();
+}
+
 function renderPosts(){
+  studioState.bootstrap.posts = mergeLocalDraftPosts(studioState.bootstrap.posts || []);
   ensureSelectedPost();
   const panel = studioRefs.panels.posts;
   const posts = studioState.bootstrap.posts || [];
   const currentPost = getCurrentPost();
+  const editorState = currentPost ? getHydratedEditorPost(currentPost) : null;
   studioState.markdownEditorAssets = {};
+  clearPostAutosaveTimer();
 
   panel.innerHTML = `
     <div class="studio-toolbar">
@@ -1023,31 +1851,49 @@ function renderPosts(){
       </div>
       <div class="studio-row-actions">
         <button class="btn magnetic" type="button" id="createPostBtn">New Post</button>
-        <button class="btn btn-primary magnetic" type="button" id="savePostBtn">Save Post</button>
+        <button class="btn magnetic" type="button" id="previewDraftToolbarBtn" ${currentPost ? '' : 'disabled'}>Preview Draft</button>
+        <button class="btn btn-primary magnetic" type="button" id="savePostBtn" ${currentPost ? '' : 'disabled'}>Save Post</button>
       </div>
     </div>
     <div class="studio-post-layout" style="margin-top:20px">
       <div>
         <div class="studio-posts-list">
-          ${posts.length ? posts.map(post => `
-            <article class="studio-post-item ${post.id === studioState.selectedPostId ? 'selected' : ''}" data-post-card="${post.id}">
-              <div class="studio-row-actions">
-                <span class="studio-pill ${post.visibility === 'acquaintance' ? 'private' : 'public'}">${post.visibility === 'acquaintance' ? 'Acquaintance' : 'Public'}</span>
-                <span class="studio-pill">${post.status}</span>
-              </div>
-              <h4 style="margin-top:14px">${escapeHtml(post.title.zh || post.title.en || 'Untitled')}</h4>
-              <p class="small muted">${escapeHtml(post.slug)}</p>
-            </article>
-          `).join('') : '<div class="studio-empty">還沒有 managed posts。新增之後，公開文章會在 /notes/slug 出現。</div>'}
+          ${posts.length ? posts.map(post => {
+            const localDraft = readLocalPostDraft(post.id);
+            return `
+              <article class="studio-post-item ${post.id === studioState.selectedPostId ? 'selected' : ''}" data-post-card="${post.id}">
+                <div class="studio-row-actions">
+                  <span class="studio-pill ${post.visibility === 'acquaintance' ? 'private' : 'public'}">${post.visibility === 'acquaintance' ? 'Acquaintance' : 'Public'}</span>
+                  <span class="studio-pill">${escapeHtml(post.status)}</span>
+                  ${(post.localDraftOnly || localDraft) ? '<span class="studio-pill private">Local Draft</span>' : ''}
+                </div>
+                <h4 style="margin-top:14px">${escapeHtml(post.title.zh || post.title.en || 'Untitled')}</h4>
+                <p class="small muted">${escapeHtml(post.slug || 'unsaved-draft')}</p>
+              </article>
+            `;
+          }).join('') : '<div class="studio-empty">還沒有 managed posts。新增之後，公開文章會在 /notes/slug 出現。</div>'}
         </div>
       </div>
       <div class="studio-post-editor">
-        ${currentPost ? renderPostEditor(currentPost) : '<div class="studio-empty">先新增一篇文章。</div>'}
+        ${editorState ? renderPostEditor(editorState) : '<div class="studio-empty">先新增一篇文章。</div>'}
       </div>
     </div>
   `;
 
+  if(editorState){
+    studioState.postEditor.currentPostId = currentPost.id;
+    studioState.postEditor.savedSnapshot = editorState.savedSnapshot;
+    studioState.postEditor.restoredDraftAt = editorState.localDraft?.savedAt || null;
+    studioState.postEditor.autosavedAt = editorState.localDraft?.savedAt || null;
+    studioState.postEditor.hasLocalDraft = Boolean(editorState.localDraft);
+  } else {
+    resetPostEditorState();
+  }
+
   panel.querySelector('#createPostBtn')?.addEventListener('click', () => {
+    if(!confirmPostContextChange()){
+      return;
+    }
     const newPost = {
       id: createId(),
       slug: '',
@@ -1058,6 +1904,8 @@ function renderPosts(){
       excerpt: { zh: '', en: '' },
       content: { zh: '', en: '' },
       tags: [],
+      coverImage: createEmptyCoverImage(),
+      localDraftOnly: true,
     };
     studioState.bootstrap.posts = [newPost, ...(studioState.bootstrap.posts || [])];
     studioState.selectedPostId = newPost.id;
@@ -1066,84 +1914,103 @@ function renderPosts(){
 
   panel.querySelectorAll('[data-post-card]').forEach(card => {
     card.addEventListener('click', () => {
+      if(card.dataset.postCard === studioState.selectedPostId){
+        return;
+      }
+      if(!confirmPostContextChange()){
+        return;
+      }
       studioState.selectedPostId = card.dataset.postCard;
       renderPosts();
     });
   });
 
   panel.querySelector('#savePostBtn')?.addEventListener('click', saveCurrentPost);
+  panel.querySelector('#previewDraftToolbarBtn')?.addEventListener('click', previewCurrentPost);
   panel.querySelector('#deletePostBtn')?.addEventListener('click', deleteCurrentPost);
   bindMarkdownEditors(panel);
+  bindPostEditorInteractions(panel);
 }
 
 function collectCurrentPostFromForm(){
-  const post = getCurrentPost();
-  if(!post) return null;
-  const postContentZh = document.getElementById('postContentZh').value;
-  const postContentEn = document.getElementById('postContentEn').value;
-  const zhManifest = pruneMarkdownImageManifest('postContentZh', postContentZh);
-  const enManifest = pruneMarkdownImageManifest('postContentEn', postContentEn);
-
+  const draft = collectCurrentPostDraftFromForm();
+  if(!draft) return null;
   return {
-    ...post,
-    slug: document.getElementById('postSlug').value.trim(),
-    visibility: document.getElementById('postVisibility').value,
-    status: document.getElementById('postStatus').value,
-    publishedAt: document.getElementById('postPublishedAt').value || null,
-    title: {
-      zh: document.getElementById('postTitleZh').value,
-      en: document.getElementById('postTitleEn').value,
-    },
-    excerpt: {
-      zh: document.getElementById('postExcerptZh').value,
-      en: document.getElementById('postExcerptEn').value,
-    },
+    ...draft,
+    publishedAt: draft.publishedAt || null,
+    coverImage: normalizePostCoverImage(draft.coverImage),
     content: {
-      zh: serializeEmbeddedImageDocument(
-        postContentZh,
-        zhManifest,
-      ),
-      en: serializeEmbeddedImageDocument(
-        postContentEn,
-        enManifest,
-      ),
+      zh: serializeEmbeddedImageDocument(draft.content.zh, draft.assets.postContentZh),
+      en: serializeEmbeddedImageDocument(draft.content.en, draft.assets.postContentEn),
     },
-    tags: document.getElementById('postTagsInput').value
-      .split(',')
-      .map(tag => tag.trim())
-      .filter(Boolean),
   };
 }
 
 async function saveCurrentPost(){
+  const draft = collectCurrentPostDraftFromForm();
   const post = collectCurrentPostFromForm();
-  if(!post) return;
-  if(!post.slug){
-    setStudioStatus('Slug is required', 'error');
+  if(!draft || !post) return;
+
+  if(!draft.slug){
+    setStudioStatus('Slug is required before saving to the site', 'error');
+    updatePostWorkflowUI();
     return;
   }
-  setStudioStatus('Saving post...', 'pending');
+  if(!STUDIO_POST_SLUG_PATTERN.test(draft.slug)){
+    setStudioStatus('Slug must use lowercase letters, numbers, and hyphens only', 'error');
+    updatePostWorkflowUI();
+    return;
+  }
+
+  const checklist = evaluatePostChecklist(draft);
+  if(draft.status === 'published' && checklist.blockers.length){
+    setStudioStatus('Complete the publish checklist before publishing this post', 'error');
+    updatePostWorkflowUI();
+    return;
+  }
+
+  setStudioStatus(post.status === 'published' ? 'Publishing post...' : 'Saving post...', 'pending');
   await studioFetchJson('/api/admin/posts', {
     method: 'POST',
     body: JSON.stringify({ post }),
   });
-  studioState.bootstrap.posts = studioState.bootstrap.posts.map(item => item.id === post.id ? post : item);
+  removeLocalPostDraft(post.id);
+  clearPostAutosaveTimer();
+  studioState.bootstrap.posts = studioState.bootstrap.posts.map(item => item.id === post.id ? {
+    ...post,
+    localDraftOnly: false,
+    updatedAt: new Date().toISOString(),
+    path: `/notes/${post.slug}`,
+  } : item);
   studioState.selectedPostId = post.id;
   renderPosts();
-  setStudioStatus('Post saved', 'success');
+  setStudioStatus(post.status === 'published' ? 'Post published' : 'Post saved', 'success');
 }
 
 async function deleteCurrentPost(){
   const post = getCurrentPost();
   if(!post) return;
-  if(!window.confirm(`Delete "${post.title.zh || post.title.en || post.slug}"?`)){
+  if(!window.confirm(`Delete "${post.title.zh || post.title.en || post.slug || 'Untitled'}"?`)){
     return;
   }
+
+  if(post.localDraftOnly){
+    removeLocalPostDraft(post.id);
+    clearPostAutosaveTimer();
+    studioState.bootstrap.posts = studioState.bootstrap.posts.filter(item => item.id !== post.id);
+    ensureSelectedPost();
+    renderPosts();
+    setStudioStatus('Local draft deleted', 'success');
+    return;
+  }
+
   setStudioStatus('Deleting post...', 'pending');
   await studioFetchJson('/api/admin/posts', {
     method: 'DELETE',
     body: JSON.stringify({ id: post.id }),
   });
+  removeLocalPostDraft(post.id);
+  clearPostAutosaveTimer();
   studioState.bootstrap.posts = studioState.bootstrap.posts.filter(item => item.id !== post.id);
   ensureSelectedPost();
   renderPosts();
@@ -1441,7 +2308,10 @@ function renderStudio(){
 async function loadBootstrap(){
   setStudioStatus('Loading studio data...', 'pending');
   const payload = await studioFetchJson('/api/admin/bootstrap');
-  studioState.bootstrap = payload;
+  studioState.bootstrap = {
+    ...payload,
+    posts: mergeLocalDraftPosts(payload.posts || []),
+  };
   studioState.username = payload.username;
   ensureSelectedPost();
   renderStudio();
@@ -1471,6 +2341,9 @@ async function handleLogin(event){
 }
 
 async function handleLogout(){
+  if(!confirmPostContextChange()){
+    return;
+  }
   await clearStudioSession('Signed out', 'neutral');
 }
 
@@ -1501,6 +2374,9 @@ studioRefs.logoutBtn?.addEventListener('click', handleLogout);
 document.addEventListener('visibilitychange', () => {
   if(!studioState.username) return;
   if(document.visibilityState === 'hidden'){
+    if(studioState.section === 'posts'){
+      persistCurrentPostDraft({ silent: true });
+    }
     return;
   }
   if(Date.now() - studioSessionState.lastActivityAt >= STUDIO_IDLE_TIMEOUT_MS){
@@ -1511,6 +2387,15 @@ document.addEventListener('visibilitychange', () => {
 });
 STUDIO_ACTIVITY_EVENTS.forEach(eventName => {
   document.addEventListener(eventName, recordStudioActivity, { passive: true });
+});
+
+window.addEventListener('beforeunload', event => {
+  if(studioState.section !== 'posts' || !studioState.postEditor.dirty){
+    return;
+  }
+  persistCurrentPostDraft({ silent: true });
+  event.preventDefault();
+  event.returnValue = '';
 });
 
 bootstrapStudio();

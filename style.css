@@ -3073,3 +3073,44 @@ main,
     grid-column:auto;
   }
 }
+
+/* ── Blog Cover Media ---------------------------------------------------- */
+.writing-feature-card.has-cover{
+  grid-template-rows:minmax(220px, 320px) auto;
+  align-content:stretch;
+}
+
+.writing-feature-media{
+  position:relative;
+  margin:-38px -38px 0;
+  min-height:260px;
+  border-radius:40px 40px 28px 28px;
+  background-position:center;
+  background-repeat:no-repeat;
+  background-size:cover;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+
+.blog-card-media{
+  min-height:180px;
+  margin:-28px -28px 2px;
+  border-radius:32px 32px 22px 22px;
+  background-position:center;
+  background-repeat:no-repeat;
+  background-size:cover;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+
+@media (max-width: 760px){
+  .writing-feature-media{
+    margin:-26px -26px 0;
+    min-height:220px;
+    border-radius:30px 30px 22px 22px;
+  }
+
+  .blog-card-media{
+    margin:-24px -24px 2px;
+    min-height:170px;
+    border-radius:30px 30px 20px 20px;
+  }
+}

@@ -59,6 +59,8 @@ function renderPostPage(post){
     en: renderRichContent(post.content.en || ''),
   };
   const readingMinutes = estimateReadingMinutes(post);
+  const coverImageSrc = String(post.coverImage?.src || '').trim();
+  const publicCoverImage = coverImageSrc && !coverImageSrc.startsWith('data:') ? coverImageSrc : '';
 
   const postData = JSON.stringify({
     title: post.title,
@@ -67,12 +69,17 @@ function renderPostPage(post){
     tags: post.tags,
     publishedAt: post.publishedAt,
     readingMinutes,
+    coverImage: post.coverImage || {},
   }).replace(/</g, '\\u003c');
 
   const robots = post.visibility === 'public' ? 'index,follow,max-image-preview:large' : 'noindex,nofollow';
   const title = escapeHtml(post.title.zh || post.title.en);
   const description = escapeHtml(post.excerpt.zh || post.excerpt.en);
   const tags = (post.tags || []).map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('');
+  const coverImageAlt = escapeHtml(post.coverImage?.alt?.zh || post.coverImage?.alt?.en || title);
+  const coverMarkup = coverImageSrc
+    ? `<div class="post-cover"><img src="${escapeHtml(coverImageSrc)}" alt="${coverImageAlt}"></div>`
+    : '';
 
   return `<!DOCTYPE html>
   <html lang="zh-Hant" data-lang="zh">
@@ -84,9 +91,11 @@ function renderPostPage(post){
     <meta property="og:type" content="article">
     <meta property="og:title" content="${title}">
     <meta property="og:description" content="${description}">
+    ${publicCoverImage ? `<meta property="og:image" content="${escapeHtml(publicCoverImage)}">` : ''}
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="${title}">
     <meta name="twitter:description" content="${description}">
+    ${publicCoverImage ? `<meta name="twitter:image" content="${escapeHtml(publicCoverImage)}">` : ''}
     <title>${title}</title>
     <link rel="stylesheet" href="/style.css">
     <style>
@@ -134,6 +143,7 @@ function renderPostPage(post){
       }
       .post-title{margin:0;font-size:clamp(2.5rem, 5vw, 4.4rem);line-height:.95;letter-spacing:-.03em;max-width:12ch}
       .post-excerpt{margin:0;font-size:1.08rem;color:#d6cec1;max-width:64ch;line-height:1.85}
+      .post-cover img{display:block;width:100%;max-height:440px;object-fit:cover;border-radius:28px;border:1px solid rgba(255,255,255,.08);box-shadow:0 20px 48px rgba(0,0,0,.22)}
       .post-panel{
         margin-top:24px;
         padding:42px;
@@ -191,6 +201,7 @@ function renderPostPage(post){
             <span class="post-chip" id="postReadingTime">${readingMinutes} min read</span>
           </div>
         </div>
+        ${coverMarkup}
         <h1 class="post-title">${title}</h1>
         <p class="post-excerpt">${description}</p>
         <div class="tags" id="postTags">${tags}</div>

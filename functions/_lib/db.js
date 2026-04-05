@@ -36,7 +36,8 @@ const SCHEMA_STATEMENTS = [
     excerpt_en TEXT NOT NULL,
     content_zh TEXT NOT NULL,
     content_en TEXT NOT NULL,
-    tags_json TEXT NOT NULL DEFAULT '[]'
+    tags_json TEXT NOT NULL DEFAULT '[]',
+    cover_image_json TEXT NOT NULL DEFAULT '{}'
   )`,
 ];
 
@@ -55,6 +56,34 @@ function parseJson(text, fallback){
   }
 }
 
+async function ensureOptionalColumn(env, tableName, columnName, definition){
+  try {
+    await env.CMS_DB.prepare(
+      `ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${definition}`,
+    ).run();
+  } catch (error){
+    const message = String(error?.message || '');
+    if(
+      message.includes('duplicate column name') ||
+      message.includes(`duplicate column name: ${columnName}`) ||
+      message.includes('already exists')
+    ){
+      return;
+    }
+    throw error;
+  }
+}
+
+function normalizeCoverImage(coverImage = {}){
+  return {
+    src: String(coverImage?.src || '').trim(),
+    alt: {
+      zh: String(coverImage?.alt?.zh || '').trim(),
+      en: String(coverImage?.alt?.en || '').trim(),
+    },
+  };
+}
+
 export async function ensureCmsDb(env){
   if(!env.CMS_DB){
     throw new Error('CMS_DB binding is missing');
@@ -65,6 +94,7 @@ export async function ensureCmsDb(env){
       for(const statement of SCHEMA_STATEMENTS){
         await env.CMS_DB.prepare(statement).run();
       }
+      await ensureOptionalColumn(env, 'cms_posts', 'cover_image_json', "TEXT NOT NULL DEFAULT '{}'");
       await env.CMS_DB.prepare(
         'INSERT OR IGNORE INTO cms_documents (id, value_json, updated_at) VALUES (?, ?, ?)',
       ).bind(
@@ -185,6 +215,7 @@ function normalizePostRow(row){
       en: row.content_en,
     },
     tags: parseJson(row.tags_json, []),
+    coverImage: normalizeCoverImage(parseJson(row.cover_image_json, {})),
     path: `/notes/${row.slug}`,
   };
 }
@@ -239,13 +270,14 @@ export async function upsertPost(env, post){
       en: post.content?.en || '',
     },
     tags: Array.isArray(post.tags) ? post.tags : [],
+    coverImage: normalizeCoverImage(post.coverImage),
   };
 
   await env.CMS_DB.prepare(
     `INSERT INTO cms_posts (
       id, slug, visibility, status, published_at, updated_at,
-      title_zh, title_en, excerpt_zh, excerpt_en, content_zh, content_en, tags_json
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      title_zh, title_en, excerpt_zh, excerpt_en, content_zh, content_en, tags_json, cover_image_json
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
       slug = excluded.slug,
       visibility = excluded.visibility,
@@ -258,7 +290,8 @@ export async function upsertPost(env, post){
       excerpt_en = excluded.excerpt_en,
       content_zh = excluded.content_zh,
       content_en = excluded.content_en,
-      tags_json = excluded.tags_json`,
+      tags_json = excluded.tags_json,
+      cover_image_json = excluded.cover_image_json`,
   ).bind(
     normalized.id,
     normalized.slug,
@@ -273,6 +306,7 @@ export async function upsertPost(env, post){
     normalized.content.zh,
     normalized.content.en,
     JSON.stringify(normalized.tags),
+    JSON.stringify(normalized.coverImage),
   ).run();
 }
 

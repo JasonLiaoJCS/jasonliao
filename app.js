@@ -645,6 +645,8 @@ function renderCmsPosts(){
   if(!posts.length){
     if(featuredLink){
       featuredLink.hidden = false;
+      featuredLink.classList.remove('has-cover');
+      featuredLink.querySelector('.writing-feature-media')?.remove();
     }
     if(recentList){
       recentList.hidden = false;
@@ -687,6 +689,28 @@ function renderCmsPosts(){
     return currentLang === 'en' ? 'Managed Post' : '精選文章';
   };
   const buildTags = tags => (tags || []).slice(0, 4).map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('');
+  const getCoverSrc = post => {
+    const src = String(post?.coverImage?.src || '').trim();
+    if(!src) return '';
+    return /^(?:data:image\/(?:png|jpe?g);base64,|https?:\/\/|\/)/i.test(src) ? src : '';
+  };
+  const syncFeaturedCover = post => {
+    if(!featuredLink) return;
+    let media = featuredLink.querySelector('.writing-feature-media');
+    const src = getCoverSrc(post);
+    if(!src){
+      media?.remove();
+      featuredLink.classList.remove('has-cover');
+      return;
+    }
+    if(!media){
+      media = document.createElement('div');
+      media.className = 'writing-feature-media';
+      featuredLink.prepend(media);
+    }
+    media.style.backgroundImage = `linear-gradient(180deg, rgba(8,10,16,.04), rgba(8,10,16,.72)), url("${src}")`;
+    featuredLink.classList.add('has-cover');
+  };
 
   const featuredPost = posts[0];
   if(featuredPost && featuredLink && featuredMeta && featuredTitle && featuredExcerpt && featuredTags){
@@ -695,6 +719,7 @@ function renderCmsPosts(){
     featuredTitle.textContent = getLocalizedPostField(featuredPost.title);
     featuredExcerpt.textContent = getLocalizedPostField(featuredPost.excerpt);
     featuredTags.innerHTML = buildTags(featuredPost.tags);
+    syncFeaturedCover(featuredPost);
   }
 
   if(recentList){
@@ -725,7 +750,12 @@ function renderCmsPosts(){
     const title = getLocalizedPostField(post.title);
     const excerpt = getLocalizedPostField(post.excerpt);
     const tags = buildTags(post.tags);
+    const coverSrc = getCoverSrc(post);
+    const coverMarkup = coverSrc
+      ? `<div class="blog-card-media" style="background-image:linear-gradient(180deg, rgba(8,10,16,.02), rgba(8,10,16,.5)), url(&quot;${escapeHtml(coverSrc)}&quot;)"></div>`
+      : '';
     link.innerHTML = `
+      ${coverMarkup}
       <div class="meta">${escapeHtml(meta)}</div>
       <h3>${escapeHtml(title)}</h3>
       <p>${escapeHtml(excerpt)}</p>
