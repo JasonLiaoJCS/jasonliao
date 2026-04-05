@@ -1905,6 +1905,101 @@ main,
     0 0 28px rgba(217,177,111,.08);
 }
 
+/* ── Media Frame Cleanup ── */
+.hero-logo{
+  min-height:420px;
+  padding:10px;
+  border-radius:34px;
+  border:1px solid rgba(255,255,255,.08);
+  background:linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.012));
+  box-shadow:
+    0 22px 52px rgba(0,0,0,.22),
+    inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+.hero-logo::before{
+  inset:10px;
+  border-radius:26px;
+  border:1px solid rgba(255,255,255,.05);
+  background:linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,0));
+  box-shadow:none;
+}
+
+.hero-logo::after{
+  top:auto;
+  left:auto;
+  right:24px;
+  bottom:22px;
+  width:120px;
+  height:120px;
+  border-radius:50%;
+  padding:0;
+  background:radial-gradient(circle, rgba(217,177,111,.14), transparent 72%);
+  -webkit-mask:none;
+          mask:none;
+  opacity:.7;
+}
+
+.hero-logo img{
+  width:min(100%, 338px);
+  border-radius:24px;
+  background:none;
+  box-shadow:
+    0 20px 42px rgba(0,0,0,.24),
+    0 0 0 1px rgba(255,255,255,.05);
+}
+
+.portrait-gallery{
+  gap:26px;
+  max-width:940px;
+}
+
+.portrait-card{
+  padding:10px;
+  border-radius:30px;
+  border:1px solid rgba(255,255,255,.08);
+  background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.012));
+  box-shadow:
+    0 20px 48px rgba(0,0,0,.22),
+    inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+.portrait-card::before{
+  content:"";
+  position:absolute;
+  inset:10px;
+  border-radius:22px;
+  border:1px solid rgba(255,255,255,.05);
+  pointer-events:none;
+}
+
+.portrait-card-private{
+  padding:24px;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(217,177,111,.1), transparent 32%),
+    linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.012));
+}
+
+.portrait-card-private::before{
+  inset:10px;
+  border-radius:22px;
+  background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.008));
+}
+
+.portrait-card img{
+  height:100%;
+  border-radius:22px;
+  box-shadow:0 16px 38px rgba(0,0,0,.18);
+}
+
+.portrait-card figcaption{
+  left:10px;
+  right:10px;
+  bottom:10px;
+  padding:36px 18px 14px;
+  border-radius:0 0 22px 22px;
+}
+
 @media (max-width: 1040px){
   body::after{
     inset:12px;
@@ -1927,7 +2022,7 @@ main,
   }
 
   .hero-logo{
-    min-height:400px;
+    min-height:360px;
   }
 
   .news-bar,
@@ -1968,8 +2063,8 @@ main,
   }
 
   .hero-logo{
-    min-height:320px;
-    padding:14px;
+    min-height:300px;
+    padding:8px;
   }
 
   .hero-panel-grid{
@@ -1977,21 +2072,43 @@ main,
   }
 
   .hero-logo::before{
-    inset:14px;
-    border-radius:26px;
+    inset:8px;
+    border-radius:20px;
   }
 
   .hero-logo::after{
-    top:16px;
     right:16px;
     bottom:16px;
-    left:16px;
-    border-radius:24px;
+    width:84px;
+    height:84px;
   }
 
   .hero-logo img{
-    width:min(100%, 300px);
-    border-radius:22px;
+    width:min(100%, 280px);
+    border-radius:18px;
+  }
+
+  .portrait-card,
+  .portrait-card-primary,
+  .portrait-card-secondary{
+    padding:8px;
+  }
+
+  .portrait-card::before,
+  .portrait-card-private::before{
+    inset:8px;
+    border-radius:18px;
+  }
+
+  .portrait-card img{
+    border-radius:18px;
+  }
+
+  .portrait-card figcaption{
+    left:8px;
+    right:8px;
+    bottom:8px;
+    border-radius:0 0 18px 18px;
   }
 
   .news-bar{
