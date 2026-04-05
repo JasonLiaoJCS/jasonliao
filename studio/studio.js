@@ -19,6 +19,7 @@ const STUDIO_IDLE_TIMEOUT_MS = 10 * 60 * 1000;
 const STUDIO_SESSION_STORAGE_KEY = 'jl_studio_session_active';
 const STUDIO_ACTIVITY_EVENTS = ['pointerdown', 'keydown', 'scroll', 'touchstart'];
 const MARKDOWN_IMAGE_ACCEPT = 'image/png,image/jpeg,.png,.jpg,.jpeg';
+const MARKDOWN_IMAGE_TOKEN_PREFIX = 'jl-img:';
 const MARKDOWN_IMAGE_MAX_FILES = 6;
 const MARKDOWN_IMAGE_MAX_FILE_SIZE = 12 * 1024 * 1024;
 const MARKDOWN_IMAGE_MAX_DIMENSION = 1800;
@@ -284,6 +285,29 @@ function getMarkdownImageManifest(editorId){
   return studioState.markdownEditorAssets[editorId];
 }
 
+function getUsedMarkdownImageIds(markdown = ''){
+  const ids = new Set();
+  String(markdown || '').replace(/!\[[^\]]*\]\((jl-img:[^)]+)\)/gi, (match, token) => {
+    const id = String(token || '').trim().slice(MARKDOWN_IMAGE_TOKEN_PREFIX.length);
+    if(id){
+      ids.add(id);
+    }
+    return match;
+  });
+  return ids;
+}
+
+function pruneMarkdownImageManifest(editorId, markdown = ''){
+  const manifest = getMarkdownImageManifest(editorId);
+  const usedIds = getUsedMarkdownImageIds(markdown);
+  Object.keys(manifest).forEach(id => {
+    if(!usedIds.has(id)){
+      delete manifest[id];
+    }
+  });
+  return manifest;
+}
+
 function createUniqueMarkdownImageId(editorId){
   const manifest = getMarkdownImageManifest(editorId);
   let candidate = `img-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
@@ -426,7 +450,8 @@ function bindMarkdownEditors(container){
 
     const refreshPreview = () => {
       const value = textarea.value;
-      preview.innerHTML = getMarkdownPreviewMarkup(value, getMarkdownImageManifest(editorId));
+      const manifest = pruneMarkdownImageManifest(editorId, value);
+      preview.innerHTML = getMarkdownPreviewMarkup(value, manifest);
       preview.classList.toggle('is-empty', !String(value).trim());
       const mode = isLikelyHtml(value) ? 'Legacy HTML' : 'Markdown';
       modeBadge.textContent = mode;
@@ -1054,6 +1079,11 @@ function renderPosts(){
 function collectCurrentPostFromForm(){
   const post = getCurrentPost();
   if(!post) return null;
+  const postContentZh = document.getElementById('postContentZh').value;
+  const postContentEn = document.getElementById('postContentEn').value;
+  const zhManifest = pruneMarkdownImageManifest('postContentZh', postContentZh);
+  const enManifest = pruneMarkdownImageManifest('postContentEn', postContentEn);
+
   return {
     ...post,
     slug: document.getElementById('postSlug').value.trim(),
@@ -1070,12 +1100,12 @@ function collectCurrentPostFromForm(){
     },
     content: {
       zh: serializeEmbeddedImageDocument(
-        document.getElementById('postContentZh').value,
-        studioState.markdownEditorAssets.postContentZh,
+        postContentZh,
+        zhManifest,
       ),
       en: serializeEmbeddedImageDocument(
-        document.getElementById('postContentEn').value,
-        studioState.markdownEditorAssets.postContentEn,
+        postContentEn,
+        enManifest,
       ),
     },
     tags: document.getElementById('postTagsInput').value

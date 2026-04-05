@@ -195,6 +195,9 @@ const cmsState = {
 };
 const cmsOriginalMarkup = {
   news: null,
+  writingCount: null,
+  writingFeature: null,
+  writingRecent: null,
 };
 const PRIVATE_UI_COPY = {
   zh: {
@@ -619,6 +622,22 @@ function renderCmsPosts(){
   const archiveHead = document.querySelector('.writing-archive-head');
   if(!grid) return;
 
+  if(cmsOriginalMarkup.writingFeature === null && featuredLink && featuredMeta && featuredTitle && featuredExcerpt && featuredTags){
+    cmsOriginalMarkup.writingFeature = {
+      href: featuredLink.getAttribute('href') || '',
+      meta: featuredMeta.textContent || '',
+      title: featuredTitle.textContent || '',
+      excerpt: featuredExcerpt.textContent || '',
+      tags: featuredTags.innerHTML || '',
+    };
+  }
+  if(cmsOriginalMarkup.writingRecent === null && recentList){
+    cmsOriginalMarkup.writingRecent = recentList.innerHTML;
+  }
+  if(cmsOriginalMarkup.writingCount === null && writingCount){
+    cmsOriginalMarkup.writingCount = writingCount.textContent || '';
+  }
+
   grid.querySelectorAll('.cms-post-card').forEach(card => card.remove());
   const fallbackCards = [...grid.querySelectorAll('.blog-card:not(.cms-post-card)')];
 
@@ -629,6 +648,19 @@ function renderCmsPosts(){
     }
     if(recentList){
       recentList.hidden = false;
+      if(cmsOriginalMarkup.writingRecent !== null){
+        recentList.innerHTML = cmsOriginalMarkup.writingRecent;
+      }
+    }
+    if(cmsOriginalMarkup.writingFeature && featuredLink && featuredMeta && featuredTitle && featuredExcerpt && featuredTags){
+      featuredLink.href = cmsOriginalMarkup.writingFeature.href;
+      featuredMeta.textContent = cmsOriginalMarkup.writingFeature.meta;
+      featuredTitle.textContent = cmsOriginalMarkup.writingFeature.title;
+      featuredExcerpt.textContent = cmsOriginalMarkup.writingFeature.excerpt;
+      featuredTags.innerHTML = cmsOriginalMarkup.writingFeature.tags;
+    }
+    if(cmsOriginalMarkup.writingCount !== null && writingCount){
+      writingCount.textContent = cmsOriginalMarkup.writingCount;
     }
     fallbackCards.forEach(card => {
       card.hidden = false;
@@ -694,9 +726,9 @@ function renderCmsPosts(){
     const excerpt = getLocalizedPostField(post.excerpt);
     const tags = buildTags(post.tags);
     link.innerHTML = `
-      <div class="meta">${meta}</div>
-      <h3>${title}</h3>
-      <p>${excerpt}</p>
+      <div class="meta">${escapeHtml(meta)}</div>
+      <h3>${escapeHtml(title)}</h3>
+      <p>${escapeHtml(excerpt)}</p>
       <div class="tags">${tags}</div>
     `;
     fragment.append(link);
@@ -1183,6 +1215,8 @@ if(document.readyState === 'loading'){
 }
 
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const hasFinePointer = window.matchMedia('(hover:hover) and (pointer:fine)').matches;
+const reduceLuxeEffects = prefersReducedMotion || window.matchMedia('(max-width: 760px), (pointer:coarse)').matches;
 
 // Mobile menu toggle
 const menuBtn = document.querySelector('.menu-btn');
@@ -1283,7 +1317,7 @@ const cursorGlow = document.getElementById('cursorGlow');
 let mouseX = 0, mouseY = 0;
 let glowX = 0, glowY = 0;
 
-if(!prefersReducedMotion && cursor && cursorGlow && window.matchMedia('(pointer:fine)').matches){
+if(!prefersReducedMotion && cursor && cursorGlow && hasFinePointer){
   document.addEventListener('mousemove', e => {
     mouseX = e.clientX;
     mouseY = e.clientY;
@@ -1310,7 +1344,7 @@ if(!prefersReducedMotion && cursor && cursorGlow && window.matchMedia('(pointer:
 // ════════════════════════════════════════
 // ★ 3D Tilt Cards
 // ════════════════════════════════════════
-if(!prefersReducedMotion){
+if(!reduceLuxeEffects && hasFinePointer){
   document.querySelectorAll('.tilt-card').forEach(card => {
     card.addEventListener('mousemove', e => {
       const rect = card.getBoundingClientRect();
@@ -1331,7 +1365,7 @@ if(!prefersReducedMotion){
 // ════════════════════════════════════════
 // ★ Magnetic Buttons
 // ════════════════════════════════════════
-if(!prefersReducedMotion){
+if(!reduceLuxeEffects && hasFinePointer){
   document.querySelectorAll('.magnetic').forEach(btn => {
     btn.addEventListener('mousemove', e => {
       const rect = btn.getBoundingClientRect();
@@ -1348,21 +1382,23 @@ if(!prefersReducedMotion){
 // ════════════════════════════════════════
 // ★ Stat Cards — Mouse Glow Position
 // ════════════════════════════════════════
-document.querySelectorAll('.stat').forEach(stat => {
-  stat.addEventListener('mousemove', e => {
-    const rect = stat.getBoundingClientRect();
-    const mx = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
-    const my = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
-    stat.style.setProperty('--mx', mx + '%');
-    stat.style.setProperty('--my', my + '%');
+if(hasFinePointer){
+  document.querySelectorAll('.stat').forEach(stat => {
+    stat.addEventListener('mousemove', e => {
+      const rect = stat.getBoundingClientRect();
+      const mx = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
+      const my = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
+      stat.style.setProperty('--mx', mx + '%');
+      stat.style.setProperty('--my', my + '%');
+    });
   });
-});
+}
 
 // ════════════════════════════════════════
 // ★ Hero Particle Canvas
 // ════════════════════════════════════════
 const heroCanvas = document.getElementById('heroParticles');
-if(heroCanvas && !prefersReducedMotion){
+if(heroCanvas && !reduceLuxeEffects){
   const ctx = heroCanvas.getContext('2d');
   let particles = [];
   const PARTICLE_COUNT = 50;
@@ -1438,7 +1474,7 @@ if(heroCanvas && !prefersReducedMotion){
 // ════════════════════════════════════════
 const parallaxElements = document.querySelectorAll('.section-number, .hero-glow, .hero-logo');
 function updateParallax(){
-  if(prefersReducedMotion) return;
+  if(reduceLuxeEffects) return;
   parallaxElements.forEach(el => {
     const speed = el.classList.contains('hero-glow') ? 0.15
                 : el.classList.contains('hero-logo') ? 0.04
@@ -1448,7 +1484,7 @@ function updateParallax(){
     el.style.transform = `translateY(${offset}px)`;
   });
 }
-if(!prefersReducedMotion){
+if(!reduceLuxeEffects){
   window.addEventListener('scroll', () => {
     requestAnimationFrame(updateParallax);
   }, {passive: true});

@@ -31,11 +31,34 @@ function renderLockedPage(slug){
   </html>`;
 }
 
+function stripRichText(value = ''){
+  return String(value || '')
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, ' $1 ')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, ' $1 ')
+    .replace(/<\/?[^>]+>/g, ' ')
+    .replace(/[#>*_`~\-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function estimateReadingMinutes(post){
+  const sample = stripRichText(post.content.zh || post.content.en || '');
+  if(!sample){
+    return 1;
+  }
+  const latinWords = (sample.match(/[A-Za-z0-9_]+/g) || []).length;
+  const cjkChars = (sample.match(/[\u3400-\u9fff]/g) || []).length;
+  const wordEquivalent = latinWords + (cjkChars / 2);
+  return Math.max(1, Math.round(wordEquivalent / 220));
+}
+
 function renderPostPage(post){
   const renderedContent = {
     zh: renderRichContent(post.content.zh || ''),
     en: renderRichContent(post.content.en || ''),
   };
+  const readingMinutes = estimateReadingMinutes(post);
 
   const postData = JSON.stringify({
     title: post.title,
@@ -43,6 +66,7 @@ function renderPostPage(post){
     renderedContent,
     tags: post.tags,
     publishedAt: post.publishedAt,
+    readingMinutes,
   }).replace(/</g, '\\u003c');
 
   const robots = post.visibility === 'public' ? 'index,follow,max-image-preview:large' : 'noindex,nofollow';
@@ -66,12 +90,60 @@ function renderPostPage(post){
     <title>${title}</title>
     <link rel="stylesheet" href="/style.css">
     <style>
-      .post-shell{padding:140px 0 100px}
-      .post-panel{width:min(860px, calc(100% - 40px));margin:0 auto;padding:42px;border-radius:32px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);box-shadow:0 24px 80px rgba(0,0,0,.28)}
-      .post-meta{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}
-      .post-title{margin:0 0 18px}
-      .post-excerpt{font-size:1.05rem;color:#d6cec1;max-width:720px}
-      .post-body{margin-top:28px;color:#ddd6c9}
+      .post-shell{padding:132px 0 110px}
+      .post-hero,.post-panel{width:min(960px, calc(100% - 40px));margin:0 auto}
+      .post-hero{
+        position:relative;
+        overflow:hidden;
+        display:grid;
+        gap:20px;
+        padding:38px 40px;
+        border-radius:34px;
+        border:1px solid rgba(255,255,255,.1);
+        background:
+          radial-gradient(circle at 82% 18%, rgba(217,177,111,.16), transparent 24%),
+          linear-gradient(160deg, rgba(17,21,31,.96), rgba(8,10,16,.985));
+        box-shadow:
+          0 28px 82px rgba(0,0,0,.28),
+          inset 0 1px 0 rgba(255,255,255,.05);
+      }
+      .post-hero::before{
+        content:"";
+        position:absolute;
+        inset:16px;
+        border-radius:26px;
+        border:1px solid rgba(255,255,255,.06);
+        background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.008));
+        pointer-events:none;
+      }
+      .post-hero > *{position:relative;z-index:1}
+      .post-toolbar{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+      .post-toolbar .actions{display:flex;gap:12px;flex-wrap:wrap}
+      .post-toggle{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:var(--gold-soft);font-weight:600;cursor:pointer}
+      .post-meta{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:flex-start}
+      .post-meta-cluster{display:flex;gap:10px;flex-wrap:wrap}
+      .post-chip{
+        display:inline-flex;
+        align-items:center;
+        padding:8px 12px;
+        border-radius:999px;
+        border:1px solid rgba(255,255,255,.08);
+        background:rgba(255,255,255,.04);
+        color:#e7decf;
+        font-size:.85rem;
+      }
+      .post-title{margin:0;font-size:clamp(2.5rem, 5vw, 4.4rem);line-height:.95;letter-spacing:-.03em;max-width:12ch}
+      .post-excerpt{margin:0;font-size:1.08rem;color:#d6cec1;max-width:64ch;line-height:1.85}
+      .post-panel{
+        margin-top:24px;
+        padding:42px;
+        border-radius:32px;
+        background:rgba(255,255,255,.045);
+        border:1px solid rgba(255,255,255,.08);
+        box-shadow:0 24px 80px rgba(0,0,0,.28)
+      }
+      .post-body-wrap{max-width:70ch}
+      .post-body{color:#ddd6c9}
       .post-body p{color:#ddd6c9;margin:0 0 18px}
       .post-body h2,.post-body h3,.post-body h4{margin:36px 0 16px}
       .post-body ul,.post-body ol{padding-left:1.3rem;margin:0 0 18px}
@@ -83,10 +155,11 @@ function renderPostPage(post){
       .post-body hr{border:none;height:1px;margin:32px 0;background:rgba(255,255,255,.12)}
       .post-body a{color:var(--gold-soft);text-decoration:underline;text-underline-offset:3px}
       .post-body img{display:block;max-width:100%;height:auto;margin:22px 0;border-radius:22px;border:1px solid rgba(255,255,255,.08)}
-      .post-toolbar{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:28px}
-      .post-toolbar .actions{display:flex;gap:12px;flex-wrap:wrap}
-      .post-toggle{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:var(--gold-soft);font-weight:600;cursor:pointer}
-      @media (max-width:720px){.post-panel{padding:30px 22px}}
+      @media (max-width:720px){
+        .post-hero,.post-panel{width:min(100%, calc(100% - 24px))}
+        .post-hero,.post-panel{padding:28px 22px}
+        .post-title{max-width:none}
+      }
     </style>
   </head>
   <body>
@@ -104,7 +177,7 @@ function renderPostPage(post){
     </nav>
 
     <main class="post-shell">
-      <article class="post-panel">
+      <section class="post-hero">
         <div class="post-toolbar">
           <a class="btn" href="/#writing">← Back</a>
           <div class="actions">
@@ -113,12 +186,20 @@ function renderPostPage(post){
         </div>
         <div class="post-meta">
           <div class="eyebrow">${post.visibility === 'acquaintance' ? 'Acquaintance Note' : 'Blog / Notes'}</div>
-          <div class="small muted">${escapeHtml(post.publishedAt || '')}</div>
+          <div class="post-meta-cluster">
+            <span class="post-chip" id="postPublished">${escapeHtml(post.publishedAt || '')}</span>
+            <span class="post-chip" id="postReadingTime">${readingMinutes} min read</span>
+          </div>
         </div>
         <h1 class="post-title">${title}</h1>
         <p class="post-excerpt">${description}</p>
         <div class="tags" id="postTags">${tags}</div>
-        <div class="post-body" id="postBody">${renderedContent.zh || renderedContent.en || ''}</div>
+      </section>
+
+      <article class="post-panel">
+        <div class="post-body-wrap">
+          <div class="post-body" id="postBody">${renderedContent.zh || renderedContent.en || ''}</div>
+        </div>
       </article>
     </main>
 
@@ -129,6 +210,8 @@ function renderPostPage(post){
       const postTags = document.getElementById('postTags');
       const postTitle = document.querySelector('.post-title');
       const postExcerpt = document.querySelector('.post-excerpt');
+      const postPublished = document.getElementById('postPublished');
+      const postReadingTime = document.getElementById('postReadingTime');
       let currentLang = 'zh';
       const escapeHtml = value => String(value || '')
         .replaceAll('&', '&amp;')
@@ -149,6 +232,10 @@ function renderPostPage(post){
         postTitle.textContent = postData.title[lang] || postData.title.zh || postData.title.en || '';
         postExcerpt.textContent = postData.excerpt[lang] || postData.excerpt.zh || postData.excerpt.en || '';
         postBody.innerHTML = postData.renderedContent[lang] || postData.renderedContent.zh || postData.renderedContent.en || '';
+        postPublished.textContent = postData.publishedAt || '';
+        postReadingTime.textContent = lang === 'zh'
+          ? '閱讀約 ' + postData.readingMinutes + ' 分鐘'
+          : postData.readingMinutes + ' min read';
         renderTags();
       }
 
