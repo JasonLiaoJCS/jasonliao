@@ -348,6 +348,27 @@
   border-radius:14px;
 }
 
+.studio-markdown-utility-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px 16px;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.studio-markdown-upload-trigger{
+  min-width:132px;
+}
+
+.studio-hidden-file-input{
+  display:none;
+}
+
+.studio-markdown-upload-note{
+  flex:1 1 260px;
+  line-height:1.65;
+}
+
 .studio-markdown-preview-shell{
   display:grid;
   gap:8px;
@@ -1256,4 +1277,10 @@
   .studio-form-grid.cols-2,
   .studio-private-media,
   .studio-dashboard-stats{grid-template-columns:1fr}
+  .studio-markdown-utility-row{
+    align-items:flex-start;
+  }
+  .studio-markdown-upload-trigger{
+    width:100%;
+  }
 }

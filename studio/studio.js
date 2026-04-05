@@ -10,6 +10,12 @@ const studioState = {
 const STUDIO_IDLE_TIMEOUT_MS = 10 * 60 * 1000;
 const STUDIO_SESSION_STORAGE_KEY = 'jl_studio_session_active';
 const STUDIO_ACTIVITY_EVENTS = ['pointerdown', 'keydown', 'scroll', 'touchstart'];
+const MARKDOWN_IMAGE_ACCEPT = 'image/png,image/jpeg,.png,.jpg,.jpeg';
+const MARKDOWN_IMAGE_MAX_FILES = 6;
+const MARKDOWN_IMAGE_MAX_FILE_SIZE = 12 * 1024 * 1024;
+const MARKDOWN_IMAGE_MAX_DIMENSION = 1800;
+const MARKDOWN_IMAGE_JPEG_QUALITY = 0.86;
+const MARKDOWN_IMAGE_PNG_KEEP_THRESHOLD = 1.2 * 1024 * 1024;
 
 const studioSessionState = {
   idleTimer: null,
@@ -157,6 +163,26 @@ function renderMarkdownEditor({ id, label, value, languageLabel }){
           </button>
         `).join('')}
       </div>
+      <div class="studio-markdown-utility-row">
+        <button
+          class="btn magnetic studio-markdown-upload-trigger"
+          type="button"
+          data-markdown-image-trigger="${id}"
+          data-default-label="Add Photos"
+        >
+          Add Photos
+        </button>
+        <input
+          class="studio-hidden-file-input"
+          type="file"
+          accept="${MARKDOWN_IMAGE_ACCEPT}"
+          multiple
+          data-markdown-image-input="${id}"
+        >
+        <div class="small muted studio-markdown-upload-note">
+          支援 PNG / JPG，多張一次插入。系統會先縮圖後再嵌進文章，適合放幾張 blog 照片。
+        </div>
+      </div>
       <label class="studio-form-field">
         <span>${label}（Markdown）</span>
         <textarea id="${id}" data-markdown-source="${id}" rows="16">${escapeHtml(value || '')}</textarea>
@@ -214,6 +240,103 @@ function insertAtCursor(textarea, value){
   focusTextarea(textarea);
 }
 
+function insertBlockAtCursor(textarea, value){
+  const start = textarea.selectionStart ?? textarea.value.length;
+  const end = textarea.selectionEnd ?? start;
+  const before = textarea.value.slice(0, start);
+  const after = textarea.value.slice(end);
+  const needsLeadingGap = before.trim() && !before.endsWith('\n\n');
+  const needsTrailingGap = after.trim() && !after.startsWith('\n\n');
+  const nextValue = `${needsLeadingGap ? '\n\n' : ''}${value}${needsTrailingGap ? '\n\n' : ''}`;
+  textarea.setRangeText(nextValue, start, end, 'end');
+  const caret = start + nextValue.length;
+  textarea.setSelectionRange(caret, caret);
+  focusTextarea(textarea);
+}
+
+function normalizeMarkdownImageAlt(fileName = ''){
+  return String(fileName)
+    .replace(/\.[^.]+$/, '')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim() || 'Blog photo';
+}
+
+function escapeMarkdownImageAlt(value = ''){
+  return String(value).replace(/[\[\]]/g, '').trim();
+}
+
+function isSupportedMarkdownImageFile(file){
+  if(!file){
+    return false;
+  }
+  const fileName = String(file.name || '');
+  const fileType = String(file.type || '');
+  return /^image\/(?:png|jpe?g)$/i.test(fileType) || /\.(?:png|jpe?g)$/i.test(fileName);
+}
+
+async function loadImageElement(file){
+  return new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(image);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error(`無法讀取圖片：${file.name || 'unknown file'}`));
+    };
+    image.src = objectUrl;
+  });
+}
+
+async function createEmbeddedMarkdownImage(file){
+  if(!isSupportedMarkdownImageFile(file)){
+    throw new Error(`${file?.name || '檔案'} 不是支援的 PNG/JPG`);
+  }
+  if(file.size > MARKDOWN_IMAGE_MAX_FILE_SIZE){
+    throw new Error(`${file.name} 超過 12MB，請先縮小再上傳`);
+  }
+
+  const image = await loadImageElement(file);
+  const sourceWidth = image.naturalWidth || image.width || 1;
+  const sourceHeight = image.naturalHeight || image.height || 1;
+  const scale = Math.min(1, MARKDOWN_IMAGE_MAX_DIMENSION / Math.max(sourceWidth, sourceHeight));
+  const width = Math.max(1, Math.round(sourceWidth * scale));
+  const height = Math.max(1, Math.round(sourceHeight * scale));
+  const keepPng = /^image\/png$/i.test(file.type || '') && file.size <= MARKDOWN_IMAGE_PNG_KEEP_THRESHOLD;
+  const outputType = keepPng ? 'image/png' : 'image/jpeg';
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext('2d', { alpha: true });
+  if(!context){
+    throw new Error('目前瀏覽器無法處理圖片縮圖');
+  }
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = 'high';
+  if(outputType === 'image/jpeg'){
+    context.fillStyle = '#ffffff';
+    context.fillRect(0, 0, width, height);
+  }
+  context.drawImage(image, 0, 0, width, height);
+  const dataUrl = outputType === 'image/png'
+    ? canvas.toDataURL(outputType)
+    : canvas.toDataURL(outputType, MARKDOWN_IMAGE_JPEG_QUALITY);
+
+  return {
+    alt: escapeMarkdownImageAlt(normalizeMarkdownImageAlt(file.name)),
+    dataUrl,
+  };
+}
+
+function buildEmbeddedMarkdownImages(images){
+  return images
+    .map(image => `![${image.alt}](${image.dataUrl})`)
+    .join('\n\n');
+}
+
 function applyMarkdownAction(textarea, action){
   switch(action){
     case 'h2':
@@ -263,6 +386,8 @@ function bindMarkdownEditors(container){
     const editor = container.querySelector(`[data-markdown-editor="${editorId}"]`);
     const preview = container.querySelector(`[data-markdown-preview="${editorId}"]`);
     const modeBadge = container.querySelector(`[data-markdown-mode="${editorId}"]`);
+    const imageTrigger = container.querySelector(`[data-markdown-image-trigger="${editorId}"]`);
+    const imageInput = container.querySelector(`[data-markdown-image-input="${editorId}"]`);
     if(!editor || !preview || !modeBadge){
       return;
     }
@@ -282,6 +407,62 @@ function bindMarkdownEditors(container){
     editor.querySelectorAll('[data-markdown-action]').forEach(button => {
       button.addEventListener('click', () => applyMarkdownAction(textarea, button.dataset.markdownAction));
     });
+
+    if(imageTrigger && imageInput){
+      imageTrigger.addEventListener('click', () => imageInput.click());
+      imageInput.addEventListener('change', async event => {
+        const files = Array.from(event.target.files || []);
+        imageInput.value = '';
+        if(!files.length){
+          return;
+        }
+
+        const limitedFiles = files.slice(0, MARKDOWN_IMAGE_MAX_FILES);
+        const skippedFiles = Math.max(0, files.length - limitedFiles.length);
+        const defaultLabel = imageTrigger.dataset.defaultLabel || imageTrigger.textContent || 'Add Photos';
+        imageTrigger.disabled = true;
+        imageTrigger.textContent = 'Processing...';
+        setStudioStatus(`Processing ${limitedFiles.length} image${limitedFiles.length > 1 ? 's' : ''}...`, 'pending');
+
+        const embeddedImages = [];
+        const errors = [];
+
+        for(const file of limitedFiles){
+          try {
+            embeddedImages.push(await createEmbeddedMarkdownImage(file));
+          } catch (error){
+            errors.push(error.message || `無法處理 ${file.name}`);
+          }
+        }
+
+        if(embeddedImages.length){
+          insertBlockAtCursor(textarea, buildEmbeddedMarkdownImages(embeddedImages));
+        }
+
+        imageTrigger.disabled = false;
+        imageTrigger.textContent = defaultLabel;
+
+        if(embeddedImages.length && !errors.length && !skippedFiles){
+          setStudioStatus(`Inserted ${embeddedImages.length} photo${embeddedImages.length > 1 ? 's' : ''} into the editor`, 'success');
+          return;
+        }
+
+        const warnings = [];
+        if(skippedFiles){
+          warnings.push(`一次最多插入 ${MARKDOWN_IMAGE_MAX_FILES} 張，已略過 ${skippedFiles} 張`);
+        }
+        if(errors.length){
+          warnings.push(errors[0]);
+        }
+
+        if(embeddedImages.length){
+          setStudioStatus(`已插入 ${embeddedImages.length} 張圖片。${warnings.join('；')}`, warnings.length ? 'neutral' : 'success');
+          return;
+        }
+
+        setStudioStatus(warnings[0] || '目前沒有成功插入任何圖片', 'error');
+      });
+    }
   });
 }
 
@@ -746,7 +927,7 @@ function renderPostEditor(post){
         <input id="postTagsInput" type="text" value="${escapeHtml((post.tags || []).join(', '))}">
       </label>
       <div class="studio-post-editor-note" style="margin-top:18px">
-        Studio 文章現在支援 Markdown 編輯、常用格式工具列與即時預覽。舊的 HTML 文章也會繼續正常顯示。
+        Studio 文章現在支援 Markdown 編輯、常用格式工具列、PNG/JPG 圖片插入與即時預覽。舊的 HTML 文章也會繼續正常顯示。
       </div>
       <div class="studio-form-grid cols-2 studio-markdown-grid" style="margin-top:18px">
         ${renderMarkdownEditor({

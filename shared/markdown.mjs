@@ -11,10 +11,21 @@ function escapeAttribute(value = ''){
   return escapeHtml(value);
 }
 
-function sanitizeUrl(value = ''){
+function isSafeDataImageUrl(value = ''){
+  const trimmed = String(value).trim();
+  if(!trimmed){
+    return false;
+  }
+  return /^data:image\/(?:png|jpe?g);base64,[a-z0-9+/=]+$/i.test(trimmed);
+}
+
+function sanitizeUrl(value = '', options = {}){
   const trimmed = String(value).trim();
   if(!trimmed){
     return '';
+  }
+  if(options.allowDataImage && isSafeDataImageUrl(trimmed)){
+    return trimmed;
   }
   if(/^(https?:|mailto:|tel:|\/|#)/i.test(trimmed)){
     return trimmed;
@@ -45,7 +56,7 @@ function renderInlineMarkdown(value = ''){
   let html = escapeHtml(value);
 
   html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, url) => {
-    const safeUrl = sanitizeUrl(url);
+    const safeUrl = sanitizeUrl(url, { allowDataImage: true });
     if(!safeUrl){
       return match;
     }
@@ -226,6 +237,7 @@ function renderRichContent(value = ''){
 export {
   escapeHtml,
   isLikelyHtml,
+  isSafeDataImageUrl,
   renderMarkdownToHtml,
   renderRichContent,
   sanitizeUrl,
