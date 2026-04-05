@@ -75,11 +75,12 @@ async function ensureOptionalColumn(env, tableName, columnName, definition){
 }
 
 function normalizeCoverImage(coverImage = {}){
+  const src = String(coverImage?.src || '').trim();
   return {
-    src: String(coverImage?.src || '').trim(),
+    src,
     alt: {
-      zh: String(coverImage?.alt?.zh || '').trim(),
-      en: String(coverImage?.alt?.en || '').trim(),
+      zh: src ? String(coverImage?.alt?.zh || '').trim() : '',
+      en: src ? String(coverImage?.alt?.en || '').trim() : '',
     },
   };
 }

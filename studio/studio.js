@@ -37,6 +37,10 @@ const MARKDOWN_IMAGE_PNG_KEEP_THRESHOLD = 1.2 * 1024 * 1024;
 const STUDIO_POST_DRAFT_KEY_PREFIX = 'jl-studio-post-draft:';
 const STUDIO_POST_AUTOSAVE_DELAY_MS = 1200;
 const STUDIO_POST_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const STUDIO_POST_DRAFT_RETENTION_MS = 45 * 24 * 60 * 60 * 1000;
+const STUDIO_POST_ORPHAN_DRAFT_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
+const STUDIO_POST_DRAFT_MAX_COUNT = 12;
+const STUDIO_POST_DRAFT_MAX_TOTAL_CHARS = 2_500_000;
 
 const studioSessionState = {
   idleTimer: null,
@@ -598,11 +602,27 @@ function createEmptyCoverImage(){
 }
 
 function normalizePostCoverImage(coverImage = {}){
+  const src = String(coverImage?.src || '').trim();
   return {
-    src: String(coverImage?.src || '').trim(),
+    src,
     alt: {
-      zh: String(coverImage?.alt?.zh || '').trim(),
-      en: String(coverImage?.alt?.en || '').trim(),
+      zh: src ? String(coverImage?.alt?.zh || '').trim() : '',
+      en: src ? String(coverImage?.alt?.en || '').trim() : '',
+    },
+  };
+}
+
+function normalizePrivateProfileImageEntry(image = {}){
+  const dataUrl = String(image?.dataUrl || '').trim();
+  return {
+    dataUrl,
+    alt: {
+      zh: dataUrl ? String(image?.alt?.zh || 'Portrait').trim() : 'Portrait',
+      en: dataUrl ? String(image?.alt?.en || 'Portrait').trim() : 'Portrait',
+    },
+    caption: {
+      zh: dataUrl ? String(image?.caption?.zh || '').trim() : '',
+      en: dataUrl ? String(image?.caption?.en || '').trim() : '',
     },
   };
 }
@@ -661,6 +681,105 @@ function normalizeStoredPostDraft(payload){
   };
 }
 
+function getDraftSavedAtMs(value){
+  const timestamp = Date.parse(String(value || ''));
+  return Number.isFinite(timestamp) ? timestamp : 0;
+}
+
+function cleanupLocalPostDrafts({ referencePosts = [], keepPostId = '', aggressive = false } = {}){
+  const normalizedKeepPostId = String(keepPostId || '').trim();
+  const now = Date.now();
+  const savedPostSnapshots = new Map(
+    (Array.isArray(referencePosts) ? referencePosts : [])
+      .filter(post => post && !post.localDraftOnly)
+      .map(post => {
+        const normalizedId = String(post.id || '').trim();
+        if(!normalizedId){
+          return null;
+        }
+        const savedComparable = buildComparableSavedPost(post);
+        return [normalizedId, buildComparablePostSnapshot(savedComparable, savedComparable.assets)];
+      })
+      .filter(Boolean),
+  );
+
+  const allEntries = listLocalStorageKeys()
+    .filter(key => key.startsWith(STUDIO_POST_DRAFT_KEY_PREFIX))
+    .map(key => {
+      const raw = safeLocalStorageGetItem(key);
+      const postId = key.slice(STUDIO_POST_DRAFT_KEY_PREFIX.length);
+      const draft = readLocalPostDraft(postId);
+      if(!draft){
+        return null;
+      }
+      return {
+        key,
+        postId,
+        draft,
+        savedAtMs: getDraftSavedAtMs(draft.savedAt),
+        sizeChars: raw?.length || 0,
+      };
+    })
+    .filter(Boolean);
+
+  let removedCount = 0;
+  const remaining = [];
+
+  allEntries.forEach(entry => {
+    if(entry.postId === normalizedKeepPostId){
+      remaining.push(entry);
+      return;
+    }
+
+    const ageMs = Math.max(0, now - entry.savedAtMs);
+    const savedSnapshot = savedPostSnapshots.get(entry.postId);
+    const draftSnapshot = buildComparablePostSnapshot(entry.draft.post, entry.draft.assets);
+    const matchesSavedPost = Boolean(savedSnapshot) && !entry.draft.post.localDraftOnly && savedSnapshot === draftSnapshot;
+    const isOrphanServerDraft = !savedSnapshot && !entry.draft.post.localDraftOnly;
+    const isExpired = ageMs > STUDIO_POST_DRAFT_RETENTION_MS;
+    const isExpiredOrphan = isOrphanServerDraft && ageMs > STUDIO_POST_ORPHAN_DRAFT_RETENTION_MS;
+
+    if(matchesSavedPost || isExpired || isExpiredOrphan){
+      safeLocalStorageRemoveItem(entry.key);
+      removedCount += 1;
+      return;
+    }
+
+    remaining.push(entry);
+  });
+
+  remaining.sort((left, right) => left.savedAtMs - right.savedAtMs);
+
+  const maxCount = aggressive ? Math.max(4, Math.floor(STUDIO_POST_DRAFT_MAX_COUNT / 2)) : STUDIO_POST_DRAFT_MAX_COUNT;
+  while(remaining.length > maxCount){
+    const removable = remaining.findIndex(entry => entry.postId !== normalizedKeepPostId);
+    if(removable === -1){
+      break;
+    }
+    safeLocalStorageRemoveItem(remaining[removable].key);
+    remaining.splice(removable, 1);
+    removedCount += 1;
+  }
+
+  let totalChars = remaining.reduce((sum, entry) => sum + entry.sizeChars, 0);
+  const maxTotalChars = aggressive ? Math.floor(STUDIO_POST_DRAFT_MAX_TOTAL_CHARS * 0.7) : STUDIO_POST_DRAFT_MAX_TOTAL_CHARS;
+  while(totalChars > maxTotalChars){
+    const removable = remaining.findIndex(entry => entry.postId !== normalizedKeepPostId);
+    if(removable === -1){
+      break;
+    }
+    totalChars -= remaining[removable].sizeChars;
+    safeLocalStorageRemoveItem(remaining[removable].key);
+    remaining.splice(removable, 1);
+    removedCount += 1;
+  }
+
+  return {
+    removedCount,
+    remainingCount: remaining.length,
+  };
+}
+
 function readLocalPostDraft(postId){
   if(!postId){
     return null;
@@ -682,10 +801,26 @@ function writeLocalPostDraft(postId, payload){
   if(!normalized){
     return false;
   }
-  return safeLocalStorageSetItem(
-    getPostDraftStorageKey(postId),
-    JSON.stringify(normalized),
-  );
+  const storageKey = getPostDraftStorageKey(postId);
+  const serialized = JSON.stringify(normalized);
+  const referencePosts = studioState.bootstrap?.posts || [];
+
+  cleanupLocalPostDrafts({
+    referencePosts,
+    keepPostId: postId,
+  });
+
+  if(safeLocalStorageSetItem(storageKey, serialized)){
+    return true;
+  }
+
+  cleanupLocalPostDrafts({
+    referencePosts,
+    keepPostId: postId,
+    aggressive: true,
+  });
+
+  return safeLocalStorageSetItem(storageKey, serialized);
 }
 
 function removeLocalPostDraft(postId){
@@ -2018,10 +2153,17 @@ async function deleteCurrentPost(){
 }
 
 function renderPrivateImageEditor(slot, image = {}){
+  const normalized = normalizePrivateProfileImageEntry(image);
+  const previewMarkup = normalized.dataUrl
+    ? `<img class="studio-image-preview" src="${escapeHtml(normalized.dataUrl)}" alt="${escapeHtml(normalized.alt.zh || normalized.alt.en || 'Portrait')}">`
+    : '<div class="studio-empty">No portrait uploaded yet.</div>';
   return `
     <div class="studio-card">
       <div class="studio-mini-label">${slot === 'primary' ? 'Primary Portrait' : 'Secondary Portrait'}</div>
-      <img class="studio-image-preview" src="${escapeHtml(image?.dataUrl || '')}" alt="">
+      ${previewMarkup}
+      <div class="studio-row-actions" style="margin-top:14px">
+        <button class="btn magnetic" type="button" data-private-image-clear="${slot}" ${normalized.dataUrl ? '' : 'disabled'}>Remove Image</button>
+      </div>
       <div class="studio-form-grid" style="margin-top:14px">
         <label class="studio-form-field">
           <span>Upload Image</span>
@@ -2029,19 +2171,19 @@ function renderPrivateImageEditor(slot, image = {}){
         </label>
         <label class="studio-form-field">
           <span>中文 Caption</span>
-          <input type="text" data-private-image-caption="${slot}" data-lang="zh" value="${escapeHtml(image?.caption?.zh || '')}">
+          <input type="text" data-private-image-caption="${slot}" data-lang="zh" value="${escapeHtml(normalized.caption.zh || '')}">
         </label>
         <label class="studio-form-field">
           <span>English Caption</span>
-          <input type="text" data-private-image-caption="${slot}" data-lang="en" value="${escapeHtml(image?.caption?.en || '')}">
+          <input type="text" data-private-image-caption="${slot}" data-lang="en" value="${escapeHtml(normalized.caption.en || '')}">
         </label>
         <label class="studio-form-field">
           <span>中文 Alt</span>
-          <input type="text" data-private-image-alt="${slot}" data-lang="zh" value="${escapeHtml(image?.alt?.zh || '')}">
+          <input type="text" data-private-image-alt="${slot}" data-lang="zh" value="${escapeHtml(normalized.alt.zh || '')}">
         </label>
         <label class="studio-form-field">
           <span>English Alt</span>
-          <input type="text" data-private-image-alt="${slot}" data-lang="en" value="${escapeHtml(image?.alt?.en || '')}">
+          <input type="text" data-private-image-alt="${slot}" data-lang="en" value="${escapeHtml(normalized.alt.en || '')}">
         </label>
       </div>
     </div>
@@ -2139,13 +2281,28 @@ function renderPrivateProfile(){
   panel.querySelector('#resetPrivateProfileBtn')?.addEventListener('click', resetPrivateProfileToDefault);
   panel.querySelector('#savePrivateProfileAsDefaultBtn')?.addEventListener('click', savePrivateProfileAsDefault);
   panel.querySelector('#savePrivateProfileBtn')?.addEventListener('click', savePrivateProfile);
+  panel.querySelectorAll('[data-private-image-clear]').forEach(button => {
+    button.addEventListener('click', () => {
+      const slot = button.dataset.privateImageClear;
+      const previous = normalizePrivateProfileImageEntry(studioState.bootstrap.privateProfile.images?.[slot]);
+      studioState.bootstrap.privateProfile.images[slot] = normalizePrivateProfileImageEntry({
+        ...previous,
+        dataUrl: '',
+      });
+      renderPrivateProfile();
+      setStudioStatus('Portrait removed from current profile draft', 'neutral');
+    });
+  });
   panel.querySelectorAll('[data-private-image-upload]').forEach(input => {
     input.addEventListener('change', async event => {
       const slot = event.target.dataset.privateImageUpload;
       const file = event.target.files?.[0];
       if(!file) return;
       const dataUrl = await readFileAsDataUrl(file);
-      studioState.bootstrap.privateProfile.images[slot].dataUrl = dataUrl;
+      studioState.bootstrap.privateProfile.images[slot] = normalizePrivateProfileImageEntry({
+        ...studioState.bootstrap.privateProfile.images[slot],
+        dataUrl,
+      });
       renderPrivateProfile();
     });
   });
@@ -2185,6 +2342,10 @@ function collectPrivateProfileFromForm(){
   studioRefs.panels.private.querySelectorAll('[data-private-image-alt]').forEach(field => {
     const slot = field.dataset.privateImageAlt;
     current.images[slot].alt[field.dataset.lang] = field.value;
+  });
+
+  ['primary', 'secondary'].forEach(slot => {
+    current.images[slot] = normalizePrivateProfileImageEntry(current.images[slot]);
   });
 
   return current;
@@ -2308,6 +2469,9 @@ function renderStudio(){
 async function loadBootstrap(){
   setStudioStatus('Loading studio data...', 'pending');
   const payload = await studioFetchJson('/api/admin/bootstrap');
+  cleanupLocalPostDrafts({
+    referencePosts: payload.posts || [],
+  });
   studioState.bootstrap = {
     ...payload,
     posts: mergeLocalDraftPosts(payload.posts || []),
