@@ -10,11 +10,15 @@
   <link rel="stylesheet" href="studio.css">
 </head>
 <body class="studio-body">
+  <canvas class="studio-aurora" aria-hidden="true"></canvas>
+  <div class="studio-grain" aria-hidden="true"></div>
+  <div class="studio-spotlight" aria-hidden="true"></div>
   <div class="studio-shell">
     <section class="studio-login" id="studioLoginView">
-      <div class="studio-login-panel">
+      <div class="studio-login-panel" data-tilt>
+        <div class="studio-login-halo" aria-hidden="true"></div>
         <div class="eyebrow">Private Studio</div>
-        <h1>Content, privacy, and publishing.</h1>
+        <h1 data-reveal-text>Content, privacy, and publishing.</h1>
         <p class="lead">這裡是你之後管理網站內容、熟客資料、updates 與文章的後台。頁面本身不會出現在站內導覽，也預設不讓搜尋引擎收錄。</p>
         <form class="studio-login-form" id="studioLoginForm">
           <label>
@@ -72,5 +76,6 @@
   </div>
 
   <script type="module" src="studio.js"></script>
+  <script type="module" src="studio-fx.js"></script>
 </body>
 </html>

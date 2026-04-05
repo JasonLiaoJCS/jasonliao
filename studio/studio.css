@@ -492,6 +492,213 @@
   background:rgba(217,177,111,.06);
 }
 
+/* ==========================================================
+   Studio FX layer — aurora, spotlight, tilt, reveal, ripple
+   ========================================================== */
+
+.studio-body{position:relative;overflow-x:hidden}
+.studio-shell{position:relative;z-index:2}
+
+.studio-aurora{
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100%;
+  z-index:0;
+  pointer-events:none;
+  opacity:.85;
+  mix-blend-mode:screen;
+}
+
+.studio-grain{
+  position:fixed;
+  inset:-120%;
+  z-index:1;
+  pointer-events:none;
+  opacity:.05;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  animation:studio-grain-shift 7s steps(6) infinite;
+}
+
+@keyframes studio-grain-shift{
+  0%{transform:translate(0,0)}
+  20%{transform:translate(-3%,2%)}
+  40%{transform:translate(2%,-3%)}
+  60%{transform:translate(-2%,-2%)}
+  80%{transform:translate(3%,3%)}
+  100%{transform:translate(0,0)}
+}
+
+.studio-spotlight{
+  position:fixed;
+  top:0;left:0;
+  width:520px;height:520px;
+  margin-left:-260px;margin-top:-260px;
+  border-radius:50%;
+  pointer-events:none;
+  z-index:1;
+  background:radial-gradient(circle, rgba(217,177,111,.18) 0%, rgba(217,177,111,.06) 28%, transparent 62%);
+  mix-blend-mode:screen;
+  transform:translate3d(-9999px,-9999px,0);
+  transition:opacity .4s ease;
+  opacity:0;
+  will-change:transform;
+}
+
+.studio-body.fx-ready .studio-spotlight{opacity:1}
+
+/* --- Login panel halo + tilt ------------------------------ */
+
+.studio-login-panel{
+  position:relative;
+  transform-style:preserve-3d;
+  transition:transform .4s cubic-bezier(.2,.7,.2,1), box-shadow .4s ease;
+  overflow:hidden;
+  isolation:isolate;
+}
+
+.studio-login-panel::before{
+  content:"";
+  position:absolute;
+  inset:-1px;
+  border-radius:inherit;
+  padding:1px;
+  background:conic-gradient(from var(--halo-angle,0deg),
+    rgba(217,177,111,0) 0deg,
+    rgba(217,177,111,.55) 80deg,
+    rgba(255,244,220,.9) 140deg,
+    rgba(217,177,111,.55) 200deg,
+    rgba(217,177,111,0) 360deg);
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+          mask-composite:exclude;
+  opacity:.9;
+  animation:studio-halo-spin 9s linear infinite;
+  pointer-events:none;
+  z-index:1;
+}
+
+@property --halo-angle{
+  syntax:"<angle>";
+  inherits:false;
+  initial-value:0deg;
+}
+
+@keyframes studio-halo-spin{
+  to{--halo-angle:360deg}
+}
+
+.studio-login-halo{
+  position:absolute;
+  inset:auto -40% -70% -40%;
+  height:260px;
+  background:radial-gradient(ellipse at center, rgba(217,177,111,.22), transparent 60%);
+  filter:blur(30px);
+  pointer-events:none;
+  z-index:0;
+}
+
+.studio-login-panel > *:not(.studio-login-halo){position:relative;z-index:2}
+
+.studio-login-panel:hover{
+  box-shadow:0 32px 120px rgba(0,0,0,.42), 0 0 60px rgba(217,177,111,.08);
+}
+
+/* --- Text reveal ------------------------------------------ */
+
+[data-reveal-text]{
+  display:inline-block;
+}
+
+[data-reveal-text] .rv-char{
+  display:inline-block;
+  opacity:0;
+  transform:translateY(.6em) rotateX(-40deg);
+  transform-origin:bottom;
+  animation:rv-char-in .9s cubic-bezier(.22,.9,.25,1) forwards;
+  animation-delay:var(--rv-delay, 0s);
+}
+
+[data-reveal-text] .rv-space{display:inline-block;width:.28em}
+
+@keyframes rv-char-in{
+  to{opacity:1;transform:translateY(0) rotateX(0)}
+}
+
+/* --- Button ripple + magnetic enhancement ----------------- */
+
+.magnetic{position:relative;overflow:hidden}
+
+.magnetic .fx-ripple{
+  position:absolute;
+  border-radius:50%;
+  transform:translate(-50%,-50%) scale(0);
+  background:radial-gradient(circle, rgba(255,236,200,.55) 0%, rgba(217,177,111,.25) 40%, transparent 70%);
+  pointer-events:none;
+  mix-blend-mode:screen;
+  animation:fx-ripple-go .75s ease-out forwards;
+}
+
+@keyframes fx-ripple-go{
+  to{transform:translate(-50%,-50%) scale(1);opacity:0}
+}
+
+/* --- Dashboard stats count-up pulse ----------------------- */
+
+.studio-stat{
+  position:relative;
+  overflow:hidden;
+  transition:transform .35s ease, border-color .35s ease;
+}
+
+.studio-stat::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(120deg, transparent 30%, rgba(217,177,111,.14) 50%, transparent 70%);
+  transform:translateX(-120%);
+  transition:transform .9s ease;
+  pointer-events:none;
+}
+
+.studio-stat:hover{
+  transform:translateY(-3px);
+  border-color:rgba(217,177,111,.32);
+}
+
+.studio-stat:hover::after{transform:translateX(120%)}
+
+.studio-stat strong{
+  background:linear-gradient(180deg, #fff7e3 0%, var(--gold-soft) 55%, #b38a4c 100%);
+  -webkit-background-clip:text;
+          background-clip:text;
+  color:transparent;
+  filter:drop-shadow(0 2px 18px rgba(217,177,111,.25));
+}
+
+/* --- Nav active indicator --------------------------------- */
+
+.studio-nav button{position:relative}
+.studio-nav button.active::before{
+  content:"";
+  position:absolute;
+  left:6px;top:50%;
+  width:4px;height:22px;
+  margin-top:-11px;
+  border-radius:4px;
+  background:linear-gradient(180deg, #fff1cf, var(--gold-soft));
+  box-shadow:0 0 14px rgba(217,177,111,.55);
+}
+
+/* --- Respect reduced motion ------------------------------- */
+
+@media (prefers-reduced-motion: reduce){
+  .studio-aurora,.studio-grain,.studio-spotlight{display:none}
+  .studio-login-panel::before{animation:none}
+  [data-reveal-text] .rv-char{animation:none;opacity:1;transform:none}
+}
+
 @media (max-width:1100px){
   .studio-app{grid-template-columns:1fr}
   .studio-sidebar{
