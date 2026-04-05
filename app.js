@@ -1054,6 +1054,8 @@ if(document.readyState === 'loading'){
   setupI18nUI();
 }
 
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 // Mobile menu toggle
 const menuBtn = document.querySelector('.menu-btn');
 const navLinks = document.querySelector('.nav-links');
@@ -1112,15 +1114,19 @@ if(backToTop){
 
 // Scroll Reveal (Intersection Observer)
 const revealElements = document.querySelectorAll('.reveal');
-const revealObserver = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if(entry.isIntersecting){
-      entry.target.classList.add('visible');
-      revealObserver.unobserve(entry.target);
-    }
-  });
-}, {threshold: 0.1, rootMargin: '0px 0px -40px 0px'});
-revealElements.forEach(el => revealObserver.observe(el));
+if(prefersReducedMotion){
+  revealElements.forEach(el => el.classList.add('visible'));
+} else {
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting){
+        entry.target.classList.add('visible');
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, {threshold: 0.1, rootMargin: '0px 0px -40px 0px'});
+  revealElements.forEach(el => revealObserver.observe(el));
+}
 
 // Combined scroll handler (throttled)
 let ticking = false;
@@ -1149,7 +1155,7 @@ const cursorGlow = document.getElementById('cursorGlow');
 let mouseX = 0, mouseY = 0;
 let glowX = 0, glowY = 0;
 
-if(cursor && cursorGlow && window.matchMedia('(pointer:fine)').matches){
+if(!prefersReducedMotion && cursor && cursorGlow && window.matchMedia('(pointer:fine)').matches){
   document.addEventListener('mousemove', e => {
     mouseX = e.clientX;
     mouseY = e.clientY;
@@ -1176,36 +1182,40 @@ if(cursor && cursorGlow && window.matchMedia('(pointer:fine)').matches){
 // ════════════════════════════════════════
 // ★ 3D Tilt Cards
 // ════════════════════════════════════════
-document.querySelectorAll('.tilt-card').forEach(card => {
-  card.addEventListener('mousemove', e => {
-    const rect = card.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width - 0.5;
-    const y = (e.clientY - rect.top) / rect.height - 0.5;
-    card.style.transform = `perspective(800px) rotateY(${x * 8}deg) rotateX(${-y * 8}deg) translateY(-5px)`;
+if(!prefersReducedMotion){
+  document.querySelectorAll('.tilt-card').forEach(card => {
+    card.addEventListener('mousemove', e => {
+      const rect = card.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width - 0.5;
+      const y = (e.clientY - rect.top) / rect.height - 0.5;
+      card.style.transform = `perspective(800px) rotateY(${x * 8}deg) rotateX(${-y * 8}deg) translateY(-5px)`;
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = 'perspective(800px) rotateY(0) rotateX(0) translateY(0)';
+      card.style.transition = 'transform .5s cubic-bezier(.25,.46,.45,.94)';
+    });
+    card.addEventListener('mouseenter', () => {
+      card.style.transition = 'transform .1s ease-out';
+    });
   });
-  card.addEventListener('mouseleave', () => {
-    card.style.transform = 'perspective(800px) rotateY(0) rotateX(0) translateY(0)';
-    card.style.transition = 'transform .5s cubic-bezier(.25,.46,.45,.94)';
-  });
-  card.addEventListener('mouseenter', () => {
-    card.style.transition = 'transform .1s ease-out';
-  });
-});
+}
 
 // ════════════════════════════════════════
 // ★ Magnetic Buttons
 // ════════════════════════════════════════
-document.querySelectorAll('.magnetic').forEach(btn => {
-  btn.addEventListener('mousemove', e => {
-    const rect = btn.getBoundingClientRect();
-    const x = e.clientX - rect.left - rect.width / 2;
-    const y = e.clientY - rect.top - rect.height / 2;
-    btn.style.transform = `translate(${x * 0.2}px, ${y * 0.2}px)`;
+if(!prefersReducedMotion){
+  document.querySelectorAll('.magnetic').forEach(btn => {
+    btn.addEventListener('mousemove', e => {
+      const rect = btn.getBoundingClientRect();
+      const x = e.clientX - rect.left - rect.width / 2;
+      const y = e.clientY - rect.top - rect.height / 2;
+      btn.style.transform = `translate(${x * 0.2}px, ${y * 0.2}px)`;
+    });
+    btn.addEventListener('mouseleave', () => {
+      btn.style.transform = 'translate(0,0)';
+    });
   });
-  btn.addEventListener('mouseleave', () => {
-    btn.style.transform = 'translate(0,0)';
-  });
-});
+}
 
 // ════════════════════════════════════════
 // ★ Stat Cards — Mouse Glow Position
@@ -1224,7 +1234,7 @@ document.querySelectorAll('.stat').forEach(stat => {
 // ★ Hero Particle Canvas
 // ════════════════════════════════════════
 const heroCanvas = document.getElementById('heroParticles');
-if(heroCanvas){
+if(heroCanvas && !prefersReducedMotion){
   const ctx = heroCanvas.getContext('2d');
   let particles = [];
   const PARTICLE_COUNT = 50;
@@ -1300,6 +1310,7 @@ if(heroCanvas){
 // ════════════════════════════════════════
 const parallaxElements = document.querySelectorAll('.section-number, .hero-glow, .hero-logo');
 function updateParallax(){
+  if(prefersReducedMotion) return;
   parallaxElements.forEach(el => {
     const speed = el.classList.contains('hero-glow') ? 0.15
                 : el.classList.contains('hero-logo') ? 0.04
@@ -1309,9 +1320,11 @@ function updateParallax(){
     el.style.transform = `translateY(${offset}px)`;
   });
 }
-window.addEventListener('scroll', () => {
-  requestAnimationFrame(updateParallax);
-}, {passive: true});
+if(!prefersReducedMotion){
+  window.addEventListener('scroll', () => {
+    requestAnimationFrame(updateParallax);
+  }, {passive: true});
+}
 
 // ════════════════════════════════════════
 // ★ Smooth Nav Background on Scroll
@@ -1319,13 +1332,7 @@ window.addEventListener('scroll', () => {
 const nav = document.querySelector('.nav');
 function updateNavBg(){
   if(!nav) return;
-  if(window.scrollY > 60){
-    nav.style.background = 'rgba(9,11,17,.85)';
-    nav.style.borderBottomColor = 'rgba(217,177,111,.08)';
-  } else {
-    nav.style.background = 'rgba(9,11,17,.58)';
-    nav.style.borderBottomColor = 'rgba(255,255,255,.06)';
-  }
+  nav.classList.toggle('scrolled', window.scrollY > 60);
 }
 window.addEventListener('scroll', () => requestAnimationFrame(updateNavBg), {passive: true});
 updateNavBg();

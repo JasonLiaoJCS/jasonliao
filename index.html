@@ -58,6 +58,9 @@
   </script>
 </head>
 <body>
+  <div class="site-orbit" aria-hidden="true"></div>
+  <div class="site-gridlines" aria-hidden="true"></div>
+
   <!-- Scroll Progress Bar -->
   <div class="scroll-progress" id="scrollProgress"></div>
 
@@ -97,8 +100,14 @@
       <div class="hero-glow"></div>
       <canvas class="hero-particles" id="heroParticles"></canvas>
       <div class="container hero-grid">
-        <div>
-          <div class="eyebrow" data-i18n="hero.eyebrow">Personal Website</div>
+        <div class="hero-copy">
+          <div class="hero-kicker-row">
+            <div class="eyebrow" data-i18n="hero.eyebrow">Personal Website</div>
+            <div class="hero-status">
+              <span class="hero-status-dot" aria-hidden="true"></span>
+              Research log online
+            </div>
+          </div>
           <h1 class="hero-title-anim">Reason as the bone,<br><span class="gold">passion as the heart.</span></h1>
           <p class="lead" data-i18n="hero.lead">
             我是 Jason Liao，持續投入數學、控制與機器人開發。
@@ -120,8 +129,30 @@
             <span class="chip">Taiwan Baseball</span>
           </div>
         </div>
-        <div class="hero-card hero-logo">
-          <img src="assets/logo-jason-liao.png" alt="Jason Liao logo">
+        <div class="hero-stack reveal">
+          <div class="hero-card hero-logo">
+            <img src="assets/logo-jason-liao.png" alt="Jason Liao logo">
+          </div>
+          <div class="hero-card hero-panel">
+            <div class="hero-panel-header">
+              <span class="hero-panel-label">Current Coordinates</span>
+              <span class="hero-panel-chip">2026</span>
+            </div>
+            <div class="hero-panel-grid">
+              <div class="hero-panel-item">
+                <span>Focus</span>
+                <strong>Control & Robotics</strong>
+              </div>
+              <div class="hero-panel-item">
+                <span>Method</span>
+                <strong>Mathematics + Modeling</strong>
+              </div>
+              <div class="hero-panel-item">
+                <span>Base</span>
+                <strong>Taipei, Taiwan</strong>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -244,9 +275,11 @@
 
     <section class="section" id="focus">
       <div class="container">
-        <div class="section-number">03</div>
-        <div class="eyebrow">Core Focus</div>
-        <h2 data-i18n="focus.h2">我正在投入的問題</h2>
+        <div class="section-head">
+          <div class="section-number">03</div>
+          <div class="eyebrow">Core Focus</div>
+          <h2 data-i18n="focus.h2">我正在投入的問題</h2>
+        </div>
         <div class="grid-2 reveal" style="margin-top:30px">
           <div class="card">
             <h3 data-i18n="focus.card1.title">現在主要在做的事</h3>
@@ -274,10 +307,12 @@
     <!-- 04 Tools & Foundations -->
     <section class="section" id="skills">
       <div class="container">
-        <div class="section-number">04</div>
-        <div class="eyebrow">Methods & Tools</div>
-        <h2>Tools & Foundations</h2>
-        <p class="lead" data-i18n="skills.lead">下面這些，是我目前最常用，也最願意繼續磨的東西。</p>
+        <div class="section-head">
+          <div class="section-number">04</div>
+          <div class="eyebrow">Methods & Tools</div>
+          <h2>Tools & Foundations</h2>
+          <p class="lead" data-i18n="skills.lead">下面這些，是我目前最常用，也最願意繼續磨的東西。</p>
+        </div>
         <div class="skills-grid reveal stagger-parent" style="margin-top:30px">
           <div class="skill-category">
             <h3>Engineering & Modeling</h3>
@@ -337,10 +372,12 @@
     <!-- 05 Research & Ongoing Work -->
     <section class="section" id="publications">
       <div class="container">
-        <div class="section-number">05</div>
-        <div class="eyebrow">Research & Current Work</div>
-        <h2>Research & Ongoing Work</h2>
-        <p class="lead" data-i18n="research.lead">目前還沒有正式論文發表，這裡先放我正在做的研究，以及幾個構成我現在這條路的重要方向。</p>
+        <div class="section-head">
+          <div class="section-number">05</div>
+          <div class="eyebrow">Research & Current Work</div>
+          <h2>Research & Ongoing Work</h2>
+          <p class="lead" data-i18n="research.lead">目前還沒有正式論文發表，這裡先放我正在做的研究，以及幾個構成我現在這條路的重要方向。</p>
+        </div>
         <div class="pub-list reveal" style="margin-top:30px">
           <div class="pub-item">
             <div class="pub-type">Current Research</div>
@@ -373,9 +410,11 @@
     <!-- 06 Projects -->
     <section class="section" id="projects">
       <div class="container">
-        <div class="section-number">06</div>
-        <div class="eyebrow">Selected Directions</div>
-        <h2>Project / Research Directions</h2>
+        <div class="section-head">
+          <div class="section-number">06</div>
+          <div class="eyebrow">Selected Directions</div>
+          <h2>Project / Research Directions</h2>
+        </div>
         <div class="project-grid reveal stagger-parent">
           <article class="project-card tilt-card">
             <div class="meta">01 · Current Focus</div>
@@ -402,13 +441,15 @@
     <!-- 07 Writing -->
     <section class="section" id="writing">
       <div class="container">
-        <div class="section-number">07</div>
-        <div class="eyebrow">Writing</div>
-        <h2>Blog / Notes</h2>
-        <p class="lead" data-i18n="writing.lead">
-          這裡留下的，是我一路走來的一些痕跡。
-          有些關於研究，有些關於棒球，也有些只是某個當下很真實的想法。
-        </p>
+        <div class="section-head">
+          <div class="section-number">07</div>
+          <div class="eyebrow">Writing</div>
+          <h2>Blog / Notes</h2>
+          <p class="lead" data-i18n="writing.lead">
+            這裡留下的，是我一路走來的一些痕跡。
+            有些關於研究，有些關於棒球，也有些只是某個當下很真實的想法。
+          </p>
+        </div>
         <div class="blog-grid reveal stagger-parent">
           <a class="blog-card tilt-card" href="posts/reason-passion.html">
             <div class="meta" data-i18n="writing.card1.meta">Essay · Identity</div>
@@ -434,9 +475,11 @@
 
     <section class="section" id="contact">
       <div class="container">
-        <div class="section-number">08</div>
-        <div class="eyebrow">Contact</div>
-        <h2 data-i18n="contact.h2">歡迎和我聯絡</h2>
+        <div class="section-head">
+          <div class="section-number">08</div>
+          <div class="eyebrow">Contact</div>
+          <h2 data-i18n="contact.h2">歡迎和我聯絡</h2>
+        </div>
         <div class="contact reveal" style="margin-top:28px">
           <div class="contact-panel">
             <h3>Get in Touch</h3>

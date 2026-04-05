@@ -26,6 +26,7 @@ const studioRefs = {
   password: document.getElementById('studioPassword'),
   nav: document.getElementById('studioNav'),
   title: document.getElementById('studioSectionTitle'),
+  subtitle: document.getElementById('studioSectionSubtitle'),
   status: document.getElementById('studioStatusPill'),
   sessionHint: document.getElementById('studioSessionHint'),
   logoutBtn: document.getElementById('studioLogoutBtn'),
@@ -40,12 +41,48 @@ const studioRefs = {
 };
 
 const STUDIO_SECTIONS = [
-  { id: 'dashboard', label: 'Dashboard' },
-  { id: 'translations', label: 'Public Copy' },
-  { id: 'updates', label: 'Updates' },
-  { id: 'posts', label: 'Posts' },
-  { id: 'private', label: 'Acquaintance Profile' },
-  { id: 'deploy', label: 'Deploy' },
+  {
+    id: 'dashboard',
+    label: 'Dashboard',
+    subtitle: 'Overview, publishing state, and your current content workflow.',
+    description: 'Overview & status',
+    icon: '◉',
+  },
+  {
+    id: 'translations',
+    label: 'Public Copy',
+    subtitle: 'Bilingual homepage copy, section text, and public-facing messaging.',
+    description: 'Homepage bilingual copy',
+    icon: '文',
+  },
+  {
+    id: 'updates',
+    label: 'Updates',
+    subtitle: 'Homepage news items, visibility, order, and short bilingual announcements.',
+    description: 'Latest news & ordering',
+    icon: '↗',
+  },
+  {
+    id: 'posts',
+    label: 'Posts',
+    subtitle: 'Article drafting, markdown editing, visibility, slugs, and publishing.',
+    description: 'Writing & publishing',
+    icon: '✦',
+  },
+  {
+    id: 'private',
+    label: 'Acquaintance Profile',
+    subtitle: 'Protected identity details, portraits, private captions, and contact fields.',
+    description: 'Protected profile data',
+    icon: '◌',
+  },
+  {
+    id: 'deploy',
+    label: 'Deploy',
+    subtitle: 'Deployment notes, backend setup reminders, and safety resets.',
+    description: 'Release & reset tools',
+    icon: '△',
+  },
 ];
 
 function studioFetchJson(url, options = {}){
@@ -360,7 +397,11 @@ function ensureSelectedPost(){
 function renderNav(){
   studioRefs.nav.innerHTML = STUDIO_SECTIONS.map(section => `
     <button type="button" data-section="${section.id}" class="${studioState.section === section.id ? 'active' : ''}">
-      ${section.label}
+      <span class="studio-nav-icon" aria-hidden="true">${section.icon}</span>
+      <span class="studio-nav-copy">
+        <strong>${section.label}</strong>
+        <small>${section.description}</small>
+      </span>
     </button>
   `).join('');
 
@@ -379,7 +420,27 @@ function renderDashboard(){
   const privateReady = studioState.bootstrap?.privateProfile?.fields?.email ? 'Ready' : 'Needs setup';
 
   panel.innerHTML = `
-    <div class="studio-grid">
+    <div class="studio-grid studio-dashboard-shell">
+      <section class="studio-command-card">
+        <div class="eyebrow">Editorial Control</div>
+        <h3>把前台、熟客模式與內容工作流收斂到同一個控制台。</h3>
+        <p class="muted">Studio 現在是你管理網站的主場。公開文案、首頁 updates、文章、熟客資料與 reset 流程都集中在這裡，不需要再在多個檔案和頁面之間切換。</p>
+        <div class="studio-command-grid">
+          <div class="studio-mini-stat">
+            <span>Content System</span>
+            <strong>Online</strong>
+          </div>
+          <div class="studio-mini-stat">
+            <span>Session Model</span>
+            <strong>Protected</strong>
+          </div>
+          <div class="studio-mini-stat">
+            <span>Editing Mode</span>
+            <strong>Live CMS</strong>
+          </div>
+        </div>
+      </section>
+
       <div class="studio-dashboard-stats">
         <div class="studio-stat">
           <div class="small muted">Managed Updates</div>
@@ -398,18 +459,30 @@ function renderDashboard(){
         </div>
       </div>
 
-      <div class="studio-card">
-        <div class="eyebrow">What this backend handles</div>
-        <h3>你現在可以在線上做什麼</h3>
-        <ul class="list">
-          <li><span class="muted">更新首頁自介與聯絡文案，不需要再手改 HTML。</span></li>
-          <li><span class="muted">新增 updates 與文章，並決定公開或只限熟客可見。</span></li>
-          <li><span class="muted">把中文姓名、聯絡資訊、學經歷與照片留在受保護的熟客資料裡，而不是公開原始碼。</span></li>
-        </ul>
+      <div class="studio-grid cols-2">
+        <div class="studio-card">
+          <div class="eyebrow">What this backend handles</div>
+          <h3>你現在可以在線上完成的事</h3>
+          <ul class="list">
+            <li><span class="muted">更新首頁自介、焦點區塊與聯絡文案，不需要再手改 HTML。</span></li>
+            <li><span class="muted">新增 updates 與文章，並決定公開或只限熟客可見。</span></li>
+            <li><span class="muted">把中文姓名、聯絡資訊、學經歷與照片留在受保護的熟客資料裡，而不是公開原始碼。</span></li>
+          </ul>
+        </div>
+
+        <div class="studio-card">
+          <div class="eyebrow">Operating Notes</div>
+          <h3>現在的工作節奏會更單純</h3>
+          <ul class="list">
+            <li><span class="muted">日常內容更新以 Studio 為主，只有版型與程式改動才回 repo。</span></li>
+            <li><span class="muted">Markdown 編輯與即時預覽已經打通，寫文和調整結構會順很多。</span></li>
+            <li><span class="muted">熟客資料與公開內容拆開管理，安全性和維護性都更乾淨。</span></li>
+          </ul>
+        </div>
       </div>
 
       <div class="studio-callout">
-        <strong>目前仍有靜態 fallback。</strong>
+        <strong>目前仍保留靜態 fallback。</strong>
         <div class="muted" style="margin-top:6px">也就是說，就算 Cloudflare backend 還沒正式接上，現有 GitHub Pages 版前台仍可以先繼續使用，不會因為這次升級而整站失效。</div>
       </div>
     </div>
@@ -1101,7 +1174,11 @@ function renderStudio(){
   Object.entries(studioRefs.panels).forEach(([id, panel]) => {
     panel.hidden = id !== studioState.section;
   });
-  studioRefs.title.textContent = STUDIO_SECTIONS.find(section => section.id === studioState.section)?.label || 'Dashboard';
+  const currentSection = STUDIO_SECTIONS.find(section => section.id === studioState.section) || STUDIO_SECTIONS[0];
+  studioRefs.title.textContent = currentSection.label;
+  if(studioRefs.subtitle){
+    studioRefs.subtitle.textContent = currentSection.subtitle;
+  }
 
   renderDashboard();
   renderTranslations();
