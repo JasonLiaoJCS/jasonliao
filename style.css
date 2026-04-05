@@ -3145,7 +3145,6 @@ main,
   }
 
   .writing-feature-media{
-    min-height:220px;
     margin:-26px -26px 22px;
     min-height:220px;
     border-radius:30px 30px 22px 22px;
@@ -3336,7 +3335,7 @@ main,
   }
 }
 
-@media (max-width: 1180px){
+@media (min-width: 761px) and (max-width: 1040px){
   .writing-feature-card.has-cover{
     grid-template-columns:1fr;
     gap:0;
