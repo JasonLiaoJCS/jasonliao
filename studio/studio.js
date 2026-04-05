@@ -1672,6 +1672,10 @@ function renderPostEditor(editorState){
       ? 'This article is already live with the timestamp shown above.'
       : 'This is the last publish time recorded for this article.')
     : 'No manual date picker anymore. Studio will stamp the publish time automatically the first time this post goes live.';
+  const isCurrentFeatured = studioState.bootstrap?.featuredPostId === post.id;
+  const featuredLabel = isCurrentFeatured
+    ? (studioState.bootstrap?.featuredSource === 'manual' ? 'Currently featured manually' : 'Currently featured by latest publish')
+    : 'Newest published post becomes featured automatically, but you can override it here anytime.';
   return `
     <div class="studio-card studio-post-workflow-card">
       <div class="studio-post-workflow-head">
@@ -1695,7 +1699,9 @@ function renderPostEditor(editorState){
       <div class="studio-row-actions" style="margin-top:18px">
         <button class="btn magnetic" id="previewDraftBtn" type="button">Preview Draft</button>
         <button class="btn magnetic" id="discardLocalDraftBtn" type="button" ${editorState.localDraft ? '' : 'hidden'}>Discard Local Draft</button>
+        <button class="btn magnetic" id="setFeaturedPostBtn" type="button" ${(post.status === 'published' && !post.localDraftOnly) ? '' : 'disabled'}>${isCurrentFeatured ? 'Homepage Featured' : 'Set as Featured'}</button>
       </div>
+      <div class="studio-post-editor-note" style="margin-top:14px">${escapeHtml(featuredLabel)}</div>
     </div>
 
     <div class="studio-card studio-post-cover-card">
@@ -2002,6 +2008,28 @@ function discardCurrentLocalDraft(){
   setStudioStatus('Local draft discarded', 'success');
 }
 
+async function setCurrentPostAsFeatured(){
+  const post = getCurrentPost();
+  if(!post){
+    return;
+  }
+  if(post.localDraftOnly || post.status !== 'published'){
+    setStudioStatus('Publish this post first, then you can set it as featured.', 'error');
+    return;
+  }
+
+  setStudioStatus('Updating homepage featured post...', 'pending');
+  const payload = await studioFetchJson('/api/admin/posts/featured', {
+    method: 'POST',
+    body: JSON.stringify({ id: post.id }),
+  });
+
+  studioState.bootstrap.featuredPostId = payload.featuredPostId || post.id;
+  studioState.bootstrap.featuredSource = payload.featuredSource || 'manual';
+  renderPosts();
+  setStudioStatus('Homepage featured post updated', 'success');
+}
+
 function bindPostEditorInteractions(panel){
   const handleFieldChange = () => {
     syncPostCoverPreview();
@@ -2016,6 +2044,7 @@ function bindPostEditorInteractions(panel){
 
   panel.querySelector('#previewDraftBtn')?.addEventListener('click', previewCurrentPost);
   panel.querySelector('#discardLocalDraftBtn')?.addEventListener('click', discardCurrentLocalDraft);
+  panel.querySelector('#setFeaturedPostBtn')?.addEventListener('click', setCurrentPostAsFeatured);
   panel.querySelector('#postCoverUpload')?.addEventListener('change', async event => {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -2091,6 +2120,7 @@ function renderPosts(){
                 <div class="studio-row-actions">
                   <span class="studio-pill ${post.visibility === 'acquaintance' ? 'private' : 'public'}">${post.visibility === 'acquaintance' ? 'Acquaintance' : 'Public'}</span>
                   <span class="studio-pill">${escapeHtml(post.status)}</span>
+                  ${studioState.bootstrap?.featuredPostId === post.id ? `<span class="studio-pill ${studioState.bootstrap?.featuredSource === 'manual' ? 'public' : 'private'}">Featured</span>` : ''}
                   ${(post.localDraftOnly || localDraft) ? '<span class="studio-pill private">Local Draft</span>' : ''}
                 </div>
                 <h4 style="margin-top:14px">${escapeHtml(post.title.zh || post.title.en || 'Untitled')}</h4>
@@ -2174,6 +2204,7 @@ function collectCurrentPostFromForm(){
 }
 
 async function saveCurrentPost(){
+  const previousPost = getCurrentPost();
   const draft = collectCurrentPostDraftFromForm();
   const post = collectCurrentPostFromForm();
   if(!draft || !post) return;
@@ -2202,8 +2233,13 @@ async function saveCurrentPost(){
     body: JSON.stringify({ post }),
   });
   const savedPost = response?.post || post;
+  const becamePublished = previousPost?.status !== 'published' && savedPost.status === 'published';
   removeLocalPostDraft(post.id);
   clearPostAutosaveTimer();
+  if(becamePublished){
+    studioState.bootstrap.featuredPostId = savedPost.id;
+    studioState.bootstrap.featuredSource = 'auto';
+  }
   studioState.bootstrap.posts = sortStudioPosts(studioState.bootstrap.posts.map(item => item.id === post.id ? {
     ...savedPost,
     localDraftOnly: false,
@@ -2224,6 +2260,10 @@ async function deleteCurrentPost(){
     removeLocalPostDraft(post.id);
     clearPostAutosaveTimer();
     studioState.bootstrap.posts = studioState.bootstrap.posts.filter(item => item.id !== post.id);
+    if(studioState.bootstrap.featuredPostId === post.id){
+      studioState.bootstrap.featuredPostId = '';
+      studioState.bootstrap.featuredSource = 'auto';
+    }
     ensureSelectedPost();
     renderPosts();
     setStudioStatus('Local draft deleted', 'success');
@@ -2238,6 +2278,10 @@ async function deleteCurrentPost(){
   removeLocalPostDraft(post.id);
   clearPostAutosaveTimer();
   studioState.bootstrap.posts = studioState.bootstrap.posts.filter(item => item.id !== post.id);
+  if(studioState.bootstrap.featuredPostId === post.id){
+    studioState.bootstrap.featuredPostId = '';
+    studioState.bootstrap.featuredSource = 'auto';
+  }
   ensureSelectedPost();
   renderPosts();
   setStudioStatus('Post deleted', 'success');

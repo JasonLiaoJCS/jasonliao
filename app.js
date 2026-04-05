@@ -191,6 +191,8 @@ const cmsState = {
   publicPosts: [],
   privateUpdates: [],
   privatePosts: [],
+  featuredPostId: '',
+  featuredSource: 'auto',
   bootstrapPromise: null,
 };
 const cmsOriginalMarkup = {
@@ -586,6 +588,14 @@ function getVisibleCmsPosts(){
     });
 }
 
+function resolveVisibleFeaturedPost(posts = []){
+  if(!posts.length){
+    return null;
+  }
+  const manualOrAutoFeatured = posts.find(post => post.id === cmsState.featuredPostId);
+  return manualOrAutoFeatured || posts[0];
+}
+
 function bindTiltEffect(card){
   if(!card || card.dataset.tiltBound === 'true') return;
   card.dataset.tiltBound = 'true';
@@ -736,7 +746,7 @@ function renderCmsPosts(){
     featuredLink.classList.add('has-cover');
   };
 
-  const featuredPost = posts[0];
+  const featuredPost = resolveVisibleFeaturedPost(posts);
   if(featuredPost && featuredLink && featuredMeta && featuredTitle && featuredExcerpt && featuredTags){
     featuredLink.href = featuredPost.path;
     featuredMeta.textContent = formatMeta(featuredPost);
@@ -764,7 +774,7 @@ function renderCmsPosts(){
     card.hidden = true;
   });
 
-  const archivePosts = posts.length > 1 ? posts.slice(1) : posts.slice(0, 1);
+  const archivePosts = posts.filter(post => post.id !== featuredPost?.id);
   const fragment = document.createDocumentFragment();
   archivePosts.forEach(post => {
     const link = document.createElement('a');
@@ -810,6 +820,8 @@ async function loadCmsBootstrap(){
       cmsState.publicTranslations = payload.translations || { zh: {}, en: {} };
       cmsState.publicUpdates = payload.updates || [];
       cmsState.publicPosts = payload.posts || [];
+      cmsState.featuredPostId = payload.featuredPostId || '';
+      cmsState.featuredSource = payload.featuredSource || 'auto';
       applyLang(currentLang);
       return payload;
     })
@@ -948,6 +960,8 @@ async function tryServerPrivateUnlock(password){
   const payload = await fetchCmsJson('/api/acquaintance/bootstrap');
   cmsState.privateUpdates = payload.updates || [];
   cmsState.privatePosts = payload.posts || [];
+  cmsState.featuredPostId = payload.featuredPostId || cmsState.featuredPostId || '';
+  cmsState.featuredSource = payload.featuredSource || cmsState.featuredSource || 'auto';
   return payload.profile || null;
 }
 
@@ -967,6 +981,8 @@ async function restoreServerPrivateSession(){
       const payload = await fetchCmsJson('/api/acquaintance/bootstrap');
       cmsState.privateUpdates = payload.updates || [];
       cmsState.privatePosts = payload.posts || [];
+      cmsState.featuredPostId = payload.featuredPostId || cmsState.featuredPostId || '';
+      cmsState.featuredSource = payload.featuredSource || cmsState.featuredSource || 'auto';
       privateMode.unlocked = true;
       privateMode.payload = payload.profile || null;
       privateMode.source = 'server';

@@ -178,6 +178,11 @@ cloudflare/schema.sql
 - `JPG`
 - `JPEG`
 
+另外：
+
+- 公開且已發布的 `/notes/<slug>` 文章會自動進正式站的 `sitemap.xml`
+- 熟客限定文章不會進 sitemap
+
 另外保留相容層：
 
 - 舊的 HTML 文章仍然可以正常顯示

@@ -85,6 +85,14 @@ function normalizeCoverImage(coverImage = {}){
   };
 }
 
+function normalizeFeaturedPostSettings(settings = {}){
+  return {
+    featuredPostId: String(settings?.featuredPostId || '').trim(),
+    source: settings?.source === 'manual' ? 'manual' : 'auto',
+    updatedAt: String(settings?.updatedAt || '').trim(),
+  };
+}
+
 export async function ensureCmsDb(env){
   if(!env.CMS_DB){
     throw new Error('CMS_DB binding is missing');
@@ -117,6 +125,13 @@ export async function ensureCmsDb(env){
         JSON.stringify(DEFAULT_PRIVATE_PROFILE),
         nowIso(),
       ).run();
+      await env.CMS_DB.prepare(
+        'INSERT OR IGNORE INTO cms_documents (id, value_json, updated_at) VALUES (?, ?, ?)',
+      ).bind(
+        'featured_post_settings',
+        JSON.stringify(normalizeFeaturedPostSettings()),
+        nowIso(),
+      ).run();
     })().catch(error => {
       ensurePromise = null;
       throw error;
@@ -132,6 +147,20 @@ export async function getDocument(env, id, fallback = null){
     'SELECT value_json FROM cms_documents WHERE id = ?',
   ).bind(id).first();
   return parseJson(row?.value_json, fallback);
+}
+
+async function getFeaturedPostSettings(env){
+  const settings = await getDocument(env, 'featured_post_settings', normalizeFeaturedPostSettings());
+  return normalizeFeaturedPostSettings(settings);
+}
+
+async function setFeaturedPostSettings(env, settings){
+  const normalized = normalizeFeaturedPostSettings({
+    ...settings,
+    updatedAt: settings?.updatedAt || nowIso(),
+  });
+  await setDocument(env, 'featured_post_settings', normalized);
+  return normalized;
 }
 
 export async function setDocument(env, id, value){
@@ -263,10 +292,19 @@ export async function getPostBySlug(env, slug){
   return row ? normalizePostRow(row) : null;
 }
 
+export async function getPostById(env, id){
+  await ensureCmsDb(env);
+  const row = await env.CMS_DB.prepare(
+    'SELECT * FROM cms_posts WHERE id = ? LIMIT 1',
+  ).bind(id).first();
+  return row ? normalizePostRow(row) : null;
+}
+
 export async function upsertPost(env, post){
   await ensureCmsDb(env);
   const existingRow = post.id ? await getPostRowById(env, post.id) : null;
   const publishingNow = (post.status || 'draft') === 'published';
+  const publishTransition = publishingNow && existingRow?.status !== 'published';
   const firstPublishedTimestamp = existingRow?.status === 'published' && existingRow?.published_at
     ? existingRow.published_at
     : null;
@@ -331,6 +369,13 @@ export async function upsertPost(env, post){
     JSON.stringify(normalized.coverImage),
   ).run();
 
+  if(publishTransition){
+    await setFeaturedPostSettings(env, {
+      featuredPostId: normalized.id,
+      source: 'auto',
+    });
+  }
+
   const savedRow = await getPostRowById(env, normalized.id);
   return savedRow ? normalizePostRow(savedRow) : {
     ...normalized,
@@ -342,6 +387,13 @@ export async function upsertPost(env, post){
 export async function deletePost(env, id){
   await ensureCmsDb(env);
   await env.CMS_DB.prepare('DELETE FROM cms_posts WHERE id = ?').bind(id).run();
+  const featuredSettings = await getFeaturedPostSettings(env);
+  if(featuredSettings.featuredPostId === id){
+    await setFeaturedPostSettings(env, {
+      featuredPostId: '',
+      source: 'auto',
+    });
+  }
 }
 
 export async function deleteAllPosts(env){
@@ -354,6 +406,7 @@ export async function getAdminBootstrap(env){
   const privateProfile = await getDocument(env, 'private_profile', DEFAULT_PRIVATE_PROFILE);
   const updates = await listUpdates(env);
   const posts = await listPosts(env);
+  const featuredPostSettings = await getFeaturedPostSettings(env);
 
   return {
     translationFields: TRANSLATION_FIELD_GROUPS,
@@ -362,6 +415,8 @@ export async function getAdminBootstrap(env){
     privateProfile,
     updates,
     posts,
+    featuredPostId: featuredPostSettings.featuredPostId,
+    featuredSource: featuredPostSettings.source,
   };
 }
 
@@ -369,11 +424,14 @@ export async function getPublicBootstrap(env){
   const translations = await getDocument(env, 'public_translations', DEFAULT_PUBLIC_TRANSLATIONS);
   const updates = await listUpdates(env, { visibility: 'public', onlyPublished: true });
   const posts = await listPosts(env, { visibility: 'public', status: 'published' });
+  const featuredPostSettings = await getFeaturedPostSettings(env);
 
   return {
     translations,
     updates,
     posts: posts.map(({ content, ...rest }) => rest),
+    featuredPostId: featuredPostSettings.featuredPostId,
+    featuredSource: featuredPostSettings.source,
   };
 }
 
@@ -381,11 +439,32 @@ export async function getAcquaintanceBootstrap(env){
   const privateProfile = await getDocument(env, 'private_profile', DEFAULT_PRIVATE_PROFILE);
   const updates = await listUpdates(env, { visibility: 'acquaintance', onlyPublished: true });
   const posts = await listPosts(env, { visibility: 'acquaintance', status: 'published' });
+  const featuredPostSettings = await getFeaturedPostSettings(env);
 
   return {
     profile: privateProfile,
     updates,
     posts: posts.map(({ content, ...rest }) => rest),
+    featuredPostId: featuredPostSettings.featuredPostId,
+    featuredSource: featuredPostSettings.source,
+  };
+}
+
+export async function setFeaturedPost(env, id, source = 'manual'){
+  const post = await getPostById(env, id);
+  if(!post){
+    throw new Error('Post not found');
+  }
+  if(post.status !== 'published'){
+    throw new Error('Only published posts can be featured');
+  }
+  const settings = await setFeaturedPostSettings(env, {
+    featuredPostId: post.id,
+    source,
+  });
+  return {
+    post,
+    settings,
   };
 }
 

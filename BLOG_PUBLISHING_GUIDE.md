@@ -134,10 +134,11 @@
 
 ### 首頁 Blog 主打文章現在怎麼判定
 
-- 「本期主打 / Featured」會自動抓**最新發布**的那篇 CMS 文章
-- 不是手動指定
-- 也不是看最後編輯時間
-- 所以只要新文章第一次正式發布，它就會排到最前面
+- 預設情況下，「本期主打 / Featured」會自動抓**最新發布**的那篇 CMS 文章
+- 不是看最後編輯時間
+- 所以只要新文章第一次正式發布，它就會立刻變成主打
+- 你也可以在 `Studio -> Posts` 手動把某篇已發布文章設成主打
+- 但只要之後又有另一篇文章第一次正式發布，主打會自動切回那篇最新發布的文章
 
 ---
 
@@ -268,17 +269,27 @@ Discard Local Draft
 - `feed.xml`
 - `sitemap.xml`
 
-仍然主要對應舊的靜態文章 `posts/*.html`。
+現在要分開理解：
+
+- `sitemap.xml`
+  - 正式 Cloudflare 站上的 `/sitemap.xml` 會由 Pages Functions 動態產生
+  - 會自動包含所有公開且已發布的 `/notes/<slug>` 文章
+  - 每篇公開 CMS 文章都會帶上對應的 `lastmod`
+  - 熟客限定文章不會進 sitemap
+- `feed.xml`
+  - 目前仍主要對應舊的靜態文章 `posts/*.html`
+  - 還沒有同步改成動態產生
 
 ### 這代表什麼
 
-- 新的 CMS `/notes/<slug>` 文章會出現在首頁 Blog 與文章頁
-- 但目前**不會自動同步進** `feed.xml` 和 `sitemap.xml`
+- 新的 CMS `/notes/<slug>` 文章會出現在首頁 Blog、文章頁，並且會自動進 `sitemap.xml`
+- 但目前還**不會自動同步進** `feed.xml`
 
 所以現在要這樣理解：
 
 - `Studio / CMS`：現在的主發文流程
-- `feed.xml / sitemap.xml`：目前仍是靜態 fallback 的 SEO 檔
+- `feed.xml`：目前仍是靜態 fallback 的 SEO 檔
+- `sitemap.xml`：正式站已改成動態生成
 
 ---
 
@@ -294,7 +305,7 @@ Discard Local Draft
 
 - 維護舊的 `posts/*.html`
 - 特別想保留某篇完全手寫的靜態頁
-- 你知道自己需要手動維護 feed / sitemap
+- 你知道目前只需要手動維護 `feed.xml`，`sitemap.xml` 已經會自動帶公開 CMS 文章
 
 ---
 
