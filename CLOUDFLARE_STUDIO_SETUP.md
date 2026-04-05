@@ -149,6 +149,9 @@ cloudflare/schema.sql
 - 中英文摘要
 - 中英文 Markdown 內容
 - tags
+- 封面圖
+- 封面圖 alt
+- 文章內插圖
 
 新的 managed posts 會走：
 
@@ -161,6 +164,16 @@ cloudflare/schema.sql
 - Markdown 編輯
 - 常用格式工具列
 - Live Preview 即時預覽
+- `Preview Draft`
+- 本機 autosave 草稿
+- 發布前 checklist
+- `Add Photos` 插圖
+
+目前圖片格式：
+
+- `PNG`
+- `JPG`
+- `JPEG`
 
 另外保留相容層：
 
@@ -176,6 +189,38 @@ cloudflare/schema.sql
 - Instagram
 - 熟客模式下顯示的學經歷文案
 - 熟客模式照片
+  - 可上傳
+  - 可移除舊照片後再儲存
+
+## 8.1 資源現在怎麼存
+
+目前這套架構沒有額外接 R2 或外部圖床。
+
+也就是說：
+
+- 文章內圖片會跟文章內容一起存在 D1
+- 封面圖會跟文章資料一起存在 D1
+- 熟客照片會跟 `private_profile` 文件一起存在 D1
+- 這些內容都不會進 GitHub repo
+
+### 刪掉後怎麼回收
+
+- 刪文章內圖片：
+  - 從編輯器刪掉圖片標記
+  - 再按 `Save Post`
+- 刪封面圖：
+  - 按 `Remove Cover`
+  - 再按 `Save Post`
+- 刪熟客照片：
+  - 按 `Remove Image`
+  - 再按 `Save Acquaintance Profile`
+
+### 本機 autosave 草稿
+
+- 只存在目前瀏覽器 `localStorage`
+- 不會進 GitHub
+- 不會變成 Cloudflare 的獨立圖片資源
+- Studio 已內建清理機制，不會無限制累積
 
 ## 9. SEO 與公開網址
 

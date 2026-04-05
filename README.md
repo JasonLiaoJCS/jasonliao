@@ -234,6 +234,22 @@ Save Updates
 - 中文內容
 - 英文內容
 - `Tags`
+- `Cover Image`
+- `Cover Alt`
+
+這一區現在另外有幾個很實用的工作流功能：
+
+- `Add Photos`
+  - 支援 `PNG / JPG / JPEG`
+  - 可一次插入多張文章圖片
+- `Preview Draft`
+  - 先看草稿頁面長什麼樣
+- 本機 autosave
+  - 關頁前、切文章前、閒置時會自動存成 local draft
+- `Discard Local Draft`
+  - 把尚未正式儲存到網站的本機草稿丟掉
+- 發布前 checklist
+  - 欄位沒補齊時，`Published` 會被擋下來
 
 ### 7.5 Acquaintance Profile
 
@@ -249,6 +265,8 @@ Save Updates
 - 熟客模式導言
 - 熟客模式下的 Hero / About / 學經歷等私密版文案
 - 熟客照片
+  - 可上傳
+  - 可移除舊照片後再儲存
 
 改完按：
 
@@ -306,10 +324,13 @@ Reset Entire CMS
 3. 按 `New Post`
 4. 填 `Slug`
 5. `Visibility` 選 `Public`
-6. `Status` 選 `Published`
+6. `Status` 選 `Draft` 或 `Published`
 7. 填標題、摘要、內容
-8. 按 `Save Post`
-9. 用 `Open Current URL` 或直接打網址確認
+8. 如果要放封面，填 `Cover Image` 或直接上傳封面圖
+9. 如果要放文章配圖，用 `Add Photos`
+10. 先按 `Preview Draft` 看版面
+11. 按 `Save Post`
+12. 用 `Open Current URL` 或直接打網址確認
 
 ### 操作 4：發一篇只有熟客能看的文章
 
@@ -320,9 +341,19 @@ Reset Entire CMS
 3. 按 `New Post`
 4. 填 `Slug`
 5. `Visibility` 選 `Acquaintance`
-6. `Status` 選 `Published`
+6. `Status` 選 `Draft` 或 `Published`
 7. 填文章內容
-8. 按 `Save Post`
+8. 如需要可加入封面圖與文章圖片
+9. 先按 `Preview Draft`
+10. 按 `Save Post`
+
+這種文章正式路徑一樣會是：
+
+```text
+/notes/<slug>
+```
+
+但沒解鎖熟客模式的人只會看到鎖定頁，不會直接看到全文。
 
 ### 操作 5：更新熟客模式聯絡方式與照片
 
@@ -331,7 +362,7 @@ Reset Entire CMS
 1. 登入 Studio
 2. 進 `Acquaintance Profile`
 3. 改 Email / Phone / Instagram
-4. 上傳照片
+4. 上傳照片，或按 `Remove Image` 清掉舊照片
 5. 改熟客文案
 6. 按 `Save Acquaintance Profile`
 
@@ -360,12 +391,13 @@ Save as Reset Default
 
 ### `Save`
 
-表示把目前表單內容正式寫進資料庫。
+表示把目前表單內容正式寫進 Cloudflare D1。
 
 如果你沒按 `Save`：
 
-- 只是畫面上暫時改了
-- 重新整理就沒了
+- 網站正式內容不會更新
+- 但 `Posts` 很可能已經被 autosave 成本機草稿
+- 下次打開 Studio 時，草稿可能會自動恢復
 
 ### `Draft`
 
@@ -387,7 +419,7 @@ Save as Reset Default
 
 ## 10. 文章系統現在怎麼寫
 
-### 目前用的是 Markdown 編輯器 + 即時預覽
+### 目前用的是 Markdown 編輯器 + 即時預覽 + 本機草稿工作流
 
 也就是：
 
@@ -395,6 +427,10 @@ Save as Reset Default
 - 你可以直接寫 Markdown
 - Studio 右邊會有 live preview
 - 工具列可快速插入常用格式
+- 可以插入文章圖片
+- 可以加封面圖
+- 可以預覽草稿頁面
+- 會自動存本機草稿
 
 ### 你可以直接這樣寫
 
@@ -416,15 +452,60 @@ Save as Reset Default
 - Studio 不是 Word，也不是 Notion
 - 目前是 Markdown editor，不是完整所見即所得 WYSIWYG
 
+### 圖片目前怎麼用
+
+- 文章內插圖目前支援：
+  - `PNG / JPG / JPEG`
+- 封面圖也支援：
+  - 貼 URL
+  - 或直接上傳 `PNG / JPG / JPEG`
+- 文章圖片與封面圖目前不是獨立圖床
+  - 它們會跟文章內容一起存在 D1
+  - 不會進 GitHub repo
+
+### 圖片刪掉後，資源會不會殘留
+
+- 文章內圖片：
+  - 先從編輯器刪掉圖片標記
+  - 再按 `Save Post`
+  - 這樣該篇文章裡不再被引用的圖片資料就會一起被清掉
+- 封面圖：
+  - 按 `Remove Cover`
+  - 再按 `Save Post`
+  - 封面資料就會從文章裡移除
+- 熟客照片：
+  - 按 `Remove Image`
+  - 再按 `Save Acquaintance Profile`
+  - 該張照片就會從熟客資料裡清掉
+
+### 本機草稿會不會越存越大
+
+- 本機 autosave 只存在你自己的瀏覽器 `localStorage`
+- 不會進 GitHub
+- 不會變成獨立 Cloudflare 圖片資源
+- Studio 現在已經有自動清理機制
+  - 太舊的草稿會清掉
+  - 已和正式版本一致的草稿會清掉
+  - 超過保留上限的最舊草稿也會清掉
+
 ---
 
 ## 11. 如果我改得不滿意，怎麼回復
 
 ### 情況 A：還沒按 Save
 
-最簡單：
+現在不能再單純理解成「重整就一定沒了」。
 
-- 直接重新整理頁面
+因為 `Posts` 會自動做本機 autosave，所以：
+
+- 重新整理後，草稿可能還會被恢復
+- 關分頁前也可能已經先被本機保存
+
+如果你想真的丟掉目前這份未正式發佈的文章草稿，請按：
+
+```text
+Discard Local Draft
+```
 
 ### 情況 B：已經按 Save
 
