@@ -179,7 +179,8 @@ function renderPostPage(post){
           <span class="brand-mark"><span>JL</span></span>
           <span>Jason Liao</span>
         </a>
-        <div class="nav-links" style="display:flex">
+        <button class="menu-btn" id="postMenuBtn" type="button" aria-label="Toggle menu" aria-expanded="false">☰</button>
+        <div class="nav-links" id="postNavLinks">
           <a href="/#writing">Writing</a>
           <a href="/#contact">Contact</a>
         </div>
@@ -223,6 +224,8 @@ function renderPostPage(post){
       const postExcerpt = document.querySelector('.post-excerpt');
       const postPublished = document.getElementById('postPublished');
       const postReadingTime = document.getElementById('postReadingTime');
+      const postMenuBtn = document.getElementById('postMenuBtn');
+      const postNavLinks = document.getElementById('postNavLinks');
       let currentLang = 'zh';
       const escapeHtml = value => String(value || '')
         .replaceAll('&', '&amp;')
@@ -248,6 +251,44 @@ function renderPostPage(post){
           ? '閱讀約 ' + postData.readingMinutes + ' 分鐘'
           : postData.readingMinutes + ' min read';
         renderTags();
+      }
+
+      if (postMenuBtn && postNavLinks) {
+        const closeMenu = () => {
+          postNavLinks.classList.remove('open');
+          postMenuBtn.setAttribute('aria-expanded', 'false');
+        };
+
+        postMenuBtn.addEventListener('click', () => {
+          const isOpen = postNavLinks.classList.toggle('open');
+          postMenuBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        });
+
+        postNavLinks.querySelectorAll('a').forEach(link => {
+          link.addEventListener('click', closeMenu);
+        });
+
+        document.addEventListener('click', event => {
+          if (!postNavLinks.classList.contains('open')) {
+            return;
+          }
+          if (postNavLinks.contains(event.target) || postMenuBtn.contains(event.target)) {
+            return;
+          }
+          closeMenu();
+        });
+
+        document.addEventListener('keydown', event => {
+          if (event.key === 'Escape') {
+            closeMenu();
+          }
+        });
+
+        window.addEventListener('resize', () => {
+          if (window.innerWidth > 760) {
+            closeMenu();
+          }
+        });
       }
 
       langSwitch.addEventListener('click', () => renderPost(currentLang === 'zh' ? 'en' : 'zh'));
