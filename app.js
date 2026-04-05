@@ -195,11 +195,11 @@ const PRIVATE_UI_COPY = {
     portraitLocked: [
       {
         kicker: '熟客模式',
-        title: 'Portraits 只在熟客模式中開放',
+        title: '照片只在熟客模式中開放',
       },
       {
-        kicker: 'Private Profile',
-        title: '照片會在本機驗證後顯示',
+        kicker: '私人照片',
+        title: '通過驗證後才會顯示照片',
       },
     ],
   },

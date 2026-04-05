@@ -2441,3 +2441,85 @@ main,
     transform:none;
   }
 }
+
+/* ── Final Type Rhythm Fixes ── */
+.stats{
+  grid-template-columns:repeat(auto-fit, minmax(210px, 1fr));
+  gap:16px;
+  margin-top:30px;
+}
+
+.stat{
+  min-height:148px;
+  display:grid;
+  align-content:start;
+  gap:10px;
+  padding:24px 22px;
+}
+
+.stat strong{
+  max-width:12ch;
+  margin-bottom:0;
+  font-family:"Inter","Noto Sans TC",sans-serif;
+  font-size:clamp(1.14rem, 1.15rem + .42vw, 1.44rem);
+  font-weight:650;
+  line-height:1.08;
+  letter-spacing:-.02em;
+  text-wrap:balance;
+  word-break:normal;
+  overflow-wrap:break-word;
+}
+
+.stat .small,
+.stat .muted{
+  display:block;
+  line-height:1.75;
+}
+
+.portrait-lock{
+  max-width:320px;
+  gap:12px;
+}
+
+.portrait-lock-kicker{
+  font-size:.74rem;
+  letter-spacing:.16em;
+}
+
+.portrait-lock-title{
+  max-width:9ch;
+  font-size:clamp(1.9rem, 1.5rem + 1.05vw, 2.55rem);
+  line-height:1.02;
+  letter-spacing:-.025em;
+  text-wrap:balance;
+}
+
+@media (max-width: 1040px){
+  .stats{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+  }
+
+  .stat{
+    min-height:136px;
+  }
+}
+
+@media (max-width: 760px){
+  .stats{
+    grid-template-columns:1fr;
+  }
+
+  .stat{
+    min-height:auto;
+    padding:22px 20px;
+  }
+
+  .stat strong{
+    max-width:none;
+  }
+
+  .portrait-lock-title{
+    max-width:11ch;
+    font-size:clamp(1.66rem, 1.4rem + 1.5vw, 2.1rem);
+  }
+}
