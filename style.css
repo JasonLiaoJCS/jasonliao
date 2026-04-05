@@ -2218,3 +2218,226 @@ main,
   .section-number{font-size:3.5rem; margin-bottom:-12px}
   .footer-links{gap:16px}
 }
+
+/* ── Final Hero / Portrait Art Direction ── */
+.hero-stack{
+  width:min(100%, 540px);
+  justify-self:end;
+  gap:22px;
+}
+
+.hero-logo{
+  min-height:500px;
+  padding:30px;
+  border-radius:42px;
+  display:grid;
+  place-items:center;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255,244,225,.08), transparent 30%),
+    radial-gradient(circle at 82% 78%, rgba(217,177,111,.22), transparent 28%),
+    linear-gradient(160deg, rgba(19,22,30,.96), rgba(8,10,16,.99));
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:
+    0 38px 94px rgba(0,0,0,.34),
+    inset 0 1px 0 rgba(255,255,255,.05),
+    0 0 0 1px rgba(255,255,255,.02);
+}
+
+.hero-logo::before{
+  inset:28px;
+  border-radius:34px;
+  border:1px solid rgba(255,255,255,.07);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.036), rgba(255,255,255,.01)),
+    radial-gradient(ellipse at top, rgba(255,255,255,.07), transparent 56%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.04),
+    inset 0 22px 40px rgba(255,255,255,.018),
+    inset 0 -30px 60px rgba(0,0,0,.14);
+}
+
+.hero-logo::after{
+  top:auto;
+  left:58px;
+  right:58px;
+  bottom:34px;
+  width:auto;
+  height:118px;
+  padding:0;
+  border-radius:999px;
+  background:radial-gradient(ellipse at center, rgba(217,177,111,.24), rgba(217,177,111,0) 72%);
+  filter:blur(18px);
+  opacity:.62;
+  -webkit-mask:none;
+          mask:none;
+}
+
+.hero-logo img{
+  position:relative;
+  z-index:2;
+  width:min(100%, 418px);
+  border-radius:30px;
+  transform:translateY(-4px);
+  box-shadow:
+    0 36px 88px rgba(0,0,0,.42),
+    0 0 0 1px rgba(255,255,255,.06);
+}
+
+.portrait-section{
+  padding:18px 0 88px;
+}
+
+.portrait-header{
+  margin-bottom:42px;
+}
+
+.portrait-gallery{
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  align-items:stretch;
+  gap:28px;
+  max-width:968px;
+}
+
+.portrait-card,
+.portrait-card-primary,
+.portrait-card-secondary{
+  height:auto;
+  aspect-ratio:4 / 5;
+  padding:14px;
+  border-radius:34px;
+  background:
+    linear-gradient(180deg, rgba(18,22,31,.94), rgba(9,12,20,.985));
+  box-shadow:
+    0 30px 82px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.05);
+}
+
+.portrait-card::before,
+.portrait-card-private::before{
+  inset:14px;
+  border-radius:26px;
+  border:1px solid rgba(255,255,255,.06);
+  background:linear-gradient(180deg, rgba(255,255,255,.028), rgba(255,255,255,.008));
+}
+
+.portrait-card-private{
+  padding:14px;
+  background:
+    radial-gradient(circle at 18% 14%, rgba(217,177,111,.1), transparent 28%),
+    linear-gradient(180deg, rgba(18,22,31,.95), rgba(9,12,20,.985));
+}
+
+.portrait-card img{
+  height:100%;
+  border-radius:26px;
+  box-shadow:0 24px 58px rgba(0,0,0,.24);
+}
+
+.portrait-card-primary img{
+  object-position:center 20%;
+}
+
+.portrait-card-secondary img{
+  object-position:center 50%;
+}
+
+.portrait-card figcaption{
+  left:14px;
+  right:14px;
+  bottom:14px;
+  padding:44px 22px 18px;
+  border-radius:0 0 26px 26px;
+  text-align:left;
+}
+
+@media (max-width: 1040px){
+  .hero-stack{
+    width:min(100%, 720px);
+    justify-self:stretch;
+    grid-template-columns:minmax(0, 1.03fr) minmax(0, .97fr);
+    align-items:stretch;
+  }
+
+  .hero-logo{
+    min-height:410px;
+  }
+
+  .hero-logo img{
+    width:min(100%, 348px);
+  }
+
+  .portrait-gallery{
+    max-width:760px;
+    gap:22px;
+  }
+}
+
+@media (max-width: 760px){
+  .hero-stack{
+    width:100%;
+    grid-template-columns:1fr;
+    gap:18px;
+  }
+
+  .hero-logo{
+    min-height:338px;
+    padding:20px;
+    border-radius:30px;
+  }
+
+  .hero-logo::before{
+    inset:18px;
+    border-radius:22px;
+  }
+
+  .hero-logo::after{
+    left:28px;
+    right:28px;
+    bottom:24px;
+    height:78px;
+    filter:blur(12px);
+  }
+
+  .hero-logo img{
+    width:min(100%, 288px);
+    border-radius:22px;
+    transform:none;
+  }
+
+  .portrait-section{
+    padding:6px 0 48px;
+  }
+
+  .portrait-gallery{
+    grid-template-columns:1fr;
+    gap:18px;
+    max-width:392px;
+  }
+
+  .portrait-card,
+  .portrait-card-primary,
+  .portrait-card-secondary{
+    padding:10px;
+    border-radius:28px;
+  }
+
+  .portrait-card::before,
+  .portrait-card-private::before{
+    inset:10px;
+    border-radius:20px;
+  }
+
+  .portrait-card img{
+    border-radius:20px;
+  }
+
+  .portrait-card figcaption{
+    left:10px;
+    right:10px;
+    bottom:10px;
+    padding:34px 18px 16px;
+    border-radius:0 0 20px 20px;
+    opacity:1;
+    transform:none;
+  }
+}
