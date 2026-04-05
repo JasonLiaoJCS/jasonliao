@@ -888,7 +888,7 @@ function mergeLocalDraftPosts(posts = []){
       localDraftOnly: true,
     });
   });
-  return merged;
+  return sortStudioPosts(merged);
 }
 
 function formatStudioTimestamp(value){
@@ -904,6 +904,43 @@ function formatStudioTimestamp(value){
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+  });
+}
+
+function getStudioPublishStatusLabel(post, options = {}){
+  const {
+    draftLabel = 'Draft',
+    autoLabel = 'Will be set automatically when published',
+  } = options;
+  const stamped = formatStudioTimestamp(post?.publishedAt);
+  if(stamped){
+    return stamped;
+  }
+  return post?.status === 'published' ? autoLabel : draftLabel;
+}
+
+function getStudioPostSortTime(post){
+  const publishedAt = Date.parse(String(post?.publishedAt || ''));
+  const updatedAt = Date.parse(String(post?.updatedAt || ''));
+  const publishedTime = Number.isFinite(publishedAt) ? publishedAt : 0;
+  const updatedTime = Number.isFinite(updatedAt) ? updatedAt : 0;
+
+  if(post?.localDraftOnly){
+    return updatedTime || publishedTime;
+  }
+  if(post?.status === 'published'){
+    return publishedTime || updatedTime;
+  }
+  return updatedTime || publishedTime;
+}
+
+function sortStudioPosts(posts = []){
+  return [...posts].sort((left, right) => {
+    const primaryDelta = getStudioPostSortTime(right) - getStudioPostSortTime(left);
+    if(primaryDelta !== 0){
+      return primaryDelta;
+    }
+    return String(left?.slug || left?.id || '').localeCompare(String(right?.slug || right?.id || ''));
   });
 }
 
@@ -974,10 +1011,14 @@ function evaluatePostChecklist(post){
     },
     {
       key: 'publishedAt',
-      label: 'Publish date',
-      detail: publishDateReady ? normalized.publishedAt : 'Choose a publish date before publishing.',
-      ok: publishDateReady,
-      required: publishing,
+      label: 'Publish time',
+      detail: publishDateReady
+        ? `Stamped ${formatStudioTimestamp(normalized.publishedAt)}`
+        : (publishing
+          ? 'Studio will stamp the publish time automatically when you save.'
+          : 'A publish timestamp will be added automatically the first time this post goes live.'),
+      ok: publishDateReady || publishing,
+      required: false,
     },
     {
       key: 'cover',
@@ -1515,7 +1556,7 @@ function collectCurrentPostDraftFromForm(){
       slug: document.getElementById('postSlug')?.value.trim() || '',
       visibility: document.getElementById('postVisibility')?.value || 'public',
       status: document.getElementById('postStatus')?.value || 'draft',
-      publishedAt: document.getElementById('postPublishedAt')?.value || '',
+      publishedAt: post.publishedAt || '',
       title: {
         zh: document.getElementById('postTitleZh')?.value || '',
         en: document.getElementById('postTitleEn')?.value || '',
@@ -1595,6 +1636,23 @@ function updatePostWorkflowUI(){
     checklistNode.innerHTML = renderChecklistMarkup(checklist);
   }
 
+  const publishStamp = document.getElementById('postPublishStamp');
+  if(publishStamp){
+    publishStamp.textContent = getStudioPublishStatusLabel(draft, {
+      draftLabel: 'Not published yet',
+      autoLabel: 'Will be stamped automatically when you publish',
+    });
+  }
+
+  const publishHint = document.getElementById('postPublishHint');
+  if(publishHint){
+    publishHint.textContent = draft.publishedAt
+      ? (draft.status === 'published'
+        ? 'This article is already live with the timestamp shown above.'
+        : 'This is the last publish time recorded for this article.')
+      : 'No manual date picker anymore. Studio will stamp the publish time automatically the first time this post goes live.';
+  }
+
   const discardBtn = document.getElementById('discardLocalDraftBtn');
   if(discardBtn){
     discardBtn.hidden = !studioState.postEditor.hasLocalDraft;
@@ -1605,6 +1663,15 @@ function renderPostEditor(editorState){
   const post = editorState.post;
   const checklist = evaluatePostChecklist(post);
   const restoredAt = editorState.localDraft?.savedAt ? formatStudioTimestamp(editorState.localDraft.savedAt) : '';
+  const publishStamp = formatStudioTimestamp(post.publishedAt);
+  const publishStampLabel = publishStamp || (post.status === 'published'
+    ? 'Will be stamped automatically when you publish'
+    : 'Not published yet');
+  const publishStampHint = publishStamp
+    ? (post.status === 'published'
+      ? 'This article is already live with the timestamp shown above.'
+      : 'This is the last publish time recorded for this article.')
+    : 'No manual date picker anymore. Studio will stamp the publish time automatically the first time this post goes live.';
   return `
     <div class="studio-card studio-post-workflow-card">
       <div class="studio-post-workflow-head">
@@ -1671,10 +1738,11 @@ function renderPostEditor(editorState){
           <span>Slug</span>
           <input id="postSlug" type="text" value="${escapeHtml(post.slug || '')}" placeholder="example-post-slug">
         </label>
-        <label class="studio-form-field">
-          <span>Publish Date</span>
-          <input id="postPublishedAt" type="date" value="${escapeHtml((post.publishedAt || '').slice(0, 10))}">
-        </label>
+        <div class="studio-form-field">
+          <span>Publish Time</span>
+          <div class="studio-static-field" id="postPublishStamp">${escapeHtml(publishStampLabel)}</div>
+          <small class="studio-field-note" id="postPublishHint">${escapeHtml(publishStampHint)}</small>
+        </div>
         <label class="studio-form-field">
           <span>Visibility</span>
           <select id="postVisibility">
@@ -1800,6 +1868,7 @@ function buildPreviewHtml(post){
     renderedContent,
     tags: normalized.tags,
     publishedAt: normalized.publishedAt,
+    status: normalized.status,
     readingMinutes: estimateStudioReadingMinutes(normalized),
   }).replace(/</g, '\\u003c');
   const title = escapeHtml(normalized.title.zh || normalized.title.en || 'Draft Preview');
@@ -1836,7 +1905,7 @@ function buildPreviewHtml(post){
     <main class="post-shell">
       <section class="post-hero">
         <div class="post-toolbar"><a class="btn" href="javascript:window.close()">Close Preview</a><div class="actions"><button class="post-toggle" id="langSwitch" type="button">EN</button></div></div>
-        <div class="post-meta"><div class="eyebrow">Draft Preview</div><div class="post-meta-cluster"><span class="post-chip" id="postPublished">${escapeHtml(normalized.publishedAt || 'Draft')}</span><span class="post-chip" id="postReadingTime">${estimateStudioReadingMinutes(normalized)} min read</span></div></div>
+        <div class="post-meta"><div class="eyebrow">Draft Preview</div><div class="post-meta-cluster"><span class="post-chip" id="postPublished">${escapeHtml(getStudioPublishStatusLabel(normalized, { draftLabel: '尚未發布', autoLabel: '發布時自動填入' }))}</span><span class="post-chip" id="postReadingTime">${estimateStudioReadingMinutes(normalized)} min read</span></div></div>
         ${coverMarkup}
         <h1 class="post-title">${title}</h1>
         <p class="post-excerpt">${description}</p>
@@ -1855,6 +1924,28 @@ function buildPreviewHtml(post){
       const postReadingTime = document.getElementById('postReadingTime');
       let currentLang = 'zh';
       const escapeHtml = value => String(value || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
+      function formatPublishedLabel(lang){
+        if (previewData.publishedAt) {
+          const date = new Date(previewData.publishedAt);
+          if (!Number.isNaN(date.getTime())) {
+            if (lang === 'zh') {
+              const pad = value => String(value).padStart(2, '0');
+              return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate()) + ' ' + pad(date.getHours()) + ':' + pad(date.getMinutes());
+            }
+            return new Intl.DateTimeFormat('en-US', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+              hour: 'numeric',
+              minute: '2-digit',
+            }).format(date);
+          }
+        }
+        if (previewData.status === 'published') {
+          return lang === 'zh' ? '發布時自動填入' : 'Auto-set on publish';
+        }
+        return lang === 'zh' ? '尚未發布' : 'Draft';
+      }
       function renderTags(){ postTags.innerHTML = (previewData.tags || []).map(tag => '<span class="tag">' + escapeHtml(tag) + '</span>').join(''); }
       function renderPost(lang){
         currentLang = lang;
@@ -1864,7 +1955,7 @@ function buildPreviewHtml(post){
         postTitle.textContent = previewData.title[lang] || previewData.title.zh || previewData.title.en || '';
         postExcerpt.textContent = previewData.excerpt[lang] || previewData.excerpt.zh || previewData.excerpt.en || '';
         postBody.innerHTML = previewData.renderedContent[lang] || previewData.renderedContent.zh || previewData.renderedContent.en || '';
-        postPublished.textContent = previewData.publishedAt || 'Draft';
+        postPublished.textContent = formatPublishedLabel(lang);
         postReadingTime.textContent = lang === 'zh' ? '閱讀約 ' + previewData.readingMinutes + ' 分鐘' : previewData.readingMinutes + ' min read';
         renderTags();
       }
@@ -1917,7 +2008,7 @@ function bindPostEditorInteractions(panel){
     schedulePostAutosave();
   };
 
-  panel.querySelectorAll('#postSlug, #postPublishedAt, #postVisibility, #postStatus, #postTitleZh, #postTitleEn, #postExcerptZh, #postExcerptEn, #postTagsInput, #postCoverSrc, #postCoverAltZh, #postCoverAltEn, #postContentZh, #postContentEn')
+  panel.querySelectorAll('#postSlug, #postVisibility, #postStatus, #postTitleZh, #postTitleEn, #postExcerptZh, #postExcerptEn, #postTagsInput, #postCoverSrc, #postCoverAltZh, #postCoverAltEn, #postContentZh, #postContentEn')
     .forEach(field => {
       field.addEventListener('input', handleFieldChange);
       field.addEventListener('change', handleFieldChange);
@@ -2034,7 +2125,8 @@ function renderPosts(){
       slug: '',
       visibility: 'public',
       status: 'draft',
-      publishedAt: new Date().toISOString().slice(0, 10),
+      publishedAt: '',
+      updatedAt: new Date().toISOString(),
       title: { zh: '', en: '' },
       excerpt: { zh: '', en: '' },
       content: { zh: '', en: '' },
@@ -2042,7 +2134,7 @@ function renderPosts(){
       coverImage: createEmptyCoverImage(),
       localDraftOnly: true,
     };
-    studioState.bootstrap.posts = [newPost, ...(studioState.bootstrap.posts || [])];
+    studioState.bootstrap.posts = sortStudioPosts([newPost, ...(studioState.bootstrap.posts || [])]);
     studioState.selectedPostId = newPost.id;
     renderPosts();
   });
@@ -2105,21 +2197,20 @@ async function saveCurrentPost(){
   }
 
   setStudioStatus(post.status === 'published' ? 'Publishing post...' : 'Saving post...', 'pending');
-  await studioFetchJson('/api/admin/posts', {
+  const response = await studioFetchJson('/api/admin/posts', {
     method: 'POST',
     body: JSON.stringify({ post }),
   });
+  const savedPost = response?.post || post;
   removeLocalPostDraft(post.id);
   clearPostAutosaveTimer();
-  studioState.bootstrap.posts = studioState.bootstrap.posts.map(item => item.id === post.id ? {
-    ...post,
+  studioState.bootstrap.posts = sortStudioPosts(studioState.bootstrap.posts.map(item => item.id === post.id ? {
+    ...savedPost,
     localDraftOnly: false,
-    updatedAt: new Date().toISOString(),
-    path: `/notes/${post.slug}`,
-  } : item);
-  studioState.selectedPostId = post.id;
+  } : item));
+  studioState.selectedPostId = savedPost.id;
   renderPosts();
-  setStudioStatus(post.status === 'published' ? 'Post published' : 'Post saved', 'success');
+  setStudioStatus(savedPost.status === 'published' ? 'Post published' : 'Post saved', 'success');
 }
 
 async function deleteCurrentPost(){

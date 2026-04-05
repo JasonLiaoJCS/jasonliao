@@ -569,7 +569,21 @@ function getVisibleCmsPosts(){
   if(privateMode.unlocked && privateMode.source === 'server'){
     posts.push(...cmsState.privatePosts);
   }
-  return posts.slice();
+  const parseTime = value => {
+    const timestamp = Date.parse(String(value || ''));
+    return Number.isFinite(timestamp) ? timestamp : 0;
+  };
+  const getPrimaryTime = post => parseTime(post?.publishedAt || post?.updatedAt);
+  const getSecondaryTime = post => parseTime(post?.updatedAt);
+  return posts
+    .slice()
+    .sort((left, right) => {
+      const primaryDelta = getPrimaryTime(right) - getPrimaryTime(left);
+      if(primaryDelta !== 0){
+        return primaryDelta;
+      }
+      return getSecondaryTime(right) - getSecondaryTime(left);
+    });
 }
 
 function bindTiltEffect(card){

@@ -221,6 +221,13 @@ function normalizePostRow(row){
   };
 }
 
+async function getPostRowById(env, id){
+  await ensureCmsDb(env);
+  return env.CMS_DB.prepare(
+    'SELECT * FROM cms_posts WHERE id = ? LIMIT 1',
+  ).bind(id).first();
+}
+
 export async function listPosts(env, options = {}){
   await ensureCmsDb(env);
   const conditions = [];
@@ -237,7 +244,13 @@ export async function listPosts(env, options = {}){
 
   const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
   const result = await env.CMS_DB.prepare(
-    `SELECT * FROM cms_posts ${whereClause} ORDER BY COALESCE(published_at, updated_at) DESC, updated_at DESC`,
+    `SELECT * FROM cms_posts ${whereClause}
+      ORDER BY
+        CASE
+          WHEN status = 'published' THEN COALESCE(published_at, updated_at)
+          ELSE updated_at
+        END DESC,
+        updated_at DESC`,
   ).bind(...bindValues).all();
   return (result.results || []).map(normalizePostRow);
 }
@@ -252,12 +265,20 @@ export async function getPostBySlug(env, slug){
 
 export async function upsertPost(env, post){
   await ensureCmsDb(env);
+  const existingRow = post.id ? await getPostRowById(env, post.id) : null;
+  const publishingNow = (post.status || 'draft') === 'published';
+  const firstPublishedTimestamp = existingRow?.status === 'published' && existingRow?.published_at
+    ? existingRow.published_at
+    : null;
+  const effectivePublishedAt = publishingNow
+    ? (firstPublishedTimestamp || nowIso())
+    : (existingRow?.published_at || post.publishedAt || null);
   const normalized = {
     id: post.id,
     slug: (post.slug || '').trim(),
     visibility: post.visibility || 'public',
     status: post.status || 'draft',
-    publishedAt: post.publishedAt || null,
+    publishedAt: effectivePublishedAt,
     title: {
       zh: post.title?.zh || '',
       en: post.title?.en || '',
@@ -309,6 +330,13 @@ export async function upsertPost(env, post){
     JSON.stringify(normalized.tags),
     JSON.stringify(normalized.coverImage),
   ).run();
+
+  const savedRow = await getPostRowById(env, normalized.id);
+  return savedRow ? normalizePostRow(savedRow) : {
+    ...normalized,
+    updatedAt: nowIso(),
+    path: `/notes/${normalized.slug}`,
+  };
 }
 
 export async function deletePost(env, id){

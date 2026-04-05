@@ -145,6 +145,7 @@ cloudflare/schema.sql
 
 - `Draft` / `Published`
 - `Public` / `Acquaintance`
+- 自動發布時間
 - 中英文標題
 - 中英文摘要
 - 中英文 Markdown 內容
@@ -168,6 +169,8 @@ cloudflare/schema.sql
 - 本機 autosave 草稿
 - 發布前 checklist
 - `Add Photos` 插圖
+
+`Published` 不需要手動選日期。第一次正式發布時，系統會自動寫入當下的發布時間；首頁 Blog 主打文章也會依最新發布時間自動排序。
 
 目前圖片格式：
 

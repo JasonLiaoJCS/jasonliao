@@ -53,6 +53,27 @@ function estimateReadingMinutes(post){
   return Math.max(1, Math.round(wordEquivalent / 220));
 }
 
+function formatPublishedLabel(value, lang = 'zh'){
+  if(!value){
+    return '';
+  }
+  const date = new Date(value);
+  if(Number.isNaN(date.getTime())){
+    return String(value);
+  }
+  if(lang === 'en'){
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    }).format(date);
+  }
+  const pad = number => String(number).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 function renderPostPage(post){
   const renderedContent = {
     zh: renderRichContent(post.content.zh || ''),
@@ -198,7 +219,7 @@ function renderPostPage(post){
         <div class="post-meta">
           <div class="eyebrow">${post.visibility === 'acquaintance' ? 'Acquaintance Note' : 'Blog / Notes'}</div>
           <div class="post-meta-cluster">
-            <span class="post-chip" id="postPublished">${escapeHtml(post.publishedAt || '')}</span>
+            <span class="post-chip" id="postPublished">${escapeHtml(formatPublishedLabel(post.publishedAt, 'zh'))}</span>
             <span class="post-chip" id="postReadingTime">${readingMinutes} min read</span>
           </div>
         </div>
@@ -233,6 +254,26 @@ function renderPostPage(post){
         .replaceAll('>', '&gt;')
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&#39;');
+      function formatPublishedLabel(value, lang){
+        if (!value) {
+          return '';
+        }
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) {
+          return value;
+        }
+        if (lang === 'en') {
+          return new Intl.DateTimeFormat('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+          }).format(date);
+        }
+        const pad = number => String(number).padStart(2, '0');
+        return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate()) + ' ' + pad(date.getHours()) + ':' + pad(date.getMinutes());
+      }
 
       function renderTags(){
         postTags.innerHTML = (postData.tags || []).map(tag => '<span class="tag">' + escapeHtml(tag) + '</span>').join('');
@@ -246,7 +287,7 @@ function renderPostPage(post){
         postTitle.textContent = postData.title[lang] || postData.title.zh || postData.title.en || '';
         postExcerpt.textContent = postData.excerpt[lang] || postData.excerpt.zh || postData.excerpt.en || '';
         postBody.innerHTML = postData.renderedContent[lang] || postData.renderedContent.zh || postData.renderedContent.en || '';
-        postPublished.textContent = postData.publishedAt || '';
+        postPublished.textContent = formatPublishedLabel(postData.publishedAt, lang);
         postReadingTime.textContent = lang === 'zh'
           ? '閱讀約 ' + postData.readingMinutes + ' 分鐘'
           : postData.readingMinutes + ' min read';

@@ -19,8 +19,8 @@ export async function onRequestPost(context){
   }
 
   try {
-    await upsertPost(context.env, post);
-    return json({ ok: true, post });
+    const savedPost = await upsertPost(context.env, post);
+    return json({ ok: true, post: savedPost });
   } catch (error){
     if(String(error.message || '').includes('UNIQUE')){
       return badRequest('Slug already exists');

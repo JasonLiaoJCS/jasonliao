@@ -226,7 +226,7 @@ Save Updates
 - `Slug`
 - `Visibility`
 - `Status`
-- `Publish Date`
+- `Publish Time（自動）`
 - 中文標題
 - 英文標題
 - 中文摘要
@@ -250,6 +250,11 @@ Save Updates
   - 把尚未正式儲存到網站的本機草稿丟掉
 - 發布前 checklist
   - 欄位沒補齊時，`Published` 會被擋下來
+- 自動發布時間
+  - 第一次正式發布時，系統會自動記下當下時間
+  - 不需要手動選日期
+
+另外，首頁 Blog 的「本期主打 / Featured」現在是依照**最新發布時間**自動挑選，不是手動指定。
 
 ### 7.5 Acquaintance Profile
 
