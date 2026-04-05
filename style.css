@@ -3437,3 +3437,84 @@ main,
     align-content:end;
   }
 }
+
+/* ── Hero Mobile Final Lock ---------------------------------------------- */
+@media (max-width: 760px){
+  body{
+    background:#090d15 !important;
+  }
+
+  body::before,
+  body::after,
+  .site-orbit,
+  .site-gridlines,
+  .hero::before,
+  .hero::after,
+  .hero-glow,
+  .hero-particles{
+    display:none !important;
+  }
+
+  main{
+    background:
+      radial-gradient(circle at 16% 6%, rgba(217,177,111,.12), transparent 22%),
+      radial-gradient(circle at 84% 0%, rgba(128,146,173,.08), transparent 18%),
+      linear-gradient(180deg, #090d15 0%, #070a12 48%, #05070d 100%);
+  }
+
+  .hero{
+    position:relative;
+    isolation:isolate;
+    min-height:auto;
+    padding:52px 0 42px !important;
+    background:
+      radial-gradient(circle at 18% 14%, rgba(217,177,111,.1), transparent 20%),
+      linear-gradient(180deg, rgba(10,14,22,.98), rgba(7,10,18,.98));
+  }
+
+  .hero-copy{
+    gap:16px;
+  }
+
+  .eyebrow,
+  .hero-status{
+    color:#ead7b4 !important;
+  }
+
+  .hero-status{
+    background:rgba(17,20,29,.88) !important;
+    border-color:rgba(255,255,255,.09);
+  }
+
+  .hero-title-anim{
+    color:var(--text) !important;
+    text-shadow:0 14px 34px rgba(0,0,0,.42) !important;
+    filter:none !important;
+  }
+
+  .hero-title-anim .gold{
+    background:none !important;
+    color:var(--gold-soft) !important;
+    -webkit-text-fill-color:var(--gold-soft) !important;
+  }
+
+  .hero-copy .lead{
+    color:#d4ccbf !important;
+    text-shadow:none !important;
+  }
+
+  .hero-actions .btn{
+    background:linear-gradient(180deg, rgba(19,24,35,.96), rgba(10,13,20,.98)) !important;
+    border-color:rgba(255,255,255,.08);
+    color:#f5efe5;
+  }
+
+  .hero-actions .btn.btn-primary{
+    background:linear-gradient(135deg, rgba(217,177,111,.28), rgba(255,255,255,.06)) !important;
+  }
+
+  .chip{
+    background:linear-gradient(180deg, rgba(19,23,34,.94), rgba(10,13,20,.98)) !important;
+    color:#ece3d5;
+  }
+}
