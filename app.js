@@ -113,6 +113,15 @@ const I18N_EN = {
   'writing.card3.meta': "Essay · Life",
   'writing.card3.title': "What Baseball Taught Me About Engineering",
   'writing.card3.desc': "On the rhythm, discipline, and sense of team that Taiwanese baseball gave me. Many things I value in research, I first learned on the field.",
+  'blogPortal.eyebrow': 'Field Notes',
+  'blogPortal.title': 'I write here regularly, not only about research, but also about life.',
+  'blogPortal.desc': 'This is where I keep a living record of study, daily life, baseball, growth, and the thoughts that felt real enough to write down. If you want the most human side of this site, start here.',
+  'blogPortal.tag1': 'Life updates',
+  'blogPortal.tag2': 'Research notes',
+  'blogPortal.tag3': 'Baseball',
+  'blogPortal.tag4': 'Reflections',
+  'blogPortal.primary': 'Enter the Blog',
+  'blogPortal.secondary': 'See recent writing',
 
   // Contact
   'contact.h2': 'Get in Touch',
@@ -152,6 +161,7 @@ const privateMode = {
   unlocked: false,
   payload: null,
   scriptPromise: null,
+  restorePromise: null,
   mediaUrls: [],
   source: null,
   lastActivityAt: 0,
@@ -771,6 +781,40 @@ async function tryServerPrivateUnlock(password){
   return payload.profile || null;
 }
 
+async function restoreServerPrivateSession(){
+  if(privateMode.restorePromise) return privateMode.restorePromise;
+  if(privateMode.unlocked || !cmsState.serverAcquaintanceEnabled){
+    return false;
+  }
+
+  privateMode.restorePromise = (async () => {
+    try {
+      const session = await fetchCmsJson('/api/acquaintance/session');
+      if(!session?.authenticated){
+        return false;
+      }
+
+      const payload = await fetchCmsJson('/api/acquaintance/bootstrap');
+      cmsState.privateUpdates = payload.updates || [];
+      cmsState.privatePosts = payload.posts || [];
+      privateMode.unlocked = true;
+      privateMode.payload = payload.profile || null;
+      privateMode.source = 'server';
+      privateMode.lastActivityAt = Date.now();
+      privateMode.lastActivityHandledAt = privateMode.lastActivityAt;
+      applyLang(currentLang);
+      schedulePrivateAutoLock();
+      return true;
+    } catch {
+      return false;
+    } finally {
+      privateMode.restorePromise = null;
+    }
+  })();
+
+  return privateMode.restorePromise;
+}
+
 async function unlockPrivateMode(password){
   let data = null;
   let source = 'local';
@@ -1045,7 +1089,7 @@ function setupI18nUI(){
   if(toggleBtn) toggleBtn.addEventListener('click', toggleLang);
   initI18n();
   setupPrivateUI();
-  loadCmsBootstrap();
+  loadCmsBootstrap().then(() => restoreServerPrivateSession());
 }
 
 if(document.readyState === 'loading'){

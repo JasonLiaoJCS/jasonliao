@@ -1052,12 +1052,178 @@
   box-shadow:0 16px 38px rgba(0,0,0,.18);
 }
 
+/* --- Flamboyant luxe pass ------------------------------- */
+
+@keyframes studioLuxeSweep{
+  0%{transform:translateX(-135%) skewX(-18deg); opacity:0}
+  22%{opacity:.18}
+  58%{opacity:.28}
+  100%{transform:translateX(160%) skewX(-18deg); opacity:0}
+}
+
+@keyframes studioHaloPulse{
+  0%,100%{opacity:.5; transform:scale(1)}
+  50%{opacity:1; transform:scale(1.08)}
+}
+
+.studio-shell::before{
+  content:"";
+  position:fixed;
+  inset:14px;
+  pointer-events:none;
+  border-radius:34px;
+  border:1px solid rgba(255,255,255,.04);
+  box-shadow:0 0 0 1px rgba(217,177,111,.05) inset;
+}
+
+.studio-login-panel::after{
+  content:"";
+  position:absolute;
+  top:0;
+  left:-36%;
+  width:30%;
+  height:100%;
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,.24), transparent);
+  transform:skewX(-18deg);
+  animation:studioLuxeSweep 9s ease-in-out infinite;
+  pointer-events:none;
+  z-index:1;
+}
+
+.studio-sidebar{
+  box-shadow:
+    0 30px 88px rgba(0,0,0,.38),
+    0 0 0 1px rgba(255,255,255,.02) inset;
+}
+
+.studio-sidebar::after{
+  content:"";
+  position:absolute;
+  inset:1px;
+  border-radius:inherit;
+  padding:1px;
+  background:linear-gradient(150deg, rgba(255,255,255,.04), rgba(217,177,111,.34), rgba(255,255,255,.04));
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+          mask-composite:exclude;
+  pointer-events:none;
+}
+
+.studio-nav button::after{
+  content:"";
+  position:absolute;
+  top:0;
+  left:-34%;
+  width:28%;
+  height:100%;
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,.14), transparent);
+  transform:skewX(-18deg);
+  opacity:0;
+  transition:opacity .3s ease;
+  pointer-events:none;
+}
+
+.studio-nav button:hover::after,
+.studio-nav button.active::after{
+  opacity:1;
+  animation:studioLuxeSweep 6.5s ease-in-out infinite;
+}
+
+.studio-nav button.active{
+  box-shadow:
+    0 18px 38px rgba(217,177,111,.1),
+    inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+.studio-header,
+.studio-panel,
+.studio-command-card{
+  border-color:rgba(255,255,255,.1);
+}
+
+.studio-header::after,
+.studio-panel::after,
+.studio-command-card::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:-34%;
+  width:28%;
+  height:100%;
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,.16), transparent);
+  transform:skewX(-18deg);
+  animation:studioLuxeSweep 10s ease-in-out infinite;
+  pointer-events:none;
+}
+
+.studio-header{
+  box-shadow:
+    0 28px 74px rgba(0,0,0,.28),
+    0 0 0 1px rgba(255,255,255,.02) inset;
+}
+
+.studio-section-subtitle{
+  text-shadow:0 0 18px rgba(217,177,111,.04);
+}
+
+.studio-panel{
+  box-shadow:
+    0 30px 82px rgba(0,0,0,.3),
+    0 0 0 1px rgba(255,255,255,.02) inset;
+}
+
+.studio-card,
+.studio-update-item,
+.studio-post-item,
+.studio-language-pair,
+.studio-markdown-editor{
+  border:1px solid rgba(255,255,255,.09);
+}
+
+.studio-update-item:hover,
+.studio-post-item:hover{
+  box-shadow:
+    0 28px 58px rgba(0,0,0,.26),
+    0 0 26px rgba(217,177,111,.06);
+}
+
+.studio-command-card{
+  box-shadow:
+    0 28px 72px rgba(0,0,0,.26),
+    inset 0 1px 0 rgba(255,255,255,.05);
+}
+
+.studio-command-card::after{
+  background:radial-gradient(circle, rgba(255,255,255,.18), transparent 68%);
+  animation:studioHaloPulse 5.5s ease-in-out infinite;
+}
+
+.studio-mini-stat,
+.studio-stat,
+.studio-markdown-preview,
+.studio-image-preview{
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.04),
+    0 16px 38px rgba(0,0,0,.18);
+}
+
+.studio-status-pill{
+  box-shadow:0 10px 24px rgba(0,0,0,.16), inset 0 1px 0 rgba(255,255,255,.04);
+}
+
 /* --- Respect reduced motion ------------------------------- */
 
 @media (prefers-reduced-motion: reduce){
   .studio-aurora,.studio-grain,.studio-spotlight{display:none}
   .studio-login-panel::before{animation:none}
   [data-reveal-text] .rv-char{animation:none;opacity:1;transform:none}
+  .studio-shell::before,
+  .studio-login-panel::after,
+  .studio-nav button::after,
+  .studio-header::after,
+  .studio-panel::after,
+  .studio-command-card::before{display:none}
 }
 
 @media (max-width:1100px){
