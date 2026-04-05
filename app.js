@@ -708,7 +708,17 @@ function renderCmsPosts(){
       media.className = 'writing-feature-media';
       featuredLink.prepend(media);
     }
-    media.style.backgroundImage = `linear-gradient(180deg, rgba(8,10,16,.04), rgba(8,10,16,.72)), url("${src}")`;
+    let image = media.querySelector('img');
+    if(!image){
+      image = document.createElement('img');
+      image.className = 'writing-feature-media-image';
+      image.loading = 'lazy';
+      image.decoding = 'async';
+      media.replaceChildren(image);
+    }
+    image.src = src;
+    image.alt = getLocalizedPostField(post.title) || 'Featured post cover';
+    media.style.setProperty('--featured-cover-image', `url("${src}")`);
     featuredLink.classList.add('has-cover');
   };
 
