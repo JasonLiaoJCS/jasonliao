@@ -11,6 +11,14 @@ function renderLockedPage(slug){
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="robots" content="noindex,nofollow">
     <title>Private Note</title>
+    <script>
+      (function () {
+        const root = document.documentElement;
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const isTouchPrimary = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+        root.dataset.effectsProfile = prefersReducedMotion ? 'reduced' : (isTouchPrimary ? 'touch' : 'desktop');
+      })();
+    </script>
     <link rel="stylesheet" href="/style.css">
     <style>
       body{min-height:100vh;display:grid;place-items:center}
@@ -118,6 +126,14 @@ function renderPostPage(post){
     <meta name="twitter:description" content="${description}">
     ${publicCoverImage ? `<meta name="twitter:image" content="${escapeHtml(publicCoverImage)}">` : ''}
     <title>${title}</title>
+    <script>
+      (function () {
+        const root = document.documentElement;
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const isTouchPrimary = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+        root.dataset.effectsProfile = prefersReducedMotion ? 'reduced' : (isTouchPrimary ? 'touch' : 'desktop');
+      })();
+    </script>
     <link rel="stylesheet" href="/style.css">
     <style>
       .post-shell{padding:132px 0 110px}

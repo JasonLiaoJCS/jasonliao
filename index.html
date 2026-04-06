@@ -33,6 +33,14 @@
   <meta name="twitter:image" content="assets/og-cover.png">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <script>
+    (function () {
+      const root = document.documentElement;
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const isTouchPrimary = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+      root.dataset.effectsProfile = prefersReducedMotion ? 'reduced' : (isTouchPrimary ? 'touch' : 'desktop');
+    })();
+  </script>
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

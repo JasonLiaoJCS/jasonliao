@@ -1284,9 +1284,34 @@ if(document.readyState === 'loading'){
   setupI18nUI();
 }
 
-const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const hasFinePointer = window.matchMedia('(hover:hover) and (pointer:fine)').matches;
-const reduceLuxeEffects = prefersReducedMotion || window.matchMedia('(max-width: 760px), (pointer:coarse)').matches;
+const effectsRoot = document.documentElement;
+const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+const touchProfileQuery = window.matchMedia('(hover: none) and (pointer: coarse)');
+const finePointerQuery = window.matchMedia('(hover:hover) and (pointer:fine)');
+
+function getEffectsProfile(){
+  if(reducedMotionQuery.matches){
+    return 'reduced';
+  }
+  if(touchProfileQuery.matches){
+    return 'touch';
+  }
+  return 'desktop';
+}
+
+function applyEffectsProfile(){
+  const profile = getEffectsProfile();
+  effectsRoot.dataset.effectsProfile = profile;
+  if(document.body){
+    document.body.dataset.effectsProfile = profile;
+  }
+  return profile;
+}
+
+const effectsProfile = applyEffectsProfile();
+const prefersReducedMotion = effectsProfile === 'reduced';
+const hasFinePointer = effectsProfile === 'desktop' && finePointerQuery.matches;
+const reduceLuxeEffects = effectsProfile !== 'desktop';
 
 // Mobile menu toggle
 const menuBtn = document.querySelector('.menu-btn');
