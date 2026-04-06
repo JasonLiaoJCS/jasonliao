@@ -720,6 +720,72 @@ git push origin main
 
 ---
 
+## 19. 前台裝置效果現在怎麼判定
+
+現在前台的視覺效果，不是只看螢幕寬度，也不是看螢幕比例。
+
+目前用的是一套 `effects profile`：
+
+- `desktop`
+- `touch`
+- `reduced`
+
+### 判定順序
+
+1. 如果使用者系統開了 `prefers-reduced-motion: reduce`
+   - 直接用 `reduced`
+2. 否則如果裝置符合：
+   - `(hover: none) and (pointer: coarse)`
+   - 也就是典型手機 / 平板觸控裝置
+   - 就用 `touch`
+3. 其他情況才用 `desktop`
+
+### 這代表什麼
+
+- iPad 就算螢幕很寬，也不會硬吃桌機那套最重的 glow / blur / 粒子
+- 手機和平板會共用同一套比較穩的高級深色 touch profile
+- 桌機維持目前那套較完整的 desktop 視覺
+
+### 目前寬度還在做什麼
+
+螢幕寬度現在主要只管：
+
+- 欄位排版
+- nav 收合
+- hero / cards 的欄數
+- 字級與間距
+
+也就是說：
+
+- `width` 主要負責 layout
+- `effects profile` 主要負責視覺特效強度
+
+### 相關檔案
+
+- [index.html](C:/Users/User/Desktop/Blog/index.html)
+  - 在 `<head>` 很早就先寫入 `data-effects-profile`
+- [app.js](C:/Users/User/Desktop/Blog/app.js)
+  - JS 互動邏輯跟這個 profile 同步
+- [style.css](C:/Users/User/Desktop/Blog/style.css)
+  - `html[data-effects-profile=\"touch\"]` 是手機 / 平板的專用效果層
+
+### 之後如果你要改手機 / 平板質感，請改哪裡
+
+不要直接去改桌機 hero 的主效果。
+
+請優先改：
+
+- [style.css](C:/Users/User/Desktop/Blog/style.css)
+  - 檔尾的 `Effects Profile: Touch`
+
+這樣才能維持：
+
+- 桌機版不被碰壞
+- 手機 / 平板單獨微調
+- 不再出現「手機好了、平板又炸」這種互相打架
+
+---
+
 ## 19. branch 到底要不要管
 
 大多數情況下：

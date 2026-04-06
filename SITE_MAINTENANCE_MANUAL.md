@@ -720,6 +720,120 @@ git push origin main
 
 ---
 
+## 19. 手機 / 平板 / 電腦的視覺現在怎麼分
+
+現在網站前台不是單看螢幕寬度，也不是看比例去決定效果。
+
+它現在用的是一套裝置效果 profile：
+
+- `desktop`
+- `touch`
+- `reduced`
+
+### 實際判定邏輯
+
+#### `reduced`
+
+如果使用者系統開了：
+
+```text
+prefers-reduced-motion: reduce
+```
+
+就直接走 `reduced`。
+
+#### `touch`
+
+如果裝置符合：
+
+```text
+(hover: none) and (pointer: coarse)
+```
+
+就走 `touch`。
+
+這通常代表：
+
+- 手機
+- 平板
+- 以觸控為主的裝置
+
+#### `desktop`
+
+其他情況才走 `desktop`。
+
+### 你要怎麼理解這件事
+
+重點不是「平板寬度多大」，而是：
+
+- 這台裝置主要怎麼操作
+- 它是不是觸控為主
+- 它是不是要求低動態
+
+所以 iPad 就算很寬，也不一定會吃桌機那套最重的效果。
+
+這是故意的，因為之前問題就是：
+
+- 桌機的亮霧 / glow / orbit / blur 在平板上太容易發白
+- 看起來不清楚
+- 有時還會因為快取或覆寫順序，出現「手機好了、平板又壞」的 bug
+
+### 現在寬度還有沒有用
+
+有，但主要用在 layout：
+
+- 欄數
+- nav 收合
+- Hero 排版
+- 字級與間距
+
+也就是：
+
+- 寬度管排版
+- effects profile 管效果
+
+### 如果之後你想改手機 / 平板效果，應該改哪裡
+
+先看這三個檔案：
+
+- [index.html](C:/Users/User/Desktop/Blog/index.html)
+- [app.js](C:/Users/User/Desktop/Blog/app.js)
+- [style.css](C:/Users/User/Desktop/Blog/style.css)
+
+其中最重要的是：
+
+- [style.css](C:/Users/User/Desktop/Blog/style.css)
+  - 檔尾的 `Effects Profile: Touch`
+
+### 非常重要
+
+如果你只是想讓手機 / 平板更高級、更有動態感：
+
+**不要直接回去改桌機那套最亮的 glow。**
+
+請優先在 `touch` profile 裡調：
+
+- 更暗的金色 / 藍灰 ambient
+- 輕量背景動畫
+- 卡片陰影與層次
+- 只用 `transform / opacity / background-position` 的慢動畫
+
+不要優先加回這些高風險東西：
+
+- 大面積白色 glow
+- 很重的 blur 疊層
+- 會蓋滿全頁的 hero haze
+- touch 裝置上的粒子 canvas
+
+這樣才能兼顧：
+
+- 能看
+- 不發白
+- 不容易出 bug
+- 還保留高級感
+
+---
+
 ## 19. branch 到底要不要管
 
 大多數情況下：
