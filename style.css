@@ -2002,10 +2002,7 @@ main,
 
 @media (max-width: 1040px){
   body::after{
-    inset:0 10px 10px;
-    border-radius:0 0 22px 22px;
-    border-color:rgba(255,255,255,.02);
-    border-top:none;
+    display:none;
   }
 
   .hero{
@@ -3185,18 +3182,13 @@ main,
 
 /* ── Mobile Luxe Restore ------------------------------------------------- */
 @media (max-width: 760px){
-  .nav{
-    background:rgba(8,11,18,.62);
+  .nav-inner{
+    background:rgba(8,11,18,.88);
     backdrop-filter:blur(22px) saturate(1.1);
     -webkit-backdrop-filter:blur(22px) saturate(1.1);
-    border-bottom-color:rgba(255,255,255,.04);
-  }
-
-  .nav-inner{
-    background:none;
-    backdrop-filter:none;
-    -webkit-backdrop-filter:none;
-    box-shadow:none;
+    box-shadow:
+      0 16px 44px rgba(0,0,0,.28),
+      inset 0 1px 0 rgba(255,255,255,.04);
   }
 
   .nav-inner::after{
@@ -3365,37 +3357,11 @@ main,
       radial-gradient(circle at 84% 3%, rgba(160,180,210,.06), transparent 20%),
       radial-gradient(ellipse at 56% 48%, rgba(217,177,111,.03), transparent 28%),
       linear-gradient(180deg, #0a0d15 0%, #090b11 32%, #07090f 100%);
+    background-color:#090b11;
   }
 
   body::after{
     border-color:rgba(255,255,255,.02);
-  }
-
-  main{
-    background:
-      radial-gradient(circle at 16% 8%, rgba(217,177,111,.08), transparent 20%),
-      radial-gradient(circle at 84% 2%, rgba(140,160,190,.04), transparent 16%),
-      radial-gradient(ellipse at 50% 40%, rgba(217,177,111,.02), transparent 26%),
-      linear-gradient(180deg, transparent, transparent);
-  }
-
-  .hero{
-    background:
-      radial-gradient(circle at 18% 14%, rgba(217,177,111,.06), transparent 18%),
-      radial-gradient(circle at 80% 10%, rgba(140,160,190,.03), transparent 16%),
-      linear-gradient(180deg, transparent, transparent);
-  }
-
-  .nav{
-    background:rgba(9,11,17,.52);
-    backdrop-filter:blur(22px) saturate(1.08);
-    -webkit-backdrop-filter:blur(22px) saturate(1.08);
-  }
-
-  .nav-inner{
-    box-shadow:none;
-    backdrop-filter:none;
-    -webkit-backdrop-filter:none;
   }
 
   .hero-logo{
@@ -3407,6 +3373,11 @@ main,
       0 34px 82px rgba(0,0,0,.32),
       0 0 36px rgba(217,177,111,.05),
       inset 0 1px 0 rgba(255,255,255,.06);
+    animation:tabletCardFloat 14s ease-in-out infinite alternate;
+  }
+
+  .hero-logo::after{
+    opacity:.55;
   }
 
   .hero-panel,
@@ -3428,8 +3399,6 @@ main,
       0 26px 66px rgba(0,0,0,.26),
       inset 0 1px 0 rgba(255,255,255,.05),
       0 0 0 .5px rgba(255,255,255,.02);
-    backdrop-filter:blur(8px);
-    -webkit-backdrop-filter:blur(8px);
   }
 
   .hero-panel-item,
@@ -3469,52 +3438,25 @@ main,
   }
 
   /* ── Tablet Glass Card Shimmer ── */
-  .hero-panel::before,
-  .blog-spotlight::after{
+  .hero-panel{
+    position:relative;
+    overflow:hidden;
+  }
+
+  .hero-panel::before{
     content:"";
     position:absolute;
     top:0;
     left:-30%;
     width:24%;
     height:100%;
-    background:linear-gradient(90deg, transparent, rgba(255,255,255,.08), transparent);
+    background:linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent);
     transform:skewX(-18deg);
     animation:luxeSweep 14s ease-in-out infinite;
     pointer-events:none;
     z-index:1;
   }
 
-  .hero-panel{
-    position:relative;
-    overflow:hidden;
-  }
-
-  .blog-spotlight{
-    position:relative;
-    overflow:hidden;
-  }
-
-  /* ── Tablet Hero Title Gold Gradient ── */
-  .hero-title-anim .gold{
-    background:linear-gradient(90deg, #f2d8ac, var(--silver), var(--gold), #f2d8ac);
-    background-size:300% 100%;
-    -webkit-background-clip:text;
-    background-clip:text;
-    color:transparent;
-    -webkit-text-fill-color:transparent;
-    animation:flowGold 8s ease-in-out infinite;
-  }
-
-  /* ── Tablet Logo Float ── */
-  .hero-logo{
-    animation:tabletCardFloat 14s ease-in-out infinite alternate;
-  }
-
-  .hero-logo::after{
-    opacity:.55;
-  }
-
-  /* ── Tablet Writing Feature Glow ── */
   .writing-feature-card::after{
     opacity:.5;
   }
@@ -3551,12 +3493,7 @@ main,
   }
 
   body::after{
-    display:block;
-    inset:10px;
-    border-radius:26px;
-    border-color:rgba(255,255,255,.035);
-    background:none;
-    opacity:.7;
+    display:none;
   }
 
   .site-orbit{
@@ -3584,23 +3521,11 @@ main,
     display:none;
   }
 
-  main{
-    background:
-      radial-gradient(circle at 16% 6%, rgba(217,177,111,.08), transparent 22%),
-      radial-gradient(circle at 84% 2%, rgba(128,146,173,.04), transparent 16%),
-      radial-gradient(ellipse at 60% 42%, rgba(217,177,111,.02), transparent 28%),
-      linear-gradient(180deg, transparent, transparent);
-  }
-
   .hero{
     position:relative;
     isolation:isolate;
     min-height:auto;
     padding:52px 0 42px;
-    background:
-      radial-gradient(circle at 18% 14%, rgba(217,177,111,.06), transparent 20%),
-      radial-gradient(circle at 78% 8%, rgba(129,147,176,.03), transparent 16%),
-      linear-gradient(180deg, transparent, transparent);
   }
 
   .hero::before{
@@ -3745,17 +3670,7 @@ html[data-effects-profile="touch"] body::before{
 }
 
 html[data-effects-profile="touch"] body::after{
-  display:block !important;
-  content:"";
-  position:fixed;
-  inset:0 14px 14px;
-  z-index:-1;
-  pointer-events:none;
-  border-radius:0 0 34px 34px;
-  border:1px solid rgba(255,255,255,.02);
-  border-top:none;
-  background:none;
-  opacity:.4;
+  display:none !important;
 }
 
 html[data-effects-profile="touch"] .site-orbit{
@@ -3790,36 +3705,31 @@ html[data-effects-profile="touch"] main{
     radial-gradient(circle at 16% 8%, rgba(217,177,111,.08), transparent 20%),
     radial-gradient(circle at 84% 2%, rgba(128,146,173,.04), transparent 16%),
     radial-gradient(circle at 78% 34%, rgba(217,177,111,.03), transparent 18%),
-    linear-gradient(180deg, transparent, transparent);
+    linear-gradient(180deg, #090d15 0%, #070a12 52%, #05070d 100%);
 }
 
 html[data-effects-profile="touch"] .footer{
   background:
-    radial-gradient(circle at 50% 0%, rgba(217,177,111,.03), transparent 26%),
-    linear-gradient(180deg, transparent, rgba(5,7,13,.4));
-}
-
-html[data-effects-profile="touch"] .nav{
-  background:rgba(9,12,18,.55);
-  backdrop-filter:blur(22px) saturate(1.08);
-  -webkit-backdrop-filter:blur(22px) saturate(1.08);
-  border-bottom-color:rgba(255,255,255,.04);
+    radial-gradient(circle at 50% 0%, rgba(217,177,111,.04), transparent 26%),
+    linear-gradient(180deg, #070a12 0%, #05070d 100%);
 }
 
 html[data-effects-profile="touch"] .nav-inner{
-  background:none;
-  box-shadow:none;
-  backdrop-filter:none;
-  -webkit-backdrop-filter:none;
+  background:rgba(10,14,22,.88);
+  box-shadow:
+    0 20px 44px rgba(0,0,0,.24),
+    inset 0 1px 0 rgba(255,255,255,.04);
+  backdrop-filter:blur(18px) saturate(1.05);
+  -webkit-backdrop-filter:blur(18px) saturate(1.05);
 }
 
 html[data-effects-profile="touch"] .hero{
   position:relative;
   isolation:isolate;
   background:
-    radial-gradient(circle at 18% 14%, rgba(217,177,111,.06), transparent 18%),
-    radial-gradient(circle at 78% 8%, rgba(129,147,176,.04), transparent 16%),
-    linear-gradient(180deg, transparent, transparent);
+    radial-gradient(circle at 18% 14%, rgba(217,177,111,.08), transparent 18%),
+    radial-gradient(circle at 78% 8%, rgba(129,147,176,.06), transparent 16%),
+    linear-gradient(180deg, rgba(10,14,22,.98), rgba(7,10,18,.98));
 }
 
 html[data-effects-profile="touch"] .hero::before{
