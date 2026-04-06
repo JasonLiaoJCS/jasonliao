@@ -3554,12 +3554,11 @@ html[data-effects-profile="touch"] body::before{
   inset:-12%;
   z-index:-2;
   pointer-events:none;
-  opacity:.82;
+  opacity:.58;
   background:
-    radial-gradient(circle at 14% 18%, rgba(217,177,111,.14), transparent 22%),
-    radial-gradient(circle at 84% 8%, rgba(124,145,176,.11), transparent 20%),
-    radial-gradient(circle at 70% 76%, rgba(217,177,111,.08), transparent 24%),
-    radial-gradient(circle at 30% 60%, rgba(255,255,255,.016), transparent 18%);
+    radial-gradient(circle at 14% 18%, rgba(217,177,111,.09), transparent 22%),
+    radial-gradient(circle at 84% 8%, rgba(124,145,176,.07), transparent 20%),
+    radial-gradient(circle at 70% 76%, rgba(217,177,111,.05), transparent 24%);
   animation:touchAmbientFloat 18s ease-in-out infinite alternate;
   will-change:transform, opacity;
 }
@@ -3573,10 +3572,8 @@ html[data-effects-profile="touch"] body::after{
   pointer-events:none;
   border-radius:34px;
   border:1px solid rgba(255,255,255,.04);
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.014), transparent 18%, transparent 82%, rgba(255,255,255,.012)),
-    radial-gradient(circle at 50% 0%, rgba(255,255,255,.012), transparent 42%);
-  opacity:.88;
+  background:none;
+  opacity:.6;
 }
 
 html[data-effects-profile="touch"] .site-orbit{
@@ -3612,6 +3609,12 @@ html[data-effects-profile="touch"] main{
     radial-gradient(circle at 84% 0%, rgba(128,146,173,.06), transparent 16%),
     radial-gradient(circle at 78% 34%, rgba(217,177,111,.04), transparent 18%),
     linear-gradient(180deg, #090d15 0%, #070a12 52%, #05070d 100%);
+}
+
+html[data-effects-profile="touch"] .footer{
+  background:
+    radial-gradient(circle at 50% 0%, rgba(217,177,111,.04), transparent 26%),
+    linear-gradient(180deg, #070a12 0%, #05070d 100%);
 }
 
 html[data-effects-profile="touch"] .nav-inner{
