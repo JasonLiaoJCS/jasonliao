@@ -172,6 +172,7 @@ const i18nMetaOriginal = {};
 let i18nInitialized = false;
 const PRIVATE_IDLE_TIMEOUT_MS = 10 * 60 * 1000;
 const PRIVATE_ACTIVITY_THROTTLE_MS = 1000;
+const PRIVATE_SESSION_SYNC_RETRY_DELAYS = [0, 120, 260, 520];
 const privateMode = {
   unlocked: false,
   payload: null,
@@ -512,6 +513,12 @@ function refreshPrivateUI(){
   renderCmsCollections();
 }
 
+function delay(ms){
+  return new Promise(resolve => {
+    window.setTimeout(resolve, ms);
+  });
+}
+
 async function fetchCmsJson(url, options = {}){
   let response;
   try {
@@ -540,12 +547,81 @@ async function fetchCmsJson(url, options = {}){
   return data;
 }
 
+function isAcquaintanceSessionRequiredError(error){
+  return error?.code === 'Acquaintance session required' || error?.message === 'Acquaintance session required';
+}
+
+async function ensureCmsBootstrapReadyForUnlock(){
+  if(cmsState.bootstrapPromise){
+    await cmsState.bootstrapPromise.catch(() => null);
+    return;
+  }
+
+  if(cmsState.backendEnabled || cmsState.serverAcquaintanceEnabled){
+    return;
+  }
+
+  await loadCmsBootstrap().catch(() => null);
+}
+
+async function waitForAcquaintanceSession(){
+  for(let index = 0; index < PRIVATE_SESSION_SYNC_RETRY_DELAYS.length; index += 1){
+    const retryDelay = PRIVATE_SESSION_SYNC_RETRY_DELAYS[index];
+    if(retryDelay > 0){
+      await delay(retryDelay);
+    }
+
+    try {
+      const session = await fetchCmsJson('/api/acquaintance/session', {
+        cache: 'no-store',
+      });
+      if(session?.authenticated){
+        return true;
+      }
+    } catch (error){
+      if(index === PRIVATE_SESSION_SYNC_RETRY_DELAYS.length - 1){
+        throw error;
+      }
+    }
+  }
+
+  return false;
+}
+
+async function fetchAcquaintanceBootstrapWithRetry(){
+  let lastError = null;
+
+  for(let index = 0; index < PRIVATE_SESSION_SYNC_RETRY_DELAYS.length; index += 1){
+    const retryDelay = PRIVATE_SESSION_SYNC_RETRY_DELAYS[index];
+    if(retryDelay > 0){
+      await delay(retryDelay);
+    }
+
+    try {
+      return await fetchCmsJson('/api/acquaintance/bootstrap', {
+        cache: 'no-store',
+      });
+    } catch (error){
+      lastError = error;
+      if(!isAcquaintanceSessionRequiredError(error) || index === PRIVATE_SESSION_SYNC_RETRY_DELAYS.length - 1){
+        throw error;
+      }
+    }
+  }
+
+  throw lastError || new Error('cms-request-failed');
+}
+
 function getPrivateUnlockErrorMessage(error){
   if(isLegacyGithubPagesOrigin()){
     return PRIVATE_UI_COPY[currentLang].modalLegacyRedirect;
   }
 
-  if(error?.code === 'server-unavailable' || error?.code === 'cms-unavailable'){
+  if(
+    error?.code === 'server-unavailable'
+    || error?.code === 'cms-unavailable'
+    || isAcquaintanceSessionRequiredError(error)
+  ){
     return PRIVATE_UI_COPY[currentLang].modalServiceUnavailable;
   }
 
@@ -945,6 +1021,8 @@ async function decryptPrivatePayload(password){
 }
 
 async function tryServerPrivateUnlock(password){
+  await ensureCmsBootstrapReadyForUnlock();
+
   if(!cmsState.serverAcquaintanceEnabled){
     const error = new Error('server-unavailable');
     error.code = 'server-unavailable';
@@ -954,10 +1032,13 @@ async function tryServerPrivateUnlock(password){
   await fetchCmsJson('/api/acquaintance/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    cache: 'no-store',
     body: JSON.stringify({ password }),
   });
 
-  const payload = await fetchCmsJson('/api/acquaintance/bootstrap');
+  await waitForAcquaintanceSession().catch(() => false);
+
+  const payload = await fetchAcquaintanceBootstrapWithRetry();
   cmsState.privateUpdates = payload.updates || [];
   cmsState.privatePosts = payload.posts || [];
   cmsState.featuredPostId = payload.featuredPostId || cmsState.featuredPostId || '';
