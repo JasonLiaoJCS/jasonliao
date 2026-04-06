@@ -16,7 +16,10 @@
 }
 
 *{box-sizing:border-box}
-html{scroll-behavior:smooth}
+html{
+  scroll-behavior:smooth;
+  background:#05070d;
+}
 body{
   margin:0;
   font-family:"Inter","Noto Sans TC",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
@@ -3623,6 +3626,11 @@ html[data-effects-profile="touch"] body{
     radial-gradient(circle at 82% 0%, rgba(128,146,173,.07), transparent 17%),
     radial-gradient(circle at 76% 36%, rgba(217,177,111,.05), transparent 20%),
     linear-gradient(180deg, #0b0e16 0%, #080b12 42%, #06080f 100%) !important;
+  background-color:#06080f !important;
+}
+
+html[data-effects-profile="touch"]{
+  background:#05070d;
 }
 
 html[data-effects-profile="touch"] .hero-glow,
@@ -3633,9 +3641,18 @@ html[data-effects-profile="touch"] .news-bar::before{
   display:none !important;
 }
 
-/* Keep subtle glows on touch for premium feel */
+/* Keep a dark transition on touch to avoid section seams */
 html[data-effects-profile="touch"] .hero::after{
-  opacity:.3;
+  display:block !important;
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:-1px;
+  height:148px;
+  pointer-events:none;
+  background:linear-gradient(180deg, rgba(6,9,15,0) 0%, rgba(6,9,15,.92) 100%);
+  opacity:.92;
 }
 
 html[data-effects-profile="touch"] .project-card::after,
@@ -3706,6 +3723,11 @@ html[data-effects-profile="touch"] main{
     radial-gradient(circle at 84% 2%, rgba(128,146,173,.04), transparent 16%),
     radial-gradient(circle at 78% 34%, rgba(217,177,111,.03), transparent 18%),
     linear-gradient(180deg, #090d15 0%, #070a12 52%, #05070d 100%);
+}
+
+html[data-effects-profile="touch"] .nav{
+  padding-top:max(14px, env(safe-area-inset-top));
+  background:linear-gradient(180deg, rgba(5,7,12,.96) 0%, rgba(5,7,12,.74) 72%, rgba(5,7,12,0) 100%);
 }
 
 html[data-effects-profile="touch"] .footer{
@@ -3836,6 +3858,10 @@ html[data-effects-profile="touch"] .chip{
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.04),
     0 8px 18px rgba(0,0,0,.12);
+}
+
+html[data-effects-profile="touch"] .section + .section::before{
+  display:none;
 }
 
 html[data-effects-profile="touch"] .writing-feature-card::after{
