@@ -22,18 +22,138 @@ function renderLockedPage(slug){
     <link rel="stylesheet" href="/style.css">
     <style>
       body{min-height:100vh;display:grid;place-items:center}
-      .note-lock{width:min(640px, calc(100% - 40px));padding:36px;border-radius:28px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);box-shadow:0 24px 80px rgba(0,0,0,.28)}
+      .note-lock{
+        width:min(680px, calc(100% - 40px));
+        padding:36px;
+        border-radius:28px;
+        background:linear-gradient(180deg, rgba(18,22,34,.92), rgba(11,14,22,.96));
+        border:1px solid rgba(255,255,255,.08);
+        box-shadow:0 24px 80px rgba(0,0,0,.28);
+      }
       .note-lock .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}
+      .note-lock-form{
+        display:grid;
+        gap:14px;
+        margin-top:22px;
+      }
+      .note-lock-label{
+        font-size:.86rem;
+        letter-spacing:.08em;
+        text-transform:uppercase;
+        color:var(--gold-soft);
+      }
+      .note-lock-input-wrap{
+        position:relative;
+      }
+      .note-lock-input{
+        width:100%;
+        min-height:54px;
+        padding:0 18px;
+        border-radius:18px;
+        border:1px solid rgba(255,255,255,.11);
+        background:rgba(255,255,255,.04);
+        color:var(--text);
+        font:inherit;
+        outline:none;
+        transition:border-color .25s ease, background .25s ease, box-shadow .25s ease;
+      }
+      .note-lock-input:focus{
+        border-color:rgba(217,177,111,.35);
+        background:rgba(255,255,255,.06);
+        box-shadow:0 0 0 4px rgba(217,177,111,.08);
+      }
+      .note-lock-error{
+        min-height:1.4em;
+        margin:0;
+        color:#f3b7ac;
+      }
+      .note-lock-note{
+        margin-top:8px;
+      }
+      .note-lock-status{
+        min-height:1.4em;
+        margin:0;
+        color:#d8d0c4;
+      }
+      @media (max-width: 640px){
+        .note-lock{
+          padding:28px;
+        }
+      }
     </style>
   </head>
   <body>
     <main class="note-lock">
       <div class="eyebrow">Acquaintance Mode</div>
       <h1 style="font-size:clamp(2rem,4vw,3rem)">This note is available only after acquaintance access.</h1>
-      <p class="muted">The requested path <code>${escapeHtml(slug)}</code> is not public. Please return to the homepage and unlock Acquaintance Mode if you have access.</p>
-      <div class="actions">
-        <a class="btn btn-primary" href="/">Back to home</a>
-      </div>
+      <p class="muted">The requested path <code>${escapeHtml(slug)}</code> is not public. If you already have acquaintance access, you can unlock this note directly here and continue reading without going back to the homepage.</p>
+      <form class="note-lock-form" id="noteUnlockForm">
+        <label class="note-lock-label" for="noteUnlockPassword">Acquaintance Password</label>
+        <div class="note-lock-input-wrap">
+          <input class="note-lock-input" id="noteUnlockPassword" name="password" type="password" autocomplete="current-password" spellcheck="false" placeholder="Enter acquaintance password">
+        </div>
+        <p class="note-lock-error" id="noteUnlockError" aria-live="polite"></p>
+        <div class="actions">
+          <button class="btn btn-primary" id="noteUnlockSubmit" type="submit">Unlock this note</button>
+          <a class="btn" href="/">Back to home</a>
+        </div>
+        <p class="note-lock-status small" id="noteUnlockStatus" aria-live="polite"></p>
+      </form>
+      <p class="small muted note-lock-note">Successful unlock will refresh this page and open the note directly.</p>
+      <script>
+        (function () {
+          const form = document.getElementById('noteUnlockForm');
+          const passwordInput = document.getElementById('noteUnlockPassword');
+          const submitButton = document.getElementById('noteUnlockSubmit');
+          const errorEl = document.getElementById('noteUnlockError');
+          const statusEl = document.getElementById('noteUnlockStatus');
+          if(!form || !passwordInput || !submitButton || !errorEl || !statusEl){
+            return;
+          }
+
+          form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const password = passwordInput.value.trim();
+            errorEl.textContent = '';
+            statusEl.textContent = '';
+            if(!password){
+              errorEl.textContent = 'Please enter the acquaintance password.';
+              passwordInput.focus();
+              return;
+            }
+
+            submitButton.disabled = true;
+            submitButton.textContent = 'Unlocking...';
+            statusEl.textContent = 'Verifying acquaintance access...';
+
+            try {
+              const response = await fetch('/api/acquaintance/login', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password }),
+              });
+
+              if(!response.ok){
+                throw new Error(response.status === 401 ? 'invalid-password' : 'unlock-failed');
+              }
+
+              statusEl.textContent = 'Access granted. Opening note...';
+              window.location.reload();
+            } catch (error){
+              statusEl.textContent = '';
+              if(error.message === 'invalid-password'){
+                errorEl.textContent = 'Incorrect password. Please try again.';
+              } else {
+                errorEl.textContent = 'Unable to unlock this note right now. Please try again in a moment.';
+              }
+            } finally {
+              submitButton.disabled = false;
+              submitButton.textContent = 'Unlock this note';
+            }
+          });
+        })();
+      </script>
     </main>
   </body>
   </html>`;
