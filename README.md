@@ -1,979 +1,501 @@
-# Site Maintenance Manual
+# Jason Liao 個人網站
 
-這份文件是給「之後實際管理這個網站的人」看的。
+這個 repository 是 Jason Liao 個人網站的完整原始碼。
 
-它的目標不是解釋整個架構原理，而是讓你之後真的可以自己維護網站，不用每次都重新摸索。
+它不是單純的靜態單頁網站，而是一個混合式架構的專案，包含：
 
-它會回答這些最實際的問題：
+- 對外公開的個人網站前台
+- 隱藏的內容管理後台 `/studio/`
+- Cloudflare Pages Functions 後端路由
+- Cloudflare D1 資料庫
+- 受保護的熟客模式內容
 
-- 我平常到底去哪裡改東西
-- 我怎麼發文
-- 我怎麼改首頁文字
-- 我怎麼改熟客模式
-- 我怎麼改密碼
-- 我改壞了怎麼救
-- 哪些東西我不用管
-- 哪些東西我最好不要亂動
+正式網站：
 
-如果你想看整體架構原理，請看：
+- `https://jasonliao-pages.pages.dev/`
 
-- [HOW_THIS_SITE_WAS_BUILT.md](C:/Users/User/Desktop/Blog/HOW_THIS_SITE_WAS_BUILT.md)
+## 這個專案是什麼
 
----
+表面上看，這是一個用原生 HTML、CSS、JavaScript 製作的個人網站。
 
-## 1. 先記住最重要的分工
+實際上，它已經不只是靜態網站，而是「靜態前台 + 輕量 CMS + 權限控管 + 資料庫」的組合。
 
-### A. 改內容：去 Studio
+這個專案現在支援的事情包含：
 
-Studio 處理的是：
+- 不直接改 HTML 也能更新首頁文案
+- 透過後台管理首頁 updates
+- 發布新的 blog / notes
+- 控制文章是公開還是只限熟客模式可見
+- 管理較完整的私密個人資料與熟客模式照片
+
+這個 repository 刻意維持 framework-light 的方向。它沒有用 React、Vue 或大型前端框架，而是希望保留：
+
+- 前台載入快
+- 結構清楚
+- 容易維護
+- 程式行為容易直接追蹤
+
+同時再用 Cloudflare 補上後端能力。
+
+## 為什麼會長成這樣
+
+這個網站原本是靜態網站，而靜態網站有很多優點：
+
+- 簡單
+- 快
+- 穩定
+- 容易部署
+
+但純靜態網站不適合處理下面這些需求：
+
+- 登入後台
+- 權限驗證
+- 私密內容保護
+- CMS 發文
+- 可重置的內容管理流程
+
+所以現在的做法是保留靜態網站的前台優勢，再加上：
+
+- Cloudflare Pages Functions 作為後端 API
+- Cloudflare D1 作為資料儲存層
+- `/studio/` 作為後台操作介面
+
+這樣做的好處是：
+
+- 公開網站仍然輕量快速
+- 日常內容更新不需要每次改程式碼
+- 私密內容不需要直接塞在公開頁面裡
+- 專案仍然維持可讀性，不會變成很重的框架專案
+
+## 主要功能
+
+- 質感導向的個人網站首頁
+- 響應式設計，支援桌機、平板、手機
+- 中英雙語切換
+- 首頁個人介紹、研究背景、Writing、Contact 等區塊
+- CMS 管理的首頁最新動態
+- CMS 管理的文章 / notes
+- 熟客模式解鎖與自動鎖定
+- Studio 後台登入與內容管理
+- Markdown 編輯器與即時預覽
+- 本機草稿 autosave
+- 動態 `/notes/<slug>` 文章路由
+- 自動產生正式站的 sitemap
+- 與舊版 `posts/*.html` 靜態文章相容
+
+## 整體架構
+
+```text
+公開訪客
+  -> index.html + style.css + app.js
+  -> app.js 向 /api/public/bootstrap 取資料
+  -> Cloudflare Pages Functions
+  -> Cloudflare D1
+
+如果公開 CMS 資料暫時失敗
+  -> 前台回退到內建靜態內容
+
+管理者
+  -> /studio/
+  -> /api/admin/*
+  -> Cloudflare D1
+
+熟客模式使用者
+  -> /api/acquaintance/login
+  -> 簽章 session cookie
+  -> /api/acquaintance/bootstrap
+  -> 取得受保護資料
+
+文章頁
+  -> /notes/<slug>
+  -> Function 判斷文章是否公開、是否需要熟客 session
+```
+
+可以把這個系統理解成四層：
+
+1. 公開前台
+2. Studio 後台前端
+3. Cloudflare Functions 後端
+4. D1 資料層
+
+## 公開前台怎麼運作
+
+公開前台的核心檔案是：
+
+- `index.html`
+- `style.css`
+- `app.js`
+
+其中 `app.js` 是整個前台的主控制程式，負責：
+
+- 中英切換
+- 首頁 CMS 資料讀取
+- updates 渲染
+- post / featured post 渲染
+- 熟客模式解鎖與自動鎖定
+- 受保護欄位切換
+- 視覺特效與互動效果
+
+這個專案一個很重要的設計是 fallback。
+
+前台不會假設後端永遠正常。它會先嘗試讀 `/api/public/bootstrap`，如果拿不到資料，仍然可以回退到頁面內建的靜態內容。這樣就算 CMS 或 API 一時有問題，公開首頁也不會整個失效。
+
+## Studio 後台
+
+後台入口是：
+
+- `/studio/`
+
+相關檔案：
+
+- `studio/index.html`
+- `studio/studio.js`
+- `studio/studio.css`
+- `studio/studio-fx.js`
+
+Studio 是這個網站日常內容管理的主介面，主要功能包括：
+
+- 管理員登入
+- Dashboard 總覽
+- 公開首頁文案編輯
+- 首頁 updates 管理
+- 文章新增 / 編輯 / 刪除
+- 熟客模式資料編輯
+- reset 與 default baseline 流程
+- 草稿預覽
+- 本機 autosave
+
+文章編輯器目前是 Markdown-first，而不是完整 WYSIWYG。這樣的好處是：
+
+- 儲存格式比較乾淨
+- 容易保留內容結構
+- 仍然可以提供預覽與圖片插入
+- 對個人網站規模來說夠用而且穩定
+
+## 公開內容、私密內容、熟客模式
+
+這個網站的內容不是全部混在一起，而是有分層次。
+
+### 公開內容
+
+公開內容任何人都能看，必要時也能被搜尋引擎索引。
+
+例如：
 
 - 首頁公開文案
-- 熟客模式資料
-- 最新 updates
-- CMS 管理的 posts / notes
+- 公開 updates
+- 公開且已發布的 notes
 
-### B. 改程式：才回 GitHub
+### 熟客模式內容
 
-只有你要改下面這些東西時，才要碰 GitHub / 本地 repo：
+熟客模式解鎖後，才會顯示較完整的內容。
 
-- 網站排版
+例如：
+
+- 更完整的個人背景
+- 聯絡方式
+- 熟客模式照片
+- 熟客限定 updates
+- 熟客限定 notes
+
+這不是單純把所有資料先塞進前台再用 CSS 藏起來，而是透過後端 API 控制。沒有有效熟客 session 的情況下，前台拿不到那些受保護的資料。
+
+## 文章系統
+
+這個 repository 現在有兩條文章路徑。
+
+### 1. CMS managed posts
+
+這是目前的主要發文方式。
+
+特性：
+
+- 存在 Cloudflare D1
+- 透過 Studio 編輯
+- 正式網址是 `/notes/<slug>`
+- 可以設定為 `public` 或 `acquaintance`
+- 公開且已發布的文章會自動進正式站 sitemap
+
+### 2. 舊版靜態文章
+
+這些是早期保留的手寫 HTML 文章：
+
+- `posts/reason-passion.html`
+- `posts/math-robotics.html`
+- `posts/baseball-engineering.html`
+
+它們現在仍然有價值，因為：
+
+- 可以保留早期文章
+- 可以當靜態 fallback
+- 可以當舊內容結構的參考
+
+但如果是新的文章內容，現在比較建議走 Studio / CMS 路線。
+
+## 資料模型
+
+D1 schema 定義在：
+
+- `cloudflare/schema.sql`
+
+目前主要資料表有：
+
+- `cms_documents`
+  - 存 document 型態內容，例如公開文案、熟客資料、featured post 設定
+- `cms_updates`
+  - 存首頁 updates，包含 visibility、排序、日期與中英文字
+- `cms_posts`
+  - 存文章資料，包含 slug、status、visibility、雙語 title / excerpt / content、tags、cover image
+
+後端資料層實作在：
+
+- `functions/_lib/db.js`
+
+它負責：
+
+- 確保 schema 存在
+- 補齊預設資料
+- documents 讀寫
+- updates 全量替換
+- posts 查詢 / 寫入 / 刪除
+- featured post 設定
+- public / admin / acquaintance bootstrap payload 組裝
+
+## 安全與隱私設計
+
+這個網站的安全模型不是大型企業級系統，但也不是假的保護。
+
+目前重點包括：
+
+- Studio 管理員登入使用簽章 cookie
+- 熟客模式也有獨立的 session cookie
+- `/studio/*` 設為 `no-store`、`noindex`
+- `/api/*` 設為 `no-store`、`noindex`
+- 沒有熟客 session 時，熟客 bootstrap API 直接回 `401`
+- acquaintance-only 文章會在 `/notes/[slug].js` 裡做 server-side gate
+
+相關 auth 邏輯在：
+
+- `functions/_lib/auth.js`
+
+它負責：
+
+- 密碼驗證
+- PBKDF2 hash 相容處理
+- cookie parsing / serialization
+- session token 簽章與驗證
+- admin 帳密驗證
+- acquaintance password 驗證
+
+另外，repo 裡仍然保留 `private-data.js`，但那已經不是正式站現在主要使用的私密資料來源。
+
+## 主要路由
+
+| 路由 | 功能 |
+| --- | --- |
+| `/` | 公開首頁 |
+| `/studio/` | 管理後台 |
+| `/api/public/bootstrap` | 公開前台 CMS bootstrap |
+| `/api/admin/login` | 管理員登入 |
+| `/api/admin/bootstrap` | Studio 初始化資料 |
+| `/api/admin/translations` | 儲存公開首頁文案 |
+| `/api/admin/updates` | 儲存首頁 updates |
+| `/api/admin/posts` | 管理 CMS 文章 |
+| `/api/admin/private-profile` | 儲存熟客資料 |
+| `/api/admin/private-profile-default` | 讀寫熟客 reset default |
+| `/api/admin/reset` | 重置部分或全部 CMS 內容 |
+| `/api/acquaintance/login` | 熟客模式登入 |
+| `/api/acquaintance/bootstrap` | 熟客模式資料 |
+| `/notes/<slug>` | 動態文章頁 |
+| `/posts/*.html` | 舊版靜態文章頁 |
+| `/sitemap.xml` | 正式站動態 sitemap |
+| `/feed.xml` | 靜態 RSS feed |
+
+## 專案結構
+
+```text
+.
+├── index.html
+├── style.css
+├── app.js
+├── 404.html
+├── feed.xml
+├── sitemap.xml
+├── robots.txt
+├── _headers
+├── wrangler.toml
+├── assets/
+├── cloudflare/
+├── functions/
+├── posts/
+├── private/
+├── photo/
+├── scripts/
+├── shared/
+└── studio/
+```
+
+更細一點來看：
+
+- `index.html`
+  - 公開首頁 HTML 結構與 SEO metadata
+- `style.css`
+  - 全站樣式，包含首頁、文章頁、private modal、RWD 與 effect profiles
+- `app.js`
+  - 前台互動、CMS 載入、i18n、熟客模式、動畫
+- `studio/`
+  - 後台 UI 與後台互動邏輯
+- `functions/`
+  - Cloudflare Pages Functions 路由與共用後端函式
+- `shared/markdown.mjs`
+  - Markdown 與 rich content renderer，Studio 與動態文章頁共用
+- `posts/`
+  - 舊版靜態文章
+- `assets/`
+  - logo、favicon、OG 圖等資產
+- `cloudflare/schema.sql`
+  - D1 schema 定義
+- `scripts/`
+  - 密碼與私密資料同步的輔助腳本
+- `private/`
+  - 本地私密 seed 資料
+- `photo/`
+  - 本地原始照片
+
+## 本地開發
+
+這個網站的前台 shell 沒有傳統 build step。
+
+所以本地開發通常有兩種情境：
+
+### 只看前台畫面
+
+如果你只是想調整：
+
+- 首頁版面
 - CSS
 - 動畫
-- 前端邏輯
-- Studio 功能
-- 後端 API
-- 資料結構
+- 靜態文章頁
 
-### 最重要的一句話
+那用任何簡單的靜態伺服器就夠了。
 
-**日常維護看 Studio，工程級修改才看 GitHub。**
+### 要跑完整 CMS / API
 
----
+如果你需要測試：
 
-## 2. 你平常最常用的網址
+- `/api/*`
+- `/studio/`
+- D1 內容
+- 動態 `/notes/<slug>`
 
-### Studio 後台
+那就需要 Cloudflare Pages 的本地開發環境，而且要有：
 
-```text
-https://jasonliao-pages.pages.dev/studio/
-```
+- 正確的 Cloudflare 設定
+- `CMS_DB` binding
+- 必要 secrets
 
-### Cloudflare 專案
+## 部署方式
 
-```text
-Cloudflare Dashboard -> Workers & Pages -> jasonliao-pages
-```
+這個專案的正式部署目標是 Cloudflare Pages。
 
-### GitHub repo
+部署時的核心組件包括：
 
-```text
-https://github.com/JasonLiaoJCS/jasonliao
-```
+- `wrangler.toml`
+- `cloudflare/schema.sql`
+- `_headers`
+- Cloudflare Pages project 設定
+- D1 database binding
+- Cloudflare secrets
 
----
+如果要部署出完整的 CMS 版本，需要：
 
-## 3. Studio 現在怎麼登入
+1. 建立 Cloudflare Pages 專案並接上這個 repo
+2. 建立 D1 database
+3. 將 D1 綁定成 `CMS_DB`
+4. 把 `cloudflare/schema.sql` 套用到資料庫
+5. 在 Cloudflare 設定必要 secrets
 
-目前後台登入用的是 Cloudflare secrets。
-
-你平常最重要的是這三個：
+主要 secrets：
 
 - `ADMIN_USERNAME`
 - `ADMIN_PASSWORD`
 - `ADMIN_SESSION_SECRET`
+- `ACQUAINTANCE_PASSWORD`
 
-### 目前建議的理解方式
+目前也相容某些 hash-based secret 流程，但對現階段來說，直接用 plain secret 是比較直覺、也比較穩定的做法。
 
-- Username：你自己在 Cloudflare 設的帳號名
-- Password：你自己在 Cloudflare 設的原始密碼
+## 圖片與媒體資料怎麼存
 
-### 你現在應該怎麼想
+目前這個專案沒有另外接 R2 或外部圖床來存 CMS 內容圖片。
 
-以後登入後台，請把它理解成「登入網站管理員帳號」，不是去處理 hash。
+現在的做法是：
 
-也就是說，日常使用時：
+- 文章封面跟著文章資料走
+- 文章內嵌圖片跟著文章內容流程走
+- 熟客模式照片跟著 private profile document 走
 
-- 你輸入的是普通密碼
-- 不是 `pbkdf2_sha256$...`
+這樣做的好處是架構簡單，但也代表這套內容模型比較適合個人網站規模，而不是大型媒體型站點。
 
----
+## SEO 與索引策略
 
-## 4. Studio 的登入保護現在是什麼行為
+這個專案同時有靜態和動態的 SEO 結構。
 
-目前 Studio 這邊的保護邏輯是：
+靜態檔案包含：
 
-- 新開一個 Studio 分頁，預設要重新登入
-- 重開瀏覽器後，預設要重新登入
-- 閒置 10 分鐘會自動登出
-- Studio 頁面與 API 不應被搜尋引擎收錄
+- `robots.txt`
+- fallback `sitemap.xml`
+- `feed.xml`
 
-### 你要怎麼理解它
+正式站則有動態行為：
 
-它不是像某些社群平台那樣永遠幫你記住登入狀態。
-
-你可以把它理解成：
-
-- 一次工作階段登入
-- 過一陣子或重新開頁，就再登入一次
-
-這對你的隱私與後台安全是比較好的。
-
----
-
-## 5. 如果我改了 Cloudflare Secret，但還是登不進去，先怎麼查
-
-先不要慌，照這個順序查：
-
-1. 確認你改的是正確專案：`jasonliao-pages`
-2. 確認你改的是 `ADMIN_PASSWORD`，不是別的欄位
-3. 去 Cloudflare `Deployments` 看最新部署是不是 `Success`
-4. 開無痕視窗
-5. 打開 `/studio/`
-6. 按 `Ctrl + F5`
-7. 再試一次
-
-### 最常見的錯誤不是密碼本身，而是：
-
-- 改完 secret 沒重新部署
-- 看的是舊 deployment
-- 瀏覽器快取還沒刷新
-
----
-
-## 6. Secret 有一個很重要的規則
-
-Cloudflare 的 Secret 一旦存進去，原始值通常不會再顯示。
-
-也就是說：
-
-- 你看得到名稱
-- 你看不到內容
-- 如果忘了，只能直接覆蓋成新的
-
-所以之後請習慣這件事：
-
-### 忘記密碼或不確定密碼時，做法不是「查出來」
-
-而是：
-
-1. 直接把那個 secret 改成新值
-2. 重新部署
-3. 用新值登入
-
----
-
-## 7. Studio 裡每一區是做什麼的
-
-### 7.1 Dashboard
-
-用途：
-
-- 看目前有幾筆 updates
-- 看有幾篇 managed posts
-- 看熟客資料是不是已經設好
-
-它主要是總覽，不是主要編輯區。
-
-### 7.2 Public Copy
-
-用途：
-
-- 改首頁公開版文案
-
-通常可改的包括：
-
-- Hero 自介
-- About 文案
-- Profile Snapshot 幾段敘述
-- Focus / 課題區塊
-- Contact 文案
-- Footer motto
-
-改完按：
-
-```text
-Save Public Copy
-```
-
-### 7.3 Updates
-
-用途：
-
-- 管理首頁最近動態
-
-你可以：
-
-- 新增 update
-- 排順序
-- 設定公開 / 熟客可見
-- 編輯中英文
-- 刪除某筆
-
-改完按：
-
-```text
-Save Updates
-```
-
-### 7.4 Posts
-
-用途：
-
-- 發 blog / notes
-
-主要欄位有：
-
-- `Slug`
-- `Visibility`
-- `Status`
-- `Publish Time（自動）`
-- 中文標題
-- 英文標題
-- 中文摘要
-- 英文摘要
-- 中文內容
-- 英文內容
-- `Tags`
-- `Cover Image`
-- `Cover Alt`
-
-這一區現在另外有幾個很實用的工作流功能：
-
-- `Add Photos`
-  - 支援 `PNG / JPG / JPEG`
-  - 可一次插入多張文章圖片
-- `Preview Draft`
-  - 先看草稿頁面長什麼樣
-- 本機 autosave
-  - 關頁前、切文章前、閒置時會自動存成 local draft
-- `Discard Local Draft`
-  - 把尚未正式儲存到網站的本機草稿丟掉
-- 發布前 checklist
-  - 欄位沒補齊時，`Published` 會被擋下來
-- 自動發布時間
-  - 第一次正式發布時，系統會自動記下當下時間
-  - 不需要手動選日期
-- 主打文章控制
-  - 最新正式發布的文章會自動成為首頁主打
-  - 也可以在 Studio 手動把某篇已發布文章設成主打
-
-另外，手動主打在下一篇新文章正式發布後，會再次被最新發布文章接手。
-
-### 7.5 Acquaintance Profile
-
-用途：
-
-- 管熟客模式資料
-
-可以改：
-
-- Email
-- Phone
-- Instagram
-- 熟客模式導言
-- 熟客模式下的 Hero / About / 學經歷等私密版文案
-- 熟客照片
-  - 可上傳
-  - 可移除舊照片後再儲存
-
-改完按：
-
-```text
-Save Acquaintance Profile
-```
-
-### 7.6 Deploy
-
-用途：
-
-- 做整體 reset
-
-這裡有一個大重置：
-
-```text
-Reset Entire CMS
-```
-
-這個按鈕很強，不要亂按。
-
----
-
-## 8. 最常見的 6 種操作
-
-### 操作 1：改首頁公開文案
-
-步驟：
-
-1. 登入 Studio
-2. 進 `Public Copy`
-3. 找到要改的欄位
-4. 改中文 / 英文
-5. 按 `Save Public Copy`
-6. 到前台重新整理確認
-
-### 操作 2：新增一則首頁最新動態
-
-步驟：
-
-1. 登入 Studio
-2. 進 `Updates`
-3. 新增一筆
-4. 填日期、中文、英文
-5. 選 `Public` 或 `Acquaintance`
-6. 按 `Save Updates`
-7. 到首頁看顯示是否正確
-
-### 操作 3：發一篇公開文章
-
-步驟：
-
-1. 登入 Studio
-2. 進 `Posts`
-3. 按 `New Post`
-4. 填 `Slug`
-5. `Visibility` 選 `Public`
-6. `Status` 選 `Draft` 或 `Published`
-7. 填標題、摘要、內容
-8. 如果要放封面，填 `Cover Image` 或直接上傳封面圖
-9. 如果要放文章配圖，用 `Add Photos`
-10. 先按 `Preview Draft` 看版面
-11. 按 `Save Post`
-12. 用 `Open Current URL` 或直接打網址確認
-
-### 操作 4：發一篇只有熟客能看的文章
-
-步驟：
-
-1. 登入 Studio
-2. 進 `Posts`
-3. 按 `New Post`
-4. 填 `Slug`
-5. `Visibility` 選 `Acquaintance`
-6. `Status` 選 `Draft` 或 `Published`
-7. 填文章內容
-8. 如需要可加入封面圖與文章圖片
-9. 先按 `Preview Draft`
-10. 按 `Save Post`
-
-這種文章正式路徑一樣會是：
-
-```text
-/notes/<slug>
-```
-
-但沒解鎖熟客模式的人只會看到鎖定頁，不會直接看到全文。
-
-補充：
-
-- 公開且已發布的 `/notes/<slug>` 文章會自動進正式站的 `sitemap.xml`
+- `/sitemap.xml` 由 `functions/sitemap.xml.js` 動態產生
+- 公開且已發布的 CMS notes 會自動加入 sitemap
 - 熟客限定文章不會進 sitemap
 
-### 操作 5：更新熟客模式聯絡方式與照片
+另外，Studio 與 API 都刻意排除搜尋引擎索引。
 
-步驟：
+## Repository 內的重要文件
 
-1. 登入 Studio
-2. 進 `Acquaintance Profile`
-3. 改 Email / Phone / Instagram
-4. 上傳照片，或按 `Remove Image` 清掉舊照片
-5. 改熟客文案
-6. 按 `Save Acquaintance Profile`
+如果你想進一步了解這個專案，下面幾份文件很重要：
 
-### 操作 6：把目前熟客資料存成新的 reset 預設
+- `HOW_THIS_SITE_WAS_BUILT.md`
+  - 說明整體架構與設計原因
+- `SITE_MAINTENANCE_MANUAL.md`
+  - 偏日常維護 SOP
+- `BLOG_PUBLISHING_GUIDE.md`
+  - 說明現在的發文流程與舊版靜態文章差異
+- `CLOUDFLARE_STUDIO_SETUP.md`
+  - Cloudflare、Studio、D1、Secrets 相關設定
+- `README_DEPLOY.md`
+  - 較早期的靜態站部署說明
 
-這個功能很重要。
+## 這個 repository 適合誰看
 
-因為現在熟客模式的「預設值」不是寫在公開 repo 裡，而是存在 D1 的私人 baseline。
+這個 repository 對下面幾種人都可能有幫助：
 
-步驟：
+- 想看看這個網站怎麼做的人
+- 想參考 framework-light 個人網站架構的人
+- 想看 Cloudflare Pages + Functions + D1 如何搭一個小型 CMS 的人
+- 之後需要維護這個網站的人
 
-1. 進 `Acquaintance Profile`
-2. 先把內容改到你滿意
-3. 先按 `Save Acquaintance Profile`
-4. 再按：
+它不是通用型 starter template，而是一個高度客製化、以個人網站需求為核心設計出來的專案。
 
-```text
-Save as Reset Default
-```
+## 建議閱讀順序
 
-這樣之後如果你按 `Reset to Default`，就會回到你自己保存的那份熟客預設，而不是空白模板。
+如果你是第一次打開這個 repo，建議這樣看：
 
----
+1. 先讀這份 README
+2. 再讀 `HOW_THIS_SITE_WAS_BUILT.md`
+3. 打開 `index.html`
+4. 打開 `app.js`
+5. 打開 `studio/studio.js`
+6. 打開 `functions/_lib/db.js`
+7. 打開 `functions/notes/[slug].js`
 
-## 9. `Save`、`Draft`、`Published`、`Public`、`Acquaintance` 到底差在哪
+這樣會最快掌握：
 
-### `Save`
-
-表示把目前表單內容正式寫進 Cloudflare D1。
-
-如果你沒按 `Save`：
-
-- 網站正式內容不會更新
-- 但 `Posts` 很可能已經被 autosave 成本機草稿
-- 下次打開 Studio 時，草稿可能會自動恢復
-
-### `Draft`
-
-文章是草稿。
-
-### `Published`
-
-文章正式發布。
-
-### `Public`
-
-所有人都能看。
-
-### `Acquaintance`
-
-只有熟客模式解鎖後才能看。
-
----
-
-## 10. 文章系統現在怎麼寫
-
-### 目前用的是 Markdown 編輯器 + 即時預覽 + 本機草稿工作流
-
-也就是：
-
-- 你不用再手打原始 HTML
-- 你可以直接寫 Markdown
-- Studio 右邊會有 live preview
-- 工具列可快速插入常用格式
-- 可以插入文章圖片
-- 可以加封面圖
-- 可以預覽草稿頁面
-- 會自動存本機草稿
-
-### 你可以直接這樣寫
-
-```md
-## 小標題
-
-這是第一段。
-
-- 第一點
-- 第二點
-
-這是 **重點**，這是 [連結](https://example.com)。
-```
-
-### 要注意的事
-
-- 新文章建議直接用 Markdown
-- 以前已經存在的 HTML 文章仍然相容，不會直接壞掉
-- Studio 不是 Word，也不是 Notion
-- 目前是 Markdown editor，不是完整所見即所得 WYSIWYG
-
-### 圖片目前怎麼用
-
-- 文章內插圖目前支援：
-  - `PNG / JPG / JPEG`
-- 封面圖也支援：
-  - 貼 URL
-  - 或直接上傳 `PNG / JPG / JPEG`
-- 文章圖片與封面圖目前不是獨立圖床
-  - 它們會跟文章內容一起存在 D1
-  - 不會進 GitHub repo
-
-### 圖片刪掉後，資源會不會殘留
-
-- 文章內圖片：
-  - 先從編輯器刪掉圖片標記
-  - 再按 `Save Post`
-  - 這樣該篇文章裡不再被引用的圖片資料就會一起被清掉
-- 封面圖：
-  - 按 `Remove Cover`
-  - 再按 `Save Post`
-  - 封面資料就會從文章裡移除
-- 熟客照片：
-  - 按 `Remove Image`
-  - 再按 `Save Acquaintance Profile`
-  - 該張照片就會從熟客資料裡清掉
-
-### 本機草稿會不會越存越大
-
-- 本機 autosave 只存在你自己的瀏覽器 `localStorage`
-- 不會進 GitHub
-- 不會變成獨立 Cloudflare 圖片資源
-- Studio 現在已經有自動清理機制
-  - 太舊的草稿會清掉
-  - 已和正式版本一致的草稿會清掉
-  - 超過保留上限的最舊草稿也會清掉
-
----
-
-## 11. 如果我改得不滿意，怎麼回復
-
-### 情況 A：還沒按 Save
-
-現在不能再單純理解成「重整就一定沒了」。
-
-因為 `Posts` 會自動做本機 autosave，所以：
-
-- 重新整理後，草稿可能還會被恢復
-- 關分頁前也可能已經先被本機保存
-
-如果你想真的丟掉目前這份未正式發佈的文章草稿，請按：
-
-```text
-Discard Local Draft
-```
-
-### 情況 B：已經按 Save
-
-#### Public Copy
-
-按：
-
-```text
-Reset to Default
-```
-
-#### Updates
-
-按：
-
-```text
-Reset Updates
-```
-
-#### Acquaintance Profile
-
-按：
-
-```text
-Reset to Default
-```
-
-### 如果我想整個 CMS 回到初始狀態
-
-去 `Deploy` 區，按：
-
-```text
-Reset Entire CMS
-```
-
-### 這顆按鈕會做什麼
-
-- 公開文案回預設
-- updates 回預設
-- 熟客資料回預設
-- CMS managed posts 清空
-
-所以按之前一定要看清楚。
-
----
-
-## 12. 熟客模式現在該怎麼理解
-
-你現在要把它理解成：
-
-- 公開模式：只顯示公開版文案
-- 熟客模式：解鎖後才顯示較完整的私密資料與私密版文案
-
-### 你要注意的一點
-
-熟客模式下，不是只有那個「熟客資訊卡」會變。
-
-在現在這套 Cloudflare 版設計裡，熟客模式可以覆蓋的不只是聯絡方式，還包含：
-
-- Hero 的部分文案
-- About 的部分文案
-- 學經歷區塊
-- 某些個人背景 / 課題描述
-- 熟客照片
-
-所以如果你覺得「切到熟客模式，怎麼只有某一小塊變了」，那通常表示私密文案欄位沒有設完整，或還沒儲存成 baseline。
-
----
-
-## 13. 之後怎麼改後台登入密碼
-
-### 改 Admin 密碼
-
-去：
-
-```text
-Cloudflare -> jasonliao-pages -> Settings -> Variables and Secrets
-```
-
-找到：
-
-- `ADMIN_PASSWORD`
-
-把它直接改成新值。
-
-### 改完之後一定要做的事
-
-1. 儲存
-2. 去 `Deployments`
-3. 重新部署一次
-4. 開無痕視窗測登入
-
----
-
-## 14. 之後怎麼改熟客模式密碼
-
-在同一個地方改：
-
-- `ACQUAINTANCE_PASSWORD`
-
-改完後同樣：
-
-1. 儲存
-2. 重新部署
-3. 到前台重新測熟客模式
-
----
-
-## 15. 還要不要碰 `ADMIN_PASSWORD_HASH` / `ACQUAINTANCE_PASSWORD_HASH`
-
-平常不用。
-
-目前最直觀、最不容易出錯的流程是：
-
-- `ADMIN_PASSWORD`
-- `ACQUAINTANCE_PASSWORD`
-
-### 你可以這樣理解
-
-這兩個 hash 欄位現在屬於：
-
-- 相容
-- 備用
-- 不是日常維護主流程
-
-如果你不是在做特別的安全流程，不要再把自己搞進 hash 地獄。
-
----
-
-## 16. 可不可以同時有兩組以上密碼
-
-### Admin
-
-目前不支援。
-
-### Cloudflare 正式熟客模式
-
-目前也不支援。
-
-### 以前為什麼你會有「好像有多組密碼還在生效」的印象
-
-因為更早以前有一套舊的靜態本地加密流程，可支援多組密碼。
-
-但那不是現在正式站的主流程，而且正式站上那條舊路線已經被停用。
-
-### 實務結論
-
-請把現在正式站理解成：
-
-- Admin：1 組
-- Acquaintance：1 組
-
-如果未來真的要多組密碼，那是下一階段功能擴充，不是現在已內建的功能。
-
----
-
-## 17. 什麼時候要用 GitHub
-
-只有你要改「程式本身」時，才需要 GitHub。
-
-例如：
-
-- 換版型
-- 換 CSS
-- 改動畫
-- 改前端邏輯
-- 改 Studio 功能
-- 改文章頁長相
-- 改後台能力
-- 改資料結構
-
-這時你才需要本地 repo + Git：
-
-```powershell
-git status
-git add .
-git commit -m "your message"
-git push origin main
-```
-
-推上去後，Cloudflare 才會重新部署。
-
----
-
-## 18. 什麼時候完全不用 GitHub
-
-如果你只是：
-
-- 改首頁公開文案
-- 發一篇 CMS 文章
-- 改一則 update
-- 改熟客聯絡方式
-- 換熟客照片
-- 改熟客版文案
-
-那你應該只用 Studio。
-
-這些操作不需要碰 GitHub。
-
----
-
-## 19. 前台裝置效果現在怎麼判定
-
-現在前台的視覺效果，不是只看螢幕寬度，也不是看螢幕比例。
-
-目前用的是一套 `effects profile`：
-
-- `desktop`
-- `touch`
-- `reduced`
-
-### 判定順序
-
-1. 如果使用者系統開了 `prefers-reduced-motion: reduce`
-   - 直接用 `reduced`
-2. 否則如果裝置符合：
-   - `(hover: none) and (pointer: coarse)`
-   - 也就是典型手機 / 平板觸控裝置
-   - 就用 `touch`
-3. 其他情況才用 `desktop`
-
-### 這代表什麼
-
-- iPad 就算螢幕很寬，也不會硬吃桌機那套最重的 glow / blur / 粒子
-- 手機和平板會共用同一套比較穩的高級深色 touch profile
-- 桌機維持目前那套較完整的 desktop 視覺
-
-### 目前寬度還在做什麼
-
-螢幕寬度現在主要只管：
-
-- 欄位排版
-- nav 收合
-- hero / cards 的欄數
-- 字級與間距
-
-也就是說：
-
-- `width` 主要負責 layout
-- `effects profile` 主要負責視覺特效強度
-
-### 相關檔案
-
-- [index.html](C:/Users/User/Desktop/Blog/index.html)
-  - 在 `<head>` 很早就先寫入 `data-effects-profile`
-- [app.js](C:/Users/User/Desktop/Blog/app.js)
-  - JS 互動邏輯跟這個 profile 同步
-- [style.css](C:/Users/User/Desktop/Blog/style.css)
-  - `html[data-effects-profile=\"touch\"]` 是手機 / 平板的專用效果層
-
-### 之後如果你要改手機 / 平板質感，請改哪裡
-
-不要直接去改桌機 hero 的主效果。
-
-請優先改：
-
-- [style.css](C:/Users/User/Desktop/Blog/style.css)
-  - 檔尾的 `Effects Profile: Touch`
-
-這樣才能維持：
-
-- 桌機版不被碰壞
-- 手機 / 平板單獨微調
-- 不再出現「手機好了、平板又炸」這種互相打架
-
----
-
-## 19. branch 到底要不要管
-
-大多數情況下：
-
-**不用。**
-
-你現在最重要的是：
-
-- GitHub `main`
-- Cloudflare production 追蹤的也是 `main`
-
-所以平常不要被 branch 搞亂。
-
-只有在做程式開發時，Git branch 才比較重要。
-
-如果你只是維護網站內容，幾乎可以忽略它。
-
----
-
-## 20. 什麼東西你不要亂動
-
-以下這些東西，平常請不要亂改：
-
-- [wrangler.toml](C:/Users/User/Desktop/Blog/wrangler.toml)
-- `database_id`
-- `compatibility_date`
-- Cloudflare `Bindings` 裡的 `CMS_DB`
-- [cloudflare/schema.sql](C:/Users/User/Desktop/Blog/cloudflare/schema.sql)
-- [_headers](C:/Users/User/Desktop/Blog/_headers)
-- `functions/_lib/*`
-
-### 為什麼
-
-因為這些不是內容，是基礎架構。
-
-亂動之後可能造成：
-
-- Studio 登不進去
-- D1 讀不到
-- API 壞掉
-- 部署失敗
-- 熟客模式失效
-
----
-
-## 21. 什麼東西你可以放心不用管
-
-平常大多數時候，你可以放心不用管：
-
-- `compatibility_date`
-- D1 table 結構
-- `_headers`
-- API 路徑細節
-- Git 多分支
-- `database_id`
-
-### 你平常真的只要會：
-
-- 登入 Studio
-- 改內容
-- 按 Save
-- 必要時 Reset
-- 如果是程式問題，再去看 Cloudflare Deployments
-
-就夠了。
-
----
-
-## 22. 如果網站怪怪的，先怎麼查
-
-### 情況 1：Studio 看起來還是舊版
-
-先做：
-
-1. 去 Cloudflare `Deployments`
-2. 確認最新 deployment 是 `Success`
-3. 開無痕視窗
-4. `Ctrl + F5`
-
-### 情況 2：我明明改了密碼還是登不進去
-
-先做：
-
-1. 確認改的是 `jasonliao-pages` 這個專案
-2. 確認改的是 `ADMIN_PASSWORD`
-3. 重新部署
-4. 用無痕視窗重試
-
-### 情況 3：前台內容沒變
-
-先確認你現在打開的是：
-
-- Cloudflare 版網址
-  還是
-- 別的舊網址
-
-因為 Studio 改的是 Cloudflare 版資料流。
-
-### 情況 4：熟客模式看起來怪怪的
-
-先分三件事檢查：
-
-1. 熟客模式有沒有真的解鎖成功
-2. `Acquaintance Profile` 裡的內容有沒有真的 `Save`
-3. 你有沒有把目前那版存成 `Save as Reset Default`
-
----
-
-## 23. 最健康的維護習慣
-
-### 好習慣
-
-1. 日常只在 Studio 改內容
-2. 每次改完立即到前台確認
-3. 改密碼後立刻重新部署並用無痕測
-4. 密碼記在自己的密碼管理器
-5. 程式改動才走 GitHub
-6. 看到網站怪怪的，先看 Cloudflare deployment，不要先亂改設定
-
-### 壞習慣
-
-1. 一邊改 Studio，一邊手改同一段 HTML
-2. 不看 deployment 就一直刷新
-3. 改錯專案的 secret
-4. 把 secret 當一般變數亂改
-5. 亂碰 `wrangler.toml`
-6. 以為熟客模式密碼還能沿用舊靜態本地工具那套多密碼邏輯
-
----
-
-## 24. 我之後要怎麼做一次正常的內容更新
-
-### 範例 A：改首頁一句話
-
-1. Studio 登入
-2. `Public Copy`
-3. 找到欄位
-4. 改字
-5. `Save Public Copy`
-6. 打開首頁確認
-
-### 範例 B：發一篇公開文章
-
-1. Studio 登入
-2. `Posts`
-3. `New Post`
-4. 填 `Slug`
-5. `Visibility = Public`
-6. `Status = Published`
-7. 用 Markdown 寫內容
-8. `Save Post`
-9. 打開網址確認
-
-### 範例 C：更新熟客模式資料
-
-1. Studio 登入
-2. `Acquaintance Profile`
-3. 改內容
-4. `Save Acquaintance Profile`
-5. 如果這版就是你之後想保留的預設，再按 `Save as Reset Default`
-6. 用熟客模式重新解鎖首頁驗證
-
----
-
-## 25. 什麼時候需要找工程層協助，而不是繼續自己在 Studio 裡試
-
-如果你要的是這些，就應該回到程式層：
-
-- 我要新增一個新的 Studio 功能
-- 我要改熟客模式邏輯
-- 我要改文章系統結構
-- 我要支援多組熟客密碼
-- 我要加新的 API
-- 我要讓前台某個區塊切換邏輯變更
-- 我要換整體設計風格
-
-也就是說，Studio 是內容管理工具，不是萬能網站建構器。
-
----
-
-## 26. 這份手冊最後要你記住的 8 句話
-
-1. 改內容去 Studio。
-2. 改程式才去 GitHub。
-3. 改密碼要去 Cloudflare Secrets。
-4. 改完 Secret 要重新部署。
-5. 看起來像舊版時，先查 Deployments。
-6. 熟客模式不是只有一塊會切換，私密文案可以覆蓋多個區塊。
-7. 現在正式站的密碼邏輯是單一密碼，不要再混舊的多密碼本地流程。
-8. 不確定時，先不要亂動 `wrangler.toml`、D1、Bindings、_headers。
-
+- 公開前台怎麼組
+- 前台怎麼跟 CMS 串接
+- 後台怎麼管理內容
+- 資料怎麼存在 D1
+- 動態文章頁怎麼做權限判斷
